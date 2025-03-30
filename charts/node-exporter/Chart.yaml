@@ -3,5 +3,5 @@ name: addon-prometheus-node-exporter
 version: 4.30.0
 dependencies:
   - name: prometheus-node-exporter
-    version: 4.44.1
+    version: 4.45.0
     repository: https://prometheus-community.github.io/helm-charts
