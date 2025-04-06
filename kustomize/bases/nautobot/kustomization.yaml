@@ -5,7 +5,7 @@ namespace: nautobot
 helmCharts:
   - name: nautobot
     repo: https://nautobot.github.io/helm-charts/
-    version: 2.5.0
+    version: 2.5.1
     releaseName: nautobot
     namespace: nautobot
     valuesFile: helm-values.yaml
