@@ -12,7 +12,7 @@ helmCharts:
 
   - name: postgresql-ha
     repo: https://charts.bitnami.com/bitnami
-    version: 15.3.8
+    version: 15.3.11
     releaseName: pgadmin
     namespace: postgresql
     valuesFile: postgresha-values.yaml
