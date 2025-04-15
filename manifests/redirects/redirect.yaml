@@ -24,3 +24,17 @@ spec:
     enable: true
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
+
+---
+apiVersion: urlshortener.cedi.dev/v1alpha1
+kind: Redirect
+metadata:
+  name: hochzeit
+spec:
+  source: hochzeit.gold-specht.de
+  target: https://forms.office.com/Pages/ResponsePage.aspx?id=mJO-r2vL7USMS6E4oe7cSnI5LFCcej9FshXQ9uPT10lUOFNJNkE4WktKWUFEMFZQM0lWUjBFVUpRTC4u
+  code: 308
+  tls:
+    enable: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
