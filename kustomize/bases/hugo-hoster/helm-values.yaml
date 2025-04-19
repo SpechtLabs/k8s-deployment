@@ -27,7 +27,7 @@ hugohoster:
       tls:
         enable: true
         annotations:
-          cert-manager.io/cluster-issuer: letsencrypt-prod-http01
+          cert-manager.io/cluster-issuer: letsencrypt-prod
       s3_config:
         endpoint: https://s3.eu-central-003.backblazeb2.com
         bucketname: cedi-testing

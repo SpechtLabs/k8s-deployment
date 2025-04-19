@@ -4,18 +4,3 @@ namespace: cert-manager
 
 resources:
   - ../../../bases/cluster-issuer/
-  - ./letsencrypt-prod-http01.yaml
-
-generators:
-  - ./secret-generator.yaml
-
-patches:
-  - target:
-      kind: ClusterIssuer
-      name: letsencrypt-prod
-    path: dns01-cloudflare.patch.yaml
-
-  - target:
-      kind: ClusterIssuer
-      name: letsencrypt-staging
-    path: dns01-cloudflare.patch.yaml
