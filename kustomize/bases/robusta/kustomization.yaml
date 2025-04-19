@@ -5,7 +5,7 @@ namespace: robusta
 helmCharts:
   - name: robusta
     repo: https://robusta-charts.storage.googleapis.com
-    version: 0.21.5
+    version: 0.22.0
     releaseName: robusta
     namespace: robusta
     valuesFile: helm-values.yaml
