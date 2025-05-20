@@ -1,0 +1,78 @@
+staticpages:
+  nameOverride: "static-pages"
+  replicaCount: 1
+  env:
+    - name: OTEL_LOG_LEVEL
+      value: "debug"
+
+    - name: APPLICATION_ID
+      valueFrom:
+        secretKeyRef:
+          key: app-id
+          name: s3-credentials
+
+    - name: S3_SECRET
+      valueFrom:
+        secretKeyRef:
+          key: s3-secret
+          name: s3-credentials
+
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      "cert-manager.io/cluster-issuer": "letsencrypt-prod"
+
+    hosts:
+      - host: staticpages.cedi.dev
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+
+    tls:
+      - secretName: staticpages-tls
+        hosts:
+          - staticpages.cedi.dev
+
+## Static Pages Config
+configs:
+  proxy:
+    maxIdleConns: 1000
+    maxIdleConnsPerHost: 500
+    timeout: 30s
+    compression: false
+
+  output:
+    format: long
+
+  pages:
+    - domain: gold-specht.cedi.dev
+      # Configure the S3 bucket where the website is hosted in
+      bucket:
+        region: eu-central-003
+        url: https://s3.eu-central-003.backblazeb2.com
+        name: cedi-testing
+        applicationId: ENV(APPLICATION_ID)
+        secret: ENV(S3_SECRET)
+
+      # Configure Proxy URL
+      proxy:
+        url: https://f003.backblazeb2.com
+        path: file/cedi-testing
+        notFound: 404.html
+        searchPath:
+          - /index.html
+          - /index.htm
+
+      # Grant access to the repositories to use this domain
+      git:
+        provider: github
+        repository: Goldschmiede-Metallglanz/Goldschmiede-Metallglanz
+        mainBranch: main
+
+      # Configure preview-build sub domains
+      preview:
+        enabled: true
+        branch: true
+        sha: false
+        environment: false
