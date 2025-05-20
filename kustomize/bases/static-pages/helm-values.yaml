@@ -21,8 +21,10 @@ staticpages:
     enabled: true
     className: "nginx"
     annotations:
-      "cert-manager.io/cluster-issuer": "letsencrypt-prod"
-
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     hosts:
       - host: staticpages.cedi.dev
         paths:
