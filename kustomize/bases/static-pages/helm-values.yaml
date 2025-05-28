@@ -76,7 +76,7 @@ configs:
       # Grant access to the repositories to use this domain
       git:
         provider: github
-        repository: SpechtLabs/spechtlabs.github.io.git
+        repository: SpechtLabs/spechtlabs.github.io
         mainBranch: main
 
       # Configure preview-build sub domains
