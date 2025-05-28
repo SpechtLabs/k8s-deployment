@@ -5,6 +5,12 @@ staticpages:
     - name: OTEL_LOG_LEVEL
       value: "debug"
 
+    - name: OTLP_ENDPOINT
+      value: "tempo-distributor.observability.svc.cluster.local:4318"
+
+    - name: OTLP_INSECURE
+      value: "true"
+
     - name: APPLICATION_ID
       valueFrom:
         secretKeyRef:
