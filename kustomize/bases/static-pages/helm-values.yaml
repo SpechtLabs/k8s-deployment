@@ -8,10 +8,10 @@ staticpages:
     - name: OTEL_LOG_LEVEL
       value: "debug"
 
-    - name: OTLP_ENDPOINT
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "tempo-distributor.observability.svc.cluster.local:4317"
 
-    - name: OTLP_INSECURE
+    - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
 
     - name: APPLICATION_ID
