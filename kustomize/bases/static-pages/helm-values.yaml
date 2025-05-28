@@ -54,6 +54,38 @@ configs:
     format: long
 
   pages:
+    - domain: specht-labs.cedi.dev
+
+      # Configure the S3 bucket where the website is hosted in
+      bucket:
+        region: eu-central-003
+        url: https://s3.eu-central-003.backblazeb2.com
+        name: cedi-testing
+        applicationId: ENV(APPLICATION_ID)
+        secret: ENV(S3_SECRET)
+
+      # Configure Proxy URL
+      proxy:
+        url: https://f003.backblazeb2.com
+        path: file/cedi-testing
+        notFound: 404.html
+        searchPath:
+          - /index.html
+          - /index.htm
+
+      # Grant access to the repositories to use this domain
+      git:
+        provider: github
+        repository: SpechtLabs/spechtlabs.github.io.git
+        mainBranch: main
+
+      # Configure preview-build sub domains
+      preview:
+        enabled: true
+        branch: true
+        sha: false
+        environment: false
+
     - domain: www.gold-specht.de
       # Configure the S3 bucket where the website is hosted in
       bucket:
