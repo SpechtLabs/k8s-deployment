@@ -54,7 +54,7 @@ configs:
     format: long
 
   pages:
-    - domain: gold-specht.cedi.dev
+    - domain: www.gold-specht.de
       # Configure the S3 bucket where the website is hosted in
       bucket:
         region: eu-central-003
