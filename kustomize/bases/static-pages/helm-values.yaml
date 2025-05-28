@@ -2,11 +2,14 @@ staticpages:
   nameOverride: "static-pages"
   replicaCount: 1
   env:
+    - name: GIN_MODE
+      value: "release"
+
     - name: OTEL_LOG_LEVEL
       value: "debug"
 
     - name: OTLP_ENDPOINT
-      value: "tempo-distributor.observability.svc.cluster.local:4318"
+      value: "tempo-distributor.observability.svc.cluster.local:4317"
 
     - name: OTLP_INSECURE
       value: "true"
