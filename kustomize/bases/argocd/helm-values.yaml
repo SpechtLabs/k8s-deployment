@@ -4,7 +4,7 @@ global:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
 
-  domain: argocd.cedi.dev
+  domain: argocd.specht-labs.de
 
   image:
     repository: "ghcr.io/spechtlabs/argocd-custom-container"
@@ -105,7 +105,7 @@ server:
 
     pathType: ImplementationSpecific
     hosts:
-      - argocd.cedi.dev
+      - argocd.specht-labs.de
 
     tls: true
 

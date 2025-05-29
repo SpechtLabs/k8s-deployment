@@ -8,7 +8,7 @@ cert-checker:
     certificates:
       - dns: cedi.dev
       - dns: metallglanz.com
-      - dns: argocd.cedi.dev
+      - dns: argocd.specht-labs.de
       - dns: cert-checker.cedi.dev
       - dns: grafana.specht-labs.de
       - dns: cedric-kienzler.de
