@@ -1,20 +1,20 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: nautobot
-  namespace: argocd
-spec:
-  destination:
-    namespace: nautobot
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    path: kustomize/overlays/cedi-dev/nautobot
-    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
-    targetRevision: main
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: nautobot
+#   namespace: argocd
+# spec:
+#   destination:
+#     namespace: nautobot
+#     server: https://kubernetes.default.svc
+#   project: default
+#   source:
+#     path: kustomize/overlays/cedi-dev/nautobot
+#     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+#     targetRevision: main
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
