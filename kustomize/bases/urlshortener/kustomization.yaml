@@ -4,8 +4,8 @@ namespace: urlshortener
 
 helmCharts:
   - name: urlshortener
-    repo: https://spechtlabs.github.io/helm-charts
-    version: 0.0.15
+    repo: https://charts.specht-labs.de
+    version: 0.0.16
     releaseName: urlshortener
     namespace: urlshortener
     valuesFile: helm-values.yaml

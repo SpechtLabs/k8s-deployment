@@ -4,8 +4,8 @@ namespace: hugo-hoster
 
 helmCharts:
   - name: hugo-hoster
-    repo: https://spechtlabs.github.io/helm-charts
-    version: 0.0.8
+    repo: https://charts.specht-labs.de
+    version: 0.0.9
     releaseName: hugo-hoster
     namespace: hugo-hoster
     valuesFile: helm-values.yaml
