@@ -32,15 +32,15 @@ staticpages:
       nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
       nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     hosts:
-      - host: staticpages.cedi.dev
+      - host: pages.specht-labs.de
         paths:
-          - path: /
+          - path: /api
             pathType: ImplementationSpecific
 
     tls:
       - secretName: staticpages-tls
         hosts:
-          - staticpages.cedi.dev
+          - pages.specht-labs.de
 
 ## Static Pages Config
 configs:
@@ -54,9 +54,7 @@ configs:
     format: long
 
   pages:
-    - domain: specht-labs.cedi.dev
-
-      # Configure the S3 bucket where the website is hosted in
+    - domain: specht-labs.de
       bucket:
         region: eu-central-003
         url: https://s3.eu-central-003.backblazeb2.com
@@ -64,7 +62,6 @@ configs:
         applicationId: ENV(APPLICATION_ID)
         secret: ENV(S3_SECRET)
 
-      # Configure Proxy URL
       proxy:
         url: https://f003.backblazeb2.com
         path: file/cedi-testing
@@ -73,13 +70,65 @@ configs:
           - /index.html
           - /index.htm
 
-      # Grant access to the repositories to use this domain
       git:
         provider: github
         repository: SpechtLabs/spechtlabs.github.io
         mainBranch: main
 
-      # Configure preview-build sub domains
+      preview:
+        enabled: true
+        branch: true
+        sha: false
+        environment: false
+
+    - domain: static-pages.specht-labs.de
+      bucket:
+        region: eu-central-003
+        url: https://s3.eu-central-003.backblazeb2.com
+        name: cedi-testing
+        applicationId: ENV(APPLICATION_ID)
+        secret: ENV(S3_SECRET)
+
+      proxy:
+        url: https://f003.backblazeb2.com
+        path: file/cedi-testing
+        notFound: 404.html
+        searchPath:
+          - /index.html
+          - /index.htm
+
+      git:
+        provider: github
+        repository: SpechtLabs/StaticPages
+        mainBranch: main
+
+      preview:
+        enabled: true
+        branch: true
+        sha: false
+        environment: false
+
+    - domain: calendarapi.specht-labs.de
+      bucket:
+        region: eu-central-003
+        url: https://s3.eu-central-003.backblazeb2.com
+        name: cedi-testing
+        applicationId: ENV(APPLICATION_ID)
+        secret: ENV(S3_SECRET)
+
+      proxy:
+        url: https://f003.backblazeb2.com
+        path: file/cedi-testing
+        notFound: 404.html
+        searchPath:
+          - /index.html
+          - /index.htm
+
+      git:
+        provider: github
+        repository: SpechtLabs/CalendarAPI
+        mainBranch: main
+
       preview:
         enabled: true
         branch: true
@@ -87,7 +136,6 @@ configs:
         environment: false
 
     - domain: www.gold-specht.de
-      # Configure the S3 bucket where the website is hosted in
       bucket:
         region: eu-central-003
         url: https://s3.eu-central-003.backblazeb2.com
@@ -95,7 +143,6 @@ configs:
         applicationId: ENV(APPLICATION_ID)
         secret: ENV(S3_SECRET)
 
-      # Configure Proxy URL
       proxy:
         url: https://f003.backblazeb2.com
         path: file/cedi-testing
@@ -104,13 +151,11 @@ configs:
           - /index.html
           - /index.htm
 
-      # Grant access to the repositories to use this domain
       git:
         provider: github
         repository: Goldschmiede-Metallglanz/Goldschmiede-Metallglanz
         mainBranch: main
 
-      # Configure preview-build sub domains
       preview:
         enabled: true
         branch: true
