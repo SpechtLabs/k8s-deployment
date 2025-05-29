@@ -10,7 +10,7 @@ cert-checker:
       - dns: metallglanz.com
       - dns: argocd.cedi.dev
       - dns: cert-checker.cedi.dev
-      - dns: grafana.cedi.dev
+      - dns: grafana.specht-labs.de
       - dns: cedric-kienzler.de
       - dns: goldschmiede-metallglanz.de
       - dns: short.cedi.dev
@@ -18,9 +18,7 @@ cert-checker:
       - dns: dash.ccl.pw
       - dns: hole.elbschloss.xyz
       - dns: kienzler.io
-      - dns: 4omc3zg9nnqjvwaj.myfritz.net
       - dns: hass.elbschloss.xyz
-      - dns: manager.elbschloss.xyz
       - dns: nas.elbschloss.xyz
       - dns: stream.elbschloss.xyz
 
@@ -34,23 +32,7 @@ cert-checker:
     enabled: false # can be found in kustomize/bases/grafana-dashboards/dashboards/cert-checker.json
 
   ingress:
-    enabled: true
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-      nginx.ingress.kubernetes.io/auth-signin: https://auth-cert-checker.cedi.dev/oauth2/start
-      nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy-cert-checker.svc.cluster.local/oauth2/auth
-    hosts:
-      - host: cert-checker.cedi.dev
-        paths:
-          - path: /
-            backend:
-              serviceName: cert-checker.local
-              servicePort: 8081
-    tls:
-      - secretName: cert-checker-cedi-dev-tls
-        hosts:
-          - cert-checker.cedi.dev
+    enabled: false
 
   nodeSelector:
     kubernetes.io/arch: amd64
