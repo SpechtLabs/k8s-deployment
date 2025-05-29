@@ -4,8 +4,8 @@
 
 - op: replace
   path: "/spec/kubeadmConfigSpec/preKubeadmCommands/2"
-  value: export KUBERNETES_VERSION="v1.30.6"
+  value: export KUBERNETES_VERSION="v1.30.13"
 
 - op: replace
   path: "/spec/version"
-  value: v1.30.6
+  value: v1.30.13
