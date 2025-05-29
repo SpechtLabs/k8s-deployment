@@ -33,9 +33,6 @@ staticpages:
       nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     hosts:
       - host: pages.specht-labs.de
-        paths:
-          - path: /api
-            pathType: ImplementationSpecific
 
     tls:
       - secretName: staticpages-tls
