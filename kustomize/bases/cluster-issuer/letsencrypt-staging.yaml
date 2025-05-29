@@ -4,7 +4,7 @@ metadata:
   name: letsencrypt-staging
 spec:
   acme:
-    email: k8s@cedi.dev
+    email: letsencrypt@specht-labs.de
     privateKeySecretRef:
       name: letsencrypt-staging-acme-account-key
     server: https://acme-staging-v02.api.letsencrypt.org/directory
