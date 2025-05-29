@@ -23,8 +23,8 @@ chaos-mesh:
         nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy-chaos-mesh.svc.cluster.local/oauth2/auth
 
       hosts:
-        - name: chaos.cedi.dev
+        - name: chaos-mesh.specht-labs.de
           tls: true
-          tlsSecret: chaos-cedi-dev-tls
+          tlsSecret: chaos-tls
           tlsHosts:
-            - chaos.cedi.dev
+            - chaos-mesh.specht-labs.de
