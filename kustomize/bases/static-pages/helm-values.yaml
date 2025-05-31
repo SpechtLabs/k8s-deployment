@@ -78,7 +78,7 @@ configs:
         sha: false
         environment: false
 
-    - domain: static-pages.specht-labs.de
+    - domain: pages.specht-labs.de
       bucket:
         region: eu-central-003
         url: https://s3.eu-central-003.backblazeb2.com
