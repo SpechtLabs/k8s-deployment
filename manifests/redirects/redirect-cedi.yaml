@@ -2,10 +2,10 @@
 apiVersion: urlshortener.cedi.dev/v1alpha1
 kind: Redirect
 metadata:
-  name: cedi-dev-to-www-cedi
+  name: cedi-dev-to-specht-labs
 spec:
   source: cedi.dev
-  target: https://www.cedi.dev
+  target: https://specht-labs.de/about/
   code: 308
   tls:
     enable: true
@@ -16,10 +16,24 @@ spec:
 apiVersion: urlshortener.cedi.dev/v1alpha1
 kind: Redirect
 metadata:
-  name: kienzler-to-www-cedi
+  name: www-cedi-dev-to-specht-labs
+spec:
+  source: www.cedi.dev
+  target: https://specht-labs.de/about/
+  code: 308
+  tls:
+    enable: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+---
+apiVersion: urlshortener.cedi.dev/v1alpha1
+kind: Redirect
+metadata:
+  name: kienzler-to-specht-labs
 spec:
   source: kienzler.io
-  target: https://www.cedi.dev
+  target: https://specht-labs.de/about/
   code: 308
   tls:
     enable: true
@@ -30,10 +44,10 @@ spec:
 apiVersion: urlshortener.cedi.dev/v1alpha1
 kind: Redirect
 metadata:
-  name: cedric-kienzler-to-www-cedi
+  name: cedric-kienzler-to-specht-labs
 spec:
   source: cedric-kienzler.de
-  target: https://www.cedi.dev
+  target: https://specht-labs.de/about/
   code: 308
   tls:
     enable: true
