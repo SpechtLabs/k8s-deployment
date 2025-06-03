@@ -33,8 +33,8 @@ grafana.ini:
     auth_url: https://github.com/login/oauth/authorize
     token_url: https://github.com/login/oauth/access_token
     api_url: https://api.github.com/user
-    allowed_organizations: specht-labs
-    role_attribute_path: contains(groups[*], '@specht-labs/admin') && 'Admin' || contains(groups[*], '@specht-labs/contributor') && 'Editor' || 'Viewer'
+    allowed_organizations: spechtlabs
+    role_attribute_path: contains(groups[*], '@spechtlabs/admin') && 'Admin' || contains(groups[*], '@spechtlabs/contributor') && 'Editor' || 'Viewer'
   feature_toggles:
     enable: tempoSearch tempoBackendSearch tempoApmTable
 
