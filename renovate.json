@@ -9,16 +9,40 @@
       "matchUpdateTypes": [
         "patch",
         "bump",
-        "minor"
+        "minor",
+        "digest"
       ],
       "automerge": true,
       "automergeType": "branch"
     },
     {
-      "matchUpdateTypes": ["major"],
+      "description": "Automatically merge updates to GitHub workflows",
+      "matchUpdateTypes": [
+        "patch",
+        "bump",
+        "minor",
+        "major",
+        "digest"
+      ],
+      "automerge": true,
+      "matchFileNames": [
+        ".github/**",
+        ".github/workflows/**"
+      ],
+      "automergeType": "branch"
+    },
+    {
+      "description": "Request review for major updates",
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false,
-      "labels": ["update/major"],
-      "assignees": ["cedi"]
+      "labels": [
+        "update/major"
+      ],
+      "assignees": [
+        "cedi"
+      ]
     }
   ]
 }
