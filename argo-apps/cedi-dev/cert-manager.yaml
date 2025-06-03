@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: kustomize/overlays/cedi-dev/cert-manager
+    path: kustomize/overlays/specht-labs/cert-manager
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:

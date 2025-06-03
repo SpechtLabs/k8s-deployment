@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: urlshortener
-            path: kustomize/overlays/cedi-dev/urlshortener
+            path: kustomize/overlays/specht-labs/urlshortener
           - name: shortlinks
             path: manifests/shortlinks
           - name: redirects

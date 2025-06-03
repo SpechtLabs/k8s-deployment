@@ -11,7 +11,7 @@ spec:
     namespace: default
     server: https://kubernetes.default.svc
   source:
-    path: kustomize/overlays/cedi-dev/cluster-issuer
+    path: kustomize/overlays/specht-labs/cluster-issuer
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:

@@ -19,7 +19,7 @@ This is the configuration of my playground Kubernetes Cluster.
   - `settings.json`: Settings for Visual Studio Code.
 
 - **argo-apps/**: Contains Argo CD application configurations.
-  - `cedi-dev/`: Configuration for the `cedi-dev` environment.
+  - `specht-labs/`: Configuration for the `specht-labs` environment.
   - `labk3s/`: Configuration for the `labk3s` environment.
 
 - **charts/**: Helm charts for various applications.

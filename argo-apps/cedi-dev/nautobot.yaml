@@ -9,7 +9,7 @@
 #     server: https://kubernetes.default.svc
 #   project: default
 #   source:
-#     path: kustomize/overlays/cedi-dev/nautobot
+#     path: kustomize/overlays/specht-labs/nautobot
 #     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
 #     targetRevision: main
 #   syncPolicy:

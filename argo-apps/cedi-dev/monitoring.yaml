@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: kustomize/overlays/cedi-dev/kube-prometheus-stack
+    path: kustomize/overlays/specht-labs/kube-prometheus-stack
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:

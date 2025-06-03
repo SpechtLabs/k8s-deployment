@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: hugo-hoster
-            path: kustomize/overlays/cedi-dev/hugo-hoster
+            path: kustomize/overlays/specht-labs/hugo-hoster
           - name: hugo-pages
             path: manifests/hugo-pages
   template:
