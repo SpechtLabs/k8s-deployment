@@ -180,9 +180,10 @@ spec:
           tls-cipher-suites: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
     preKubeadmCommands:
       - set -x
-      - export CONTAINERD=1.7.13
+      - export CONTAINERD=1.7.26
       - export KUBERNETES_VERSION="v1.33.1"
       - export RUNC=1.2.6
+      - export CNI_PLUGIN=1.4.1
       - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
       - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
       - export ARCH="$(dpkg --print-architecture)"
@@ -207,6 +208,12 @@ spec:
       - containerd config default > /etc/containerd/config.toml
       - sed -i  "s/SystemdCgroup = false/SystemdCgroup = true/" /etc/containerd/config.toml
       - systemctl daemon-reload && systemctl enable containerd && systemctl start containerd
+      - mkdir -p /opt/cni/bin
+      - wget https://github.com/containernetworking/plugins/releases/download/v$CNI_PLUGIN/cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
+      - wget https://github.com/containernetworking/plugins/releases/download/v$CNI_PLUGIN/cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz.sha256
+      - sha256sum --check cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz.sha256
+      - tar -C /opt/cni/bin -xzf cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
+      - rm cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
       - mkdir -p /etc/apt/keyrings/
       - curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION_MAJOR/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
       - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION_MAJOR/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
