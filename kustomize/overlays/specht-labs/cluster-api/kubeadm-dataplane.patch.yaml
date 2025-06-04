@@ -1,7 +1,0 @@
-- op: replace
-  path: "/spec/template/spec/preKubeadmCommands/1"
-  value: export CONTAINERD=1.7.23
-
-- op: replace
-  path: "/spec/template/spec/preKubeadmCommands/2"
-  value: export KUBERNETES_VERSION="v1.32.5"

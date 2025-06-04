@@ -6,19 +6,38 @@ resources:
   - ../../../bases/cluster-api/
 
 patches:
-  - target:
-      version: v1beta1
-      kind: KubeadmConfigTemplate
-      namespace: default
-      name: worker-template.*
-    path: kubeadm-dataplane.patch.yaml
-
+  # Control Plane
   - target:
       version: v1beta1
       kind: KubeadmControlPlane
       namespace: default
       name: cedi-dev-control-plane
-    path: kubeadm-controlplane.patch.yaml
+    patch: |
+      - op: replace
+        path: "/spec/kubeadmConfigSpec/preKubeadmCommands/1"
+        value: export CONTAINERD=1.7.23
+
+      - op: replace
+        path: "/spec/kubeadmConfigSpec/preKubeadmCommands/2"
+        value: export KUBERNETES_VERSION="v1.33.1"
+
+      - op: replace
+        path: "/spec/version"
+        value: v1.33.1
+
+  # Data Plane
+  - target:
+      version: v1beta1
+      kind: KubeadmConfigTemplate
+      namespace: default
+      name: worker-template.*
+    patch: |
+      - op: replace
+        path: "/spec/template/spec/preKubeadmCommands/1"
+        value: export CONTAINERD=1.7.23
+      - op: replace
+        path: "/spec/template/spec/preKubeadmCommands/2"
+        value: export KUBERNETES_VERSION="v1.32.5"
 
   - target:
       version: v1beta1
@@ -30,6 +49,7 @@ patches:
         path: "/spec/template/spec/version"
         value: v1.32.5
 
+  # Customizations to MachineDeployments
   - target:
       version: v1beta1
       kind: MachineDeployment
