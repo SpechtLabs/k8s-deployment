@@ -15,6 +15,7 @@ spec:
           default-unreachable-toleration-seconds: "45"
           enable-aggregator-routing: "true"
           enable-bootstrap-token-auth: "true"
+          encryption-provider-config: /etc/kubernetes/encryption-provider.yaml
           etcd-cafile: /etc/kubernetes/pki/etcd/ca.crt
           etcd-certfile: /etc/kubernetes/pki/etcd/server.crt
           etcd-keyfile: /etc/kubernetes/pki/etcd/server.key
@@ -34,6 +35,10 @@ spec:
           tls-cert-file: /etc/kubernetes/pki/apiserver.crt
           tls-cipher-suites: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
           tls-private-key-file: /etc/kubernetes/pki/apiserver.key
+        extraVolumes:
+          - hostPath: /etc/kubernetes/encryption-provider.yaml
+            mountPath: /etc/kubernetes/encryption-provider.yaml
+            name: encryption-provider
       controllerManager:
         extraArgs:
           allocate-node-cidrs: "true"
@@ -71,101 +76,116 @@ spec:
           profiling: "false"
           secure-port: "10259"
     files:
-    - content: |
-        net.ipv4.conf.lxc*.rp_filter = 0
-      owner: root:root
-      path: /etc/sysctl.d/99-cilium.conf
-      permissions: "0744"
-    - content: |
-        overlay
-        br_netfilter
-      owner: root:root
-      path: /etc/modules-load.d/crio.conf
-      permissions: "0744"
-    - content: |
-        net.bridge.bridge-nf-call-iptables  = 1
-        net.bridge.bridge-nf-call-ip6tables = 1
-        net.ipv4.ip_forward                 = 1
-      owner: root:root
-      path: /etc/sysctl.d/99-kubernetes-cri.conf
-      permissions: "0744"
-    - content: |
-        vm.overcommit_memory=1
-        kernel.panic=10
-        kernel.panic_on_oops=1
-      owner: root:root
-      path: /etc/sysctl.d/99-kubelet.conf
-      permissions: "0744"
-    - content: |
-        fs.inotify.max_user_instances = 1280
-        fs.inotify.max_user_watches   = 655360
-      owner: root:root
-      path: /etc/sysctl.d/99-local.conf
-      permissions: '0744'
-    - content: |
-        nameserver 1.1.1.1
-        nameserver 1.0.0.1
-        nameserver 2606:4700:4700::1111
-      owner: root:root
-      path: /etc/kubernetes/resolv.conf
-      permissions: "0744"
-    - content: |
-        [Unit]
-        Description=containerd container runtime
-        Documentation=https://containerd.io
-        After=network.target local-fs.target dbus.service
+      - content: |
+          apiVersion: apiserver.config.k8s.io/v1
+          kind: EncryptionConfiguration
+          resources:
+            - resources:
+              - secrets
+              providers:
+              - aescbc:
+                  keys:
+                  - name: key1
+                    secret: 8d7iAcg3/NwN9aijhtEXj5kL2NOHIgokGFjbIBfL6X0=
+              - identity: {}
+        owner: root:root
+        path: /etc/kubernetes/encryption-provider.yaml
+        permissions: "0600"
+      - content: |
+          net.ipv4.conf.lxc*.rp_filter = 0
+        owner: root:root
+        path: /etc/sysctl.d/99-cilium.conf
+        permissions: "0744"
+      - content: |
+          overlay
+          br_netfilter
+        owner: root:root
+        path: /etc/modules-load.d/crio.conf
+        permissions: "0744"
+      - content: |
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward                 = 1
+        owner: root:root
+        path: /etc/sysctl.d/99-kubernetes-cri.conf
+        permissions: "0744"
+      - content: |
+          vm.overcommit_memory=1
+          kernel.panic=10
+          kernel.panic_on_oops=1
+        owner: root:root
+        path: /etc/sysctl.d/99-kubelet.conf
+        permissions: "0744"
+      - content: |
+          fs.inotify.max_user_instances = 1280
+          fs.inotify.max_user_watches   = 655360
+        owner: root:root
+        path: /etc/sysctl.d/99-local.conf
+        permissions: '0744'
+      - content: |
+          nameserver 1.1.1.1
+          nameserver 1.0.0.1
+          nameserver 2606:4700:4700::1111
+        owner: root:root
+        path: /etc/kubernetes/resolv.conf
+        permissions: "0744"
+      - content: |
+          [Unit]
+          Description=containerd container runtime
+          Documentation=https://containerd.io
+          After=network.target local-fs.target dbus.service
 
-        [Service]
-        ExecStartPre=-/sbin/modprobe overlay
-        ExecStart=/usr/local/bin/containerd
+          [Service]
+          ExecStartPre=-/sbin/modprobe overlay
+          ExecStart=/usr/local/bin/containerd
 
-        Type=notify
-        Delegate=yes
-        KillMode=process
-        Restart=always
-        RestartSec=5
+          Type=notify
+          Delegate=yes
+          KillMode=process
+          Restart=always
+          RestartSec=5
 
-        # Having non-zero Limit*s causes performance problems due to accounting overhead
-        # in the kernel. We recommend using cgroups to do container-local accounting.
-        LimitNPROC=infinity
-        LimitCORE=infinity
+          # Having non-zero Limit*s causes performance problems due to accounting overhead
+          # in the kernel. We recommend using cgroups to do container-local accounting.
+          LimitNPROC=infinity
+          LimitCORE=infinity
 
-        # Comment TasksMax if your systemd version does not supports it.
-        # Only systemd 226 and above support this version.
-        TasksMax=infinity
-        OOMScoreAdjust=-999
+          # Comment TasksMax if your systemd version does not supports it.
+          # Only systemd 226 and above support this version.
+          TasksMax=infinity
+          OOMScoreAdjust=-999
 
-        [Install]
-        WantedBy=multi-user.target
-      owner: root:root
-      path: /etc/systemd/system/containerd.service
-      permissions: "0744"
-    - content: |
-        {
-          "cniVersion": "0.4.0",
-          "name": "containerd-net",
-          "plugins": [
-            {
-              "type": "bridge",
-              "bridge": "cni0",
-              "isGateway": true,
-              "ipMasq": true,
-              "ipam": {
-                "type": "host-local",
-                "subnet": "10.88.0.0/16",
-                "routes": [{"dst": "0.0.0.0/0"}]
+          [Install]
+          WantedBy=multi-user.target
+        owner: root:root
+        path: /etc/systemd/system/containerd.service
+        permissions: "0744"
+      - content: |
+          {
+            "cniVersion": "0.4.0",
+            "name": "containerd-net",
+            "plugins": [
+              {
+                "type": "bridge",
+                "bridge": "cni0",
+                "isGateway": true,
+                "ipMasq": true,
+                "ipam": {
+                  "type": "host-local",
+                  "subnet": "10.88.0.0/16",
+                  "routes": [{"dst": "0.0.0.0/0"}]
+                }
+              },
+              {
+                "type": "portmap",
+                "capabilities": {"portMappings": true},
+                "snat": true
               }
-            },
-            {
-              "type": "portmap",
-              "capabilities": {"portMappings": true},
-              "snat": true
-            }
-          ]
-        }
-      owner: root:root
-      path: /etc/cni/net.d/10-containerd-net.conflist
-      permissions: "0744"
+            ]
+          }
+        owner: root:root
+        path: /etc/cni/net.d/10-containerd-net.conflist
+        permissions: "0744"
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
