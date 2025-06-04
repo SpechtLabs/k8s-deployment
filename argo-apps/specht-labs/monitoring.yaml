@@ -29,3 +29,9 @@ spec:
       group: admissionregistration.k8s.io
       jsonPointers:
         - /webhooks/0/failurePolicy
+    - kind: ServiceMonitor
+      group: monitoring.coreos.com
+      namespace: monitoring
+      name: prom-stack-kubelet
+      jsonPointers:
+        - /spec/endpoints/1/trackTimestampsStaleness
