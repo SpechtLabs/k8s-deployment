@@ -6,5 +6,4 @@ metadata:
     tailscale.com/tags: tag:core-infra
   name: idp-egress
 spec:
-  externalName: placeholder # any value - will be overwritten by operator
   type: ExternalName
