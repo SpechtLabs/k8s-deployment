@@ -6,6 +6,11 @@ metadata:
   namespace: default
   labels:
     cluster.x-k8s.io/cluster-name: "cedi-dev"
+  ownerReferences:
+    - apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: cedi-dev
+      uid: 47ca82dc-9831-47b9-bff7-7e7220ec0e20
 spec:
   template:
     spec:
@@ -24,12 +29,40 @@ metadata:
   namespace: default
   labels:
     cluster.x-k8s.io/cluster-name: "cedi-dev"
+  ownerReferences:
+    - apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: cedi-dev
+      uid: 47ca82dc-9831-47b9-bff7-7e7220ec0e20
 spec:
   template:
     spec:
       imageName: ubuntu-24.04
       placementGroupName: worker-nodes
       type: cx22
+      sshKeys:
+        - name: cedi@mae
+        - name: cedi@ivy
+        - name: cedi@devpi
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HCloudMachineTemplate
+metadata:
+  name: worker-x86-tiny-ubuntu-24-04
+  namespace: default
+  labels:
+    cluster.x-k8s.io/cluster-name: "cedi-dev"
+  ownerReferences:
+    - apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: cedi-dev
+      uid: 47ca82dc-9831-47b9-bff7-7e7220ec0e20
+spec:
+  template:
+    spec:
+      imageName: ubuntu-24.04
+      placementGroupName: worker-nodes
+      type: cpx11
       sshKeys:
         - name: cedi@mae
         - name: cedi@ivy

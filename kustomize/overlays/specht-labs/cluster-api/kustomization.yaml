@@ -28,7 +28,7 @@ patches:
     patch: |
       - op: replace
         path: "/spec/template/spec/version"
-        value: v1.30.13
+        value: v1.31.9
 
   - target:
       version: v1beta1
@@ -53,13 +53,12 @@ patches:
         path: "/spec/replicas"
         value: 2
 
-  # example for migrating just one deployment to a different machine template
-  # - target:
-  #     version: v1beta1
-  #     kind: MachineDeployment
-  #     namespace: default
-  #     name: worker-x86-nbg
-  #   patch: |
-  #     - op: replace
-  #       path: "/spec/template/spec/infrastructureRef/name"
-  #       value: worker-x86-small-ubuntu-24-04
+  - target:
+      version: v1beta1
+      kind: MachineDeployment
+      namespace: default
+      name: worker-x86-nbg
+    patch: |
+      - op: replace
+        path: "/spec/template/spec/infrastructureRef/name"
+        value: worker-x86-tiny-ubuntu-24-04
