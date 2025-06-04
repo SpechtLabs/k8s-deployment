@@ -11,7 +11,7 @@ patches:
       kind: KubeadmConfigTemplate
       namespace: default
       name: worker-template.*
-    path: kubeadm-config-template.patch.yaml
+    path: kubeadm-dataplane.patch.yaml
 
   - target:
       version: v1beta1
