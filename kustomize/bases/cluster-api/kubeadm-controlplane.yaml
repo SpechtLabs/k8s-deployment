@@ -144,6 +144,7 @@ spec:
       nodeRegistration:
         kubeletExtraArgs:
           # anonymous-auth: "false"
+          v: "6"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
           cloud-provider: external
@@ -158,6 +159,7 @@ spec:
       nodeRegistration:
         kubeletExtraArgs:
           # anonymous-auth: "false"
+          v: "6"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
           cloud-provider: external
@@ -173,7 +175,7 @@ spec:
       - export CONTAINERD=1.7.26
       - export KUBERNETES_VERSION="v1.33.1"
       - export RUNC=1.2.6
-      - export CNI_PLUGIN=1.4.1
+      - export CNI_PLUGIN=1.7.1
       - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
       - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
       - export ARCH="$(dpkg --print-architecture)"
