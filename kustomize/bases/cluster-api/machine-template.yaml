@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-arm-small
+    namespace: default
+    labels: &labels
+      cluster.x-k8s.io/cluster-name: &clusterName "cedi-dev"
+    ownerReferences: &owner_references
+          - apiVersion: cluster.x-k8s.io/v1beta1
+            kind: Cluster
+            name: *clusterName
+            uid: 47ca82dc-9831-47b9-bff7-7e7220ec0e20
+  spec:
+    template:
+      spec:
+        imageName: &ubunut_22_04 ubuntu-22.04
+        placementGroupName: &worker_placement_group worker-nodes
+        type: &arm_small cax21
+        sshKeys: &ssh_keys
+          - name: cedi@mae
+          - name: cedi@ivy
+          - name: cedi@devpi
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-arm-medium
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_22_04
+        placementGroupName: *worker_placement_group
+        type: &arm_medium cax31
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-arm-small-ubuntu-24-04
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: &ubunut_24_04 ubuntu-24.04
+        placementGroupName: *worker_placement_group
+        type: *arm_small
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-arm-medium-ubuntu-24-04
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_24_04
+        placementGroupName: *worker_placement_group
+        type: *arm_medium
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-x86-small
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_22_04
+        placementGroupName: *worker_placement_group
+        type: &x86_medium cx22
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-x86-small-ubuntu-24-04
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_24_04
+        placementGroupName: *worker_placement_group
+        type: *x86_medium
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: worker-x86-tiny-ubuntu-24-04
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_24_04
+        placementGroupName: *worker_placement_group
+        type: &x86_tiny cpx11
+        sshKeys: *ssh_keys
+
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: control-plane-arm
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_22_04
+        placementGroupName: &controlplane_placement_group control-plane
+        type: &arm_tiny cax11
+        sshKeys: *ssh_keys
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudMachineTemplate
+  metadata:
+    name: control-plane-arm-ubuntu-24-04
+    namespace: default
+    labels: *labels
+    ownerReferences: *owner_references
+  spec:
+    template:
+      spec:
+        imageName: *ubunut_24_04
+        placementGroupName: *controlplane_placement_group
+        type: *arm_tiny
+        sshKeys: *ssh_keys

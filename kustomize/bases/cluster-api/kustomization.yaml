@@ -5,8 +5,6 @@ resources:
   - cluster.yaml
   - config-template.yaml
   - controlplane-template.yaml
-  - machine-deployment-arm.yaml
-  - machine-deployment-x86.yaml
+  - machine-deployment.yaml
   - machine-healthchecks.yaml
-  - machine-template-arm.yaml
-  - machine-template-controlplane.yaml
+  - machine-template.yaml

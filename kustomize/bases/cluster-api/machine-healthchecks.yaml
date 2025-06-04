@@ -1,99 +1,70 @@
-apiVersion: cluster.x-k8s.io/v1beta1
-kind: MachineHealthCheck
-metadata:
-  name: control-plane-unhealthy-5m
-  namespace: default
-spec:
-  clusterName: cedi-dev
-  maxUnhealthy: 100%
-  nodeStartupTimeout: 20m0s
-  remediationTemplate:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-    kind: HCloudRemediationTemplate
-    name: control-plane-remediation-request
-  selector:
-    matchLabels:
-      cluster.x-k8s.io/control-plane: ""
-  unhealthyConditions:
-    - status: Unknown
-      timeout: 5m0s
-      type: Ready
-    - status: "False"
-      timeout: 5m0s
-      type: Ready
+apiVersion: v1
+kind: List
+items:
 
----
-apiVersion: cluster.x-k8s.io/v1beta1
-kind: MachineHealthCheck
-metadata:
-  name: worker-arm-unhealthy-5m
-  namespace: default
-spec:
-  clusterName: cedi-dev
-  maxUnhealthy: 100%
-  nodeStartupTimeout: 20m0s
-  remediationTemplate:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-    kind: HCloudRemediationTemplate
-    name: worker-remediation-request
-  selector:
-    matchLabels:
-      nodepool: worker-arm
-  unhealthyConditions:
-    - status: Unknown
-      timeout: 5m0s
-      type: Ready
-    - status: "False"
-      timeout: 5m0s
-      type: Ready
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineHealthCheck
+  metadata:
+    name: control-plane-unhealthy-5m
+    namespace: default
+  spec:
+    clusterName: &clusterName cedi-dev
+    maxUnhealthy: &maxUnhelathy 100%
+    nodeStartupTimeout: &nodeStartupTimeout 20m0s
+    remediationTemplate: &remediationTemplate
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: HCloudRemediationTemplate
+      name: remediation-request
+    selector:
+      matchLabels:
+        cluster.x-k8s.io/control-plane: ""
+    unhealthyConditions: &unhealthy_conditions
+      - status: Unknown
+        timeout: 5m0s
+        type: Ready
+      - status: "False"
+        timeout: 5m0s
+        type: Ready
 
----
-apiVersion: cluster.x-k8s.io/v1beta1
-kind: MachineHealthCheck
-metadata:
-  name: worker-x86-unhealthy-5m
-  namespace: default
-spec:
-  clusterName: cedi-dev
-  maxUnhealthy: 100%
-  nodeStartupTimeout: 20m0s
-  remediationTemplate:
-    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-    kind: HCloudRemediationTemplate
-    name: worker-remediation-request
-  selector:
-    matchLabels:
-      nodepool: worker-x86
-  unhealthyConditions:
-    - status: Unknown
-      timeout: 5m0s
-      type: Ready
-    - status: "False"
-      timeout: 5m0s
-      type: Ready
----
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-kind: HCloudRemediationTemplate
-metadata:
-  name: control-plane-remediation-request
-  namespace: default
-spec:
-  template:
-    spec:
-      strategy:
-        retryLimit: 1
-        timeout: 3m0s
-        type: Reboot
----
-apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-kind: HCloudRemediationTemplate
-metadata:
-  name: worker-remediation-request
-  namespace: default
-spec:
-  template:
-    spec:
-      strategy:
-        retryLimit: 1
-        timeout: 3m0s
-        type: Reboot
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineHealthCheck
+  metadata:
+    name: worker-arm-unhealthy-5m
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    maxUnhealthy: *maxUnhelathy
+    nodeStartupTimeout: *nodeStartupTimeout
+    remediationTemplate: *remediationTemplate
+    selector:
+      matchLabels:
+        nodepool: worker-arm
+    unhealthyConditions: *unhealthy_conditions
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineHealthCheck
+  metadata:
+    name: worker-x86-unhealthy-5m
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    maxUnhealthy: *maxUnhelathy
+    nodeStartupTimeout: *nodeStartupTimeout
+    remediationTemplate: *remediationTemplate
+    selector:
+      matchLabels:
+        nodepool: worker-x86
+    unhealthyConditions: *unhealthy_conditions
+
+- apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+  kind: HCloudRemediationTemplate
+  metadata:
+    name: remediation-request
+    namespace: default
+  spec:
+    template:
+      spec:
+        strategy:
+          retryLimit: 1
+          timeout: 3m0s
+          type: Reboot

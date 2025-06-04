@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: &annotations
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "1"
+    labels: &labels
+      nodepool: worker-arm
+    name: worker-arm-fsn
+    namespace: default
+  spec:
+    clusterName: &clusterName cedi-dev
+    replicas: &replicas 1
+    strategy: &strategy
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: &bootstrap
+          configRef:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            name: worker-template
+        clusterName: *clusterName
+        failureDomain: fsn1
+        infrastructureRef: &infrastructureRef
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: HCloudMachineTemplate
+          name: worker-arm-medium-ubuntu-24-04
+        version: &version v1.33.1
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: *annotations
+    labels: *labels
+    name: worker-arm-hel
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    replicas: *replicas
+    strategy: *strategy
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: *bootstrap
+        clusterName: *clusterName
+        failureDomain: hel1
+        infrastructureRef: *infrastructureRef
+        version: *version
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: *annotations
+    labels: *labels
+    name: worker-arm-nbg
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    replicas: *replicas
+    strategy: *strategy
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: *bootstrap
+        clusterName: *clusterName
+        failureDomain: nbg1
+        infrastructureRef: *infrastructureRef
+        version: *version
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: *annotations
+    labels: &labels_x86
+      nodepool: worker-x86
+    name: worker-x86-nbg
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    replicas: *replicas
+    strategy: *strategy
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels_x86
+      spec:
+        bootstrap:
+          configRef:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            name: worker-template-x86-taints
+        clusterName: *clusterName
+        failureDomain: nbg1
+        infrastructureRef:
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: HCloudMachineTemplate
+          name: worker-x86-small-ubuntu-24-04
+        version: v1.33.1
