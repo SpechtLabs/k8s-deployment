@@ -97,6 +97,12 @@ spec:
       path: /etc/sysctl.d/99-kubelet.conf
       permissions: "0744"
     - content: |
+        fs.inotify.max_user_instances = 1280
+        fs.inotify.max_user_watches   = 655360
+      owner: root:root
+      path: /etc/sysctl.d/99-local.conf
+      permissions: '0744'
+    - content: |
         nameserver 1.1.1.1
         nameserver 1.0.0.1
         nameserver 2606:4700:4700::1111
@@ -104,22 +110,6 @@ spec:
       path: /etc/kubernetes/resolv.conf
       permissions: "0744"
     - content: |
-        # Copyright The containerd Authors.
-        #
-        # Licensed under the Apache License, Version 2.0 (the "License");
-        # you may not use this file except in compliance with the License.
-        # You may obtain a copy of the License at
-        #
-        #     http://www.apache.org/licenses/LICENSE-2.0
-        #
-        # Unless required by applicable law or agreed to in writing, software
-        # distributed under the License is distributed on an "AS IS" BASIS,
-        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        # See the License for the specific language governing permissions and
-        # limitations under the License.
-        #
-        # https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
-
         [Unit]
         Description=containerd container runtime
         Documentation=https://containerd.io
@@ -153,7 +143,6 @@ spec:
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          container-runtime-endpoint: "unix:///run/containerd/containerd.sock"
           anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
@@ -168,7 +157,6 @@ spec:
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          container-runtime-endpoint: "unix:///run/containerd/containerd.sock"
           anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
