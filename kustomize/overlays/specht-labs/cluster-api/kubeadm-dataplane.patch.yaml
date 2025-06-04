@@ -8,4 +8,4 @@
 
 - op: replace
   path: "/spec/template/spec/preKubeadmCommands/3"
-  value: export RUNC=1.2.5
+  value: export RUNC=1.1.14

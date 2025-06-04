@@ -63,27 +63,23 @@ spec:
         - set -x
         - export CONTAINERD=1.7.13
         - export KUBERNETES_VERSION="v1.29.1"
-        - export RUNC=1.2.5
         - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
         - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
         - export ARCH="$(dpkg --print-architecture)"
         - localectl set-locale LANG=en_US.UTF-8
         - localectl set-locale LANGUAGE=en_US.UTF-8
         - apt-get update -y
-        - apt-get -y install at jq unzip wget socat mtr logrotate apt-transport-https bat gpg
+        - apt-get -y install at jq unzip wget socat mtr logrotate apt-transport-httpsq bat gpg
         - sed -i '/swap/d' /etc/fstab
         - swapoff -a
         - modprobe overlay && modprobe br_netfilter && sysctl --system
-        - wget https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.$ARCH
-        - wget https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.sha256sum
-        - sha256sum --check --ignore-missing runc.sha256sum
-        - install runc.$ARCH /usr/local/sbin/runc
-        - rm -f runc.$ARCH runc.sha256sum
-        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/containerd-$CONTAINERD-linux-$ARCH.tar.gz
-        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
-        - sha256sum --check containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
-        - tar -zxf containerd-$CONTAINERD-linux-$ARCH.tar.gz -C /usr/local
-        - rm -f containerd-$CONTAINERD-linux-$ARCH.tar.gz containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz
+        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - sha256sum --check cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - tar --no-overwrite-dir -C / -xzf cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz
+        - rm -f cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - rm -f /etc/cni/net.d/10-containerd-net.conflist
+        - chmod -R 644 /etc/cni && chown -R root:root /etc/cni
         - mkdir -p /etc/containerd
         - containerd config default > /etc/containerd/config.toml
         - sed -i  "s/SystemdCgroup = false/SystemdCgroup = true/" /etc/containerd/config.toml

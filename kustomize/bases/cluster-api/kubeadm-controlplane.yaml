@@ -163,7 +163,7 @@ spec:
       - export KUBERNETES_VERSION="v1.29.1"
       - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
       - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
-      - export ARCH="$(if [ "$(uname -m)" = "x86_64" ]; then echo "amd64"; elif [ "$(uname -m)" = "aarch64" ]; then echo "arm64"; else echo "unknown"; fi)"
+      - export ARCH="$(dpkg --print-architecture)"
       - localectl set-locale LANG=en_US.UTF-8
       - localectl set-locale LANGUAGE=en_US.UTF-8
       - apt-get update -y
@@ -191,7 +191,7 @@ spec:
       - systemctl enable kubelet
       - kubeadm config images pull --kubernetes-version $KUBERNETES_VERSION_CLEAN
       - echo 'source <(kubectl completion bash)' >>~/.bashrc
-      - echo 'export KUBECONFIG=/etc/kubernetes/super-admin.conf' >>~/.bashrc
+      - echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>~/.bashrc
       - apt-get -y autoremove && apt-get -y clean all
   machineTemplate:
     infrastructureRef:
