@@ -19,7 +19,8 @@ spec:
     syncOptions:
       - CreateNamespace=true
   ignoreDifferences:
-    - kind: Service
-      group: v1
+    - group: v1
+      kind: Service
+      namespace: tailscale
       jsonPointers:
         - /spec/externalName
