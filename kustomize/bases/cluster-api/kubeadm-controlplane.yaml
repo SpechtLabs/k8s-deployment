@@ -143,7 +143,7 @@ spec:
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          anonymous-auth: "false"
+          # anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
           cloud-provider: external
@@ -157,7 +157,7 @@ spec:
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
-          anonymous-auth: "false"
+          # anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
           cloud-provider: external
