@@ -5,7 +5,3 @@
 - op: replace
   path: "/spec/template/spec/preKubeadmCommands/2"
   value: export KUBERNETES_VERSION="v1.31.9"
-
-- op: replace
-  path: "/spec/template/spec/preKubeadmCommands/3"
-  value: export RUNC=1.1.14

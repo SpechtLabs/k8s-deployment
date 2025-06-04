@@ -7,9 +7,5 @@
   value: export KUBERNETES_VERSION="v1.31.9"
 
 - op: replace
-  path: "/spec/kubeadmConfigSpec/preKubeadmCommands/3"
-  value: export RUNC=1.1.14
-
-- op: replace
   path: "/spec/version"
   value: v1.31.9
