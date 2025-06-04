@@ -160,7 +160,7 @@ spec:
     preKubeadmCommands:
       - set -x
       - export CONTAINERD=1.7.13
-      - export KUBERNETES_VERSION="v1.29.1"
+      - export KUBERNETES_VERSION="v1.33.1"
       - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
       - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
       - export ARCH="$(dpkg --print-architecture)"
@@ -203,4 +203,4 @@ spec:
     type: "RollingUpdate"
     rollingUpdate:
       maxSurge: 1
-  version: v1.29.1
+  version: v1.33.1

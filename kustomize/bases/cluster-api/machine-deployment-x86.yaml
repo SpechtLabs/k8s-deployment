@@ -35,4 +35,4 @@ spec:
         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
         kind: HCloudMachineTemplate
         name: worker-x86-small-ubuntu-24-04
-      version: v1.29.1
+      version: v1.33.1

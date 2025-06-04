@@ -28,7 +28,7 @@ patches:
     patch: |
       - op: replace
         path: "/spec/template/spec/version"
-        value: v1.31.9
+        value: v1.32.5
 
   - target:
       version: v1beta1
