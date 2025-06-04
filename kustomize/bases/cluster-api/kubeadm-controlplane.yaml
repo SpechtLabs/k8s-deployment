@@ -15,7 +15,6 @@ spec:
           default-unreachable-toleration-seconds: "45"
           enable-aggregator-routing: "true"
           enable-bootstrap-token-auth: "true"
-          encryption-provider-config: /etc/kubernetes/encryption-provider.yaml
           etcd-cafile: /etc/kubernetes/pki/etcd/ca.crt
           etcd-certfile: /etc/kubernetes/pki/etcd/server.crt
           etcd-keyfile: /etc/kubernetes/pki/etcd/server.key
@@ -35,10 +34,6 @@ spec:
           tls-cert-file: /etc/kubernetes/pki/apiserver.crt
           tls-cipher-suites: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
           tls-private-key-file: /etc/kubernetes/pki/apiserver.key
-        extraVolumes:
-          - hostPath: /etc/kubernetes/encryption-provider.yaml
-            mountPath: /etc/kubernetes/encryption-provider.yaml
-            name: encryption-provider
       controllerManager:
         extraArgs:
           allocate-node-cidrs: "true"
@@ -76,85 +71,85 @@ spec:
           profiling: "false"
           secure-port: "10259"
     files:
-      - content: |
-          net.ipv4.conf.lxc*.rp_filter = 0
-        owner: root:root
-        path: /etc/sysctl.d/99-cilium.conf
-        permissions: "0744"
-      - content: |
-          overlay
-          br_netfilter
-        owner: root:root
-        path: /etc/modules-load.d/crio.conf
-        permissions: "0744"
-      - content: |
-          net.bridge.bridge-nf-call-iptables  = 1
-          net.bridge.bridge-nf-call-ip6tables = 1
-          net.ipv4.ip_forward                 = 1
-        owner: root:root
-        path: /etc/sysctl.d/99-kubernetes-cri.conf
-        permissions: "0744"
-      - content: |
-          vm.overcommit_memory=1
-          kernel.panic=10
-          kernel.panic_on_oops=1
-        owner: root:root
-        path: /etc/sysctl.d/99-kubelet.conf
-        permissions: "0744"
-      - content: |
-          nameserver 1.1.1.1
-          nameserver 1.0.0.1
-          nameserver 2606:4700:4700::1111
-        owner: root:root
-        path: /etc/kubernetes/resolv.conf
-        permissions: "0744"
-      - content: |
-          # Copyright The containerd Authors.
-          #
-          # Licensed under the Apache License, Version 2.0 (the "License");
-          # you may not use this file except in compliance with the License.
-          # You may obtain a copy of the License at
-          #
-          #     http://www.apache.org/licenses/LICENSE-2.0
-          #
-          # Unless required by applicable law or agreed to in writing, software
-          # distributed under the License is distributed on an "AS IS" BASIS,
-          # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-          # See the License for the specific language governing permissions and
-          # limitations under the License.
-          #
-          # https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+    - content: |
+        net.ipv4.conf.lxc*.rp_filter = 0
+      owner: root:root
+      path: /etc/sysctl.d/99-cilium.conf
+      permissions: "0744"
+    - content: |
+        overlay
+        br_netfilter
+      owner: root:root
+      path: /etc/modules-load.d/crio.conf
+      permissions: "0744"
+    - content: |
+        net.bridge.bridge-nf-call-iptables  = 1
+        net.bridge.bridge-nf-call-ip6tables = 1
+        net.ipv4.ip_forward                 = 1
+      owner: root:root
+      path: /etc/sysctl.d/99-kubernetes-cri.conf
+      permissions: "0744"
+    - content: |
+        vm.overcommit_memory=1
+        kernel.panic=10
+        kernel.panic_on_oops=1
+      owner: root:root
+      path: /etc/sysctl.d/99-kubelet.conf
+      permissions: "0744"
+    - content: |
+        nameserver 1.1.1.1
+        nameserver 1.0.0.1
+        nameserver 2606:4700:4700::1111
+      owner: root:root
+      path: /etc/kubernetes/resolv.conf
+      permissions: "0744"
+    - content: |
+        # Copyright The containerd Authors.
+        #
+        # Licensed under the Apache License, Version 2.0 (the "License");
+        # you may not use this file except in compliance with the License.
+        # You may obtain a copy of the License at
+        #
+        #     http://www.apache.org/licenses/LICENSE-2.0
+        #
+        # Unless required by applicable law or agreed to in writing, software
+        # distributed under the License is distributed on an "AS IS" BASIS,
+        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        # See the License for the specific language governing permissions and
+        # limitations under the License.
+        #
+        # https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
 
-          [Unit]
-          Description=containerd container runtime
-          Documentation=https://containerd.io
-          After=network.target local-fs.target dbus.service
+        [Unit]
+        Description=containerd container runtime
+        Documentation=https://containerd.io
+        After=network.target local-fs.target dbus.service
 
-          [Service]
-          ExecStartPre=-/sbin/modprobe overlay
-          ExecStart=/usr/local/bin/containerd
+        [Service]
+        ExecStartPre=-/sbin/modprobe overlay
+        ExecStart=/usr/local/bin/containerd
 
-          Type=notify
-          Delegate=yes
-          KillMode=process
-          Restart=always
-          RestartSec=5
+        Type=notify
+        Delegate=yes
+        KillMode=process
+        Restart=always
+        RestartSec=5
 
-          # Having non-zero Limit*s causes performance problems due to accounting overhead
-          # in the kernel. We recommend using cgroups to do container-local accounting.
-          LimitNPROC=infinity
-          LimitCORE=infinity
+        # Having non-zero Limit*s causes performance problems due to accounting overhead
+        # in the kernel. We recommend using cgroups to do container-local accounting.
+        LimitNPROC=infinity
+        LimitCORE=infinity
 
-          # Comment TasksMax if your systemd version does not supports it.
-          # Only systemd 226 and above support this version.
-          TasksMax=infinity
-          OOMScoreAdjust=-999
+        # Comment TasksMax if your systemd version does not supports it.
+        # Only systemd 226 and above support this version.
+        TasksMax=infinity
+        OOMScoreAdjust=-999
 
-          [Install]
-          WantedBy=multi-user.target
-        owner: root:root
-        path: /etc/systemd/system/containerd.service
-        permissions: "0744"
+        [Install]
+        WantedBy=multi-user.target
+      owner: root:root
+      path: /etc/systemd/system/containerd.service
+      permissions: "0744"
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
@@ -220,8 +215,8 @@ spec:
       - apt-mark hold kubelet kubectl kubeadm
       - systemctl enable kubelet
       - kubeadm config images pull --kubernetes-version $KUBERNETES_VERSION_CLEAN
-      - echo 'source <(kubectl completion bash)' >>~/.bashrc
-      - echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>~/.bashrc
+      - echo 'source <(kubectl completion bash)' >>/root/.bashrc
+      - echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>/root/.bashrc
       - apt-get -y autoremove && apt-get -y clean all
   machineTemplate:
     infrastructureRef:
