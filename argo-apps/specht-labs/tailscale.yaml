@@ -22,5 +22,6 @@ spec:
     - group: v1
       kind: Service
       namespace: tailscale
+      name: idp-egress
       jsonPointers:
         - /spec/externalName
