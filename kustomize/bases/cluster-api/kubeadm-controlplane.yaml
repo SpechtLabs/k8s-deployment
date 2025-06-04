@@ -153,6 +153,7 @@ spec:
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
+          container-runtime-endpoint: "unix:///run/containerd/containerd.sock"
           anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
@@ -167,6 +168,7 @@ spec:
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
+          container-runtime-endpoint: "unix:///run/containerd/containerd.sock"
           anonymous-auth: "false"
           authentication-token-webhook: "true"
           authorization-mode: Webhook
