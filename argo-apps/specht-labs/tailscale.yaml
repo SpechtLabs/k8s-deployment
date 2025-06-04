@@ -19,8 +19,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
   ignoreDifferences:
-    - group: v1
-      kind: Service
+    - kind: Service
       namespace: tailscale
       name: idp-egress
       jsonPointers:
