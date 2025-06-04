@@ -89,4 +89,6 @@ tags
 dist/
 
 charts/*/charts/
+kustomize/**/charts/
 kustomize/*/*/charts/
+kustomize/*/*/*/charts/
