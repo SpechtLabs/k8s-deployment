@@ -3,12 +3,10 @@ kind: Kustomization
 
 resources:
   - cluster.yaml
-  - kubeadm-config-template.yaml
-  - kubeadm-controlplane.yaml
+  - config-template.yaml
+  - controlplane-template.yaml
   - machine-deployment-arm.yaml
   - machine-deployment-x86.yaml
   - machine-healthchecks.yaml
   - machine-template-arm.yaml
-  - machine-template-x86.yaml
   - machine-template-controlplane.yaml
-  - kubeadm-config-template-x86-taints.yaml
