@@ -45,15 +45,70 @@ spec:
           owner: root:root
           path: /etc/kubernetes/resolv.conf
           permissions: "0744"
+        - content: |
+            [Unit]
+            Description=containerd container runtime
+            Documentation=https://containerd.io
+            After=network.target local-fs.target dbus.service
+
+            [Service]
+            ExecStartPre=-/sbin/modprobe overlay
+            ExecStart=/usr/local/bin/containerd
+
+            Type=notify
+            Delegate=yes
+            KillMode=process
+            Restart=always
+            RestartSec=5
+
+            # Having non-zero Limit*s causes performance problems due to accounting overhead
+            # in the kernel. We recommend using cgroups to do container-local accounting.
+            LimitNPROC=infinity
+            LimitCORE=infinity
+
+            # Comment TasksMax if your systemd version does not supports it.
+            # Only systemd 226 and above support this version.
+            TasksMax=infinity
+            OOMScoreAdjust=-999
+
+            [Install]
+            WantedBy=multi-user.target
+          owner: root:root
+          path: /etc/systemd/system/containerd.service
+          permissions: "0744"
+        - content: |
+            {
+              "cniVersion": "0.4.0",
+              "name": "containerd-net",
+              "plugins": [
+                {
+                  "type": "bridge",
+                  "bridge": "cni0",
+                  "isGateway": true,
+                  "ipMasq": true,
+                  "ipam": {
+                    "type": "host-local",
+                    "subnet": "10.88.0.0/16",
+                    "routes": [{"dst": "0.0.0.0/0"}]
+                  }
+                },
+                {
+                  "type": "portmap",
+                  "capabilities": {"portMappings": true},
+                  "snat": true
+                }
+              ]
+            }
+          owner: root:root
+          path: /etc/cni/net.d/10-containerd-net.conflist
+          permissions: "0744"
       joinConfiguration:
         nodeRegistration:
           kubeletExtraArgs:
-            anonymous-auth: "false"
             authentication-token-webhook: "true"
             authorization-mode: Webhook
             cloud-provider: external
             event-qps: "5"
-            kubeconfig: /etc/kubernetes/kubelet.conf
             max-pods: "220"
             read-only-port: "0"
             resolv-conf: /etc/kubernetes/resolv.conf
@@ -61,8 +116,10 @@ spec:
             tls-cipher-suites: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256
       preKubeadmCommands:
         - set -x
-        - export CONTAINERD=1.7.13
+        - export CONTAINERD=2.1.1
         - export KUBERNETES_VERSION="v1.33.1"
+        - export RUNC=1.3.0
+        - export CNI_PLUGIN=1.7.1
         - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
         - export KUBERNETES_VERSION_CLEAN=$(echo $KUBERNETES_VERSION | sed 's/^v//')
         - export ARCH="$(dpkg --print-architecture)"
@@ -73,17 +130,26 @@ spec:
         - sed -i '/swap/d' /etc/fstab
         - swapoff -a
         - modprobe overlay && modprobe br_netfilter && sysctl --system
-        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz
-        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
-        - sha256sum --check cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
-        - tar --no-overwrite-dir -C / -xzf cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz
-        - rm -f cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz cri-containerd-cni-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
-        - rm -f /etc/cni/net.d/10-containerd-net.conflist
-        - chmod -R 644 /etc/cni && chown -R root:root /etc/cni
+        - wget https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.$ARCH
+        - wget https://github.com/opencontainers/runc/releases/download/v$RUNC/runc.sha256sum
+        - sha256sum --check --ignore-missing runc.sha256sum
+        - install runc.$ARCH /usr/local/sbin/runc
+        - rm -f runc.$ARCH runc.sha256sum
+        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/containerd-$CONTAINERD-linux-$ARCH.tar.gz
+        - wget https://github.com/containerd/containerd/releases/download/v$CONTAINERD/containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - sha256sum --check containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
+        - tar -zxf containerd-$CONTAINERD-linux-$ARCH.tar.gz -C /usr/local
+        - rm -f containerd-$CONTAINERD-linux-$ARCH.tar.gz containerd-$CONTAINERD-linux-$ARCH.tar.gz.sha256sum
         - mkdir -p /etc/containerd
         - containerd config default > /etc/containerd/config.toml
         - sed -i  "s/SystemdCgroup = false/SystemdCgroup = true/" /etc/containerd/config.toml
         - systemctl daemon-reload && systemctl enable containerd && systemctl start containerd
+        - mkdir -p /opt/cni/bin
+        - wget https://github.com/containernetworking/plugins/releases/download/v$CNI_PLUGIN/cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
+        - wget https://github.com/containernetworking/plugins/releases/download/v$CNI_PLUGIN/cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz.sha256
+        - sha256sum --check cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz.sha256
+        - tar -C /opt/cni/bin -xzf cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
+        - rm cni-plugins-linux-$ARCH-v$CNI_PLUGIN.tgz
         - mkdir -p /etc/apt/keyrings/
         - curl -fsSL https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION_MAJOR/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
         - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/$KUBERNETES_VERSION_MAJOR/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
@@ -91,7 +157,7 @@ spec:
         - apt-get install -y kubelet=$KUBERNETES_VERSION_CLEAN-1.1 kubeadm=$KUBERNETES_VERSION_CLEAN-1.1 kubectl=$KUBERNETES_VERSION_CLEAN-1.1 bash-completion
         - apt-mark hold kubelet kubectl kubeadm
         - systemctl enable kubelet
-        - kubeadm config images pull --kubernetes-version $KUBERNETES_VERSION
-        - echo 'source <(kubectl completion bash)' >>~/.bashrc
-        - echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>~/.bashrc
+        - kubeadm config images pull --kubernetes-version $KUBERNETES_VERSION_CLEAN
+        - echo 'source <(kubectl completion bash)' >>/root/.bashrc
+        - echo 'export KUBECONFIG=/etc/kubernetes/admin.conf' >>/root/.bashrc
         - apt-get -y autoremove && apt-get -y clean all
