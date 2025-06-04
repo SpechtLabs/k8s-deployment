@@ -26,7 +26,6 @@ metadata:
   namespace: default
 spec:
   controlPlaneEndpoint:
-    host: ""
     port: 443
   controlPlaneLoadBalancer:
     enabled: true
