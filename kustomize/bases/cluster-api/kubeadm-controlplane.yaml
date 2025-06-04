@@ -140,6 +140,32 @@ spec:
       owner: root:root
       path: /etc/systemd/system/containerd.service
       permissions: "0744"
+    - content: |
+        {
+          "cniVersion": "0.4.0",
+          "name": "containerd-net",
+          "plugins": [
+            {
+              "type": "bridge",
+              "bridge": "cni0",
+              "isGateway": true,
+              "ipMasq": true,
+              "ipam": {
+                "type": "host-local",
+                "subnet": "10.88.0.0/16",
+                "routes": [{"dst": "0.0.0.0/0"}]
+              }
+            },
+            {
+              "type": "portmap",
+              "capabilities": {"portMappings": true},
+              "snat": true
+            }
+          ]
+        }
+      owner: root:root
+      path: /etc/cni/net.d/10-containerd-net.conflist
+      permissions: "0744"
     initConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
@@ -173,7 +199,7 @@ spec:
     preKubeadmCommands:
       - set -x
       - export CONTAINERD=1.7.26
-      - export KUBERNETES_VERSION="v1.33.1"
+      - export KUBERNETES_VERSION="v1.32.5"
       - export RUNC=1.2.6
       - export CNI_PLUGIN=1.7.1
       - export KUBERNETES_VERSION_MAJOR="${KUBERNETES_VERSION%.*}"
@@ -227,4 +253,4 @@ spec:
     type: "RollingUpdate"
     rollingUpdate:
       maxSurge: 1
-  version: v1.33.1
+  version: v1.32.5
