@@ -7,3 +7,4 @@ metadata:
   name: idp-egress
 spec:
   type: ExternalName
+  externalName: ts-idp-egress-22tkl.tailscale.svc.cluster.local
