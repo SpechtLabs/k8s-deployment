@@ -5,6 +5,10 @@ metadata:
   namespace: default
   labels:
     cluster.x-k8s.io/cluster-name: "cedi-dev"
+  ownerReferences:
+    - apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: cedi-dev
 spec:
   template:
     spec:
@@ -24,6 +28,10 @@ metadata:
   namespace: default
   labels:
     cluster.x-k8s.io/cluster-name: "cedi-dev"
+  ownerReferences:
+    - apiVersion: cluster.x-k8s.io/v1beta1
+      kind: Cluster
+      name: cedi-dev
 spec:
   template:
     spec:

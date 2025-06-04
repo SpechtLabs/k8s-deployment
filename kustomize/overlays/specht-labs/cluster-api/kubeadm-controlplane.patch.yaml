@@ -1,6 +1,6 @@
 - op: replace
   path: "/spec/kubeadmConfigSpec/preKubeadmCommands/1"
-  value: export CONTAINERD=2.1.1
+  value: export CONTAINERD=1.7.23
 
 - op: replace
   path: "/spec/kubeadmConfigSpec/preKubeadmCommands/2"
