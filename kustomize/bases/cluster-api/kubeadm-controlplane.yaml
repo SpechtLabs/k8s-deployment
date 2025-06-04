@@ -149,7 +149,7 @@ spec:
           authorization-mode: Webhook
           cloud-provider: external
           event-qps: "5"
-          kubeconfig: /etc/kubernetes/kubelet.conf
+          # kubeconfig: /etc/kubernetes/kubelet.conf
           max-pods: "120"
           read-only-port: "0"
           resolv-conf: /etc/kubernetes/resolv.conf
@@ -164,7 +164,7 @@ spec:
           authorization-mode: Webhook
           cloud-provider: external
           event-qps: "5"
-          kubeconfig: /etc/kubernetes/kubelet.conf
+          # kubeconfig: /etc/kubernetes/kubelet.conf
           max-pods: "120"
           read-only-port: "0"
           resolv-conf: /etc/kubernetes/resolv.conf
