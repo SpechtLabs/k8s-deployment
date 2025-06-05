@@ -24,9 +24,6 @@ spec:
       batch:
 
     exporters:
-      logging:
-        loglevel: debug
-
       otlp:
         endpoint: tempo-distributor.observability.svc.cluster.local:4317
         tls:
