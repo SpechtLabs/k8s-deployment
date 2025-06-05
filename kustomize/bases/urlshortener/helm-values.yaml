@@ -15,6 +15,7 @@ urlshortener:
     targetMemoryUtilizationPercentage: 80
 
   image:
+    repository: ghcr.io/spechtlabs/urlshortener
     pullPolicy: Always
     tag: main
 
@@ -62,6 +63,7 @@ dashboard:
     targetMemoryUtilizationPercentage: 80
 
   image:
+    repository: ghcr.io/spechtlabs/urlshortener-ui
     pullPolicy: Always
     tag: main
 
