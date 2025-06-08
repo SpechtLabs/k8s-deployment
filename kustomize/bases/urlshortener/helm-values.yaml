@@ -14,6 +14,9 @@ urlshortener:
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
+  extraArgs:
+    - --debug
+
   image:
     repository: ghcr.io/spechtlabs/urlshortener
     pullPolicy: Always
