@@ -5,7 +5,7 @@ namespace: hcloud-exporter
 helmCharts:
   - name: hcloud-exporter
     repo: https://promhippie.github.io/charts
-    version: 3.1.0
+    version: 3.2.0
     releaseName: hcloud-exporter
     namespace: hcloud-exporter
     valuesFile: helm-values.yaml
