@@ -8,4 +8,5 @@ metadata:
 data:
   KARAKEEP_VERSION: release
   NEXTAUTH_URL: https://keep.specht-labs.de
-
+  INFERENCE_ENABLE_AUTO_TAGGING: "true"
+  INFERENCE_ENABLE_AUTO_SUMMARIZATION: "true"
