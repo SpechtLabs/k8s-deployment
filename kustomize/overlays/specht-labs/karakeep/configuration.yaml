@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: karakeep-configuration
+  namespace: karakeep
+  annotations:
+    kustomize.config.k8s.io/behavior: replace
+data:
+  KARAKEEP_VERSION: release
+  NEXTAUTH_URL: https://keep.specht-labs.de
+
