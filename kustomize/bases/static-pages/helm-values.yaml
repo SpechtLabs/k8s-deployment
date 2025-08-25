@@ -132,7 +132,7 @@ configs:
         sha: false
         environment: false
 
-    - domain: tailscale-k8s-auth.specht-labs.de
+    - domain: tka.specht-labs.de
       bucket:
         region: eu-central-003
         url: https://s3.eu-central-003.backblazeb2.com
@@ -150,7 +150,7 @@ configs:
 
       git:
         provider: github
-        repository: SpechtLabs/tailscale-k8s-auth
+        repository: SpechtLabs/tka
         mainBranch: main
 
       preview:
