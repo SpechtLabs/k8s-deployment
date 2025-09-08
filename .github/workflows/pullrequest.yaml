@@ -26,7 +26,7 @@ jobs:
           echo "logfile=$(sed ':a;N;$!ba;s/\n/{newline}/g' < ${{ steps.lint.outputs.logfile }} )" >> $GITHUB_OUTPUT
 
       - name: Augment PR with yamllint infos
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         if: steps.lint.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
           echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
 
       - name: Augment PR with kubeval infos
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         if: steps.kubeval.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -142,7 +142,7 @@ jobs:
           echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
 
       - name: Augment PR with kubeval infos
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         if: steps.kubeval.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -195,7 +195,7 @@ jobs:
           echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
 
       - name: Augment PR with kubeval infos
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@v7.1.0
         if: steps.kubeval.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
