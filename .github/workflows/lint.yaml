@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: ibiqlik/action-yamllint@v3
         with:
@@ -28,7 +28,7 @@ jobs:
       - uses: specht-labs/gh-action-install-kubeval@main
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Manifests
         run: |
@@ -52,7 +52,7 @@ jobs:
       - uses: specht-labs/gh-action-install-kubeval@main
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Charts
         run: |
@@ -73,7 +73,7 @@ jobs:
       - uses: specht-labs/gh-action-install-kubeval@main
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Kustomize
         run: |
