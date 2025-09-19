@@ -3,5 +3,5 @@ name: addon-cilium
 version: 1.15.0
 dependencies:
   - name: cilium
-    version: 1.18.1
+    version: 1.18.2
     repository: https://helm.cilium.io/
