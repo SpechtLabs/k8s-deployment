@@ -1,0 +1,36 @@
+- op: replace
+  path: "/data/config.yaml"
+  value: |
+    debug: true
+
+    tailscale:
+      hostname: "tka-lab"
+      port: 8123
+      stateDir: "/var/lib/tka/tsnet-state"
+      tailnet: "sphinx-map.ts.net"
+      capName: "specht-labs.de/cap/tka"
+
+    server:
+      readTimeout: "10s"
+      readHeaderTimeout: "5s"
+      writeTimeout: "20s"
+      idleTimeout: "120s"
+
+    otel:
+      endpoint: "tempo-distributor.observability.svc.cluster.local:4318"
+      insecure: true
+
+    operator:
+      namespace: "tka-system"
+      clusterName: "tka-cluster"
+      contextPrefix: "tka-context-"
+      userPrefix: "tka-user-"
+
+    api:
+      retryAfterSeconds: 1
+
+    output:
+      theme: "tokyo-night"
+      long: true
+      quiet: false
+      markdownlint-fix: false

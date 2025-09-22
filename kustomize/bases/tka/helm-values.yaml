@@ -1,0 +1,92 @@
+image:
+  repository: ghcr.io/spechtlabs/tka
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "main"
+
+serviceAccount:
+  create: true
+
+service:
+  type: ClusterIP
+  port: 8123
+  metricsPort: 8123
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# TKA Configuration
+tka:
+  tailscale:
+    hostname: tka-prod
+    port: 8123
+    tailnet: "sphinx-map.ts.net"
+
+  server:
+    readTimeout: 10s
+    readHeaderTimeout: 5s
+    writeTimeout: 20s
+    idleTimeout: 120s
+
+  otel:
+    endpoint: "tempo-distributor.observability.svc.cluster.local:4318"
+    insecure: true
+
+  operator:
+    namespace: tka-system
+    clusterName: tka-cluster
+    contextPrefix: tka-context-
+    userPrefix: tka-user-
+
+  api:
+    retryAfterSeconds: 1
+
+  debug: false
+
+secrets:
+  tailscale:
+    create: false
+    secretName: tka-tailscale
+    secretKey: TS_AUTHKEY
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 15s
+  path: /metrics
+
+prometheusRule:
+  enabled: true
+  privilegedRoleAlert:
+    enabled: true
+    clusterRole: cluster-admin
+    severity: critical
+    duration: 0s
+    maxActiveSessions: 1
+
+  serverDownAlert:
+    enabled: true       # Enable server monitoring
+    severity: critical
+    duration: 1m
+
+  errorRateAlert:
+    enabled: true
+
+  forbiddenRateAlert:
+    enabled: true       # Enable security monitoring
+    severity: error
+    threshold: 0.1
+    duration: 2m
+
+
+rbac:
+  create: true

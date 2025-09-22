@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tka-system
+
+resources:
+  - ../../../bases/tka
+
+generators:
+  - ./secret-generator.yaml
+
+patches:
+  - path: delete-sm.yaml
+  - path: delete-rule.yaml
+  - target:
+      kind: ConfigMap
+      namespace: tka-system
+      name: tka-config
+    path: tka-config.patch.yaml

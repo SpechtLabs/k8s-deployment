@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tka
+  namespace: argocd
+spec:
+  destination:
+    namespace: tka-system
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: kustomize/overlays/specht-labs/tka
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
