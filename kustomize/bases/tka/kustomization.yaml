@@ -5,7 +5,7 @@ namespace: tka-system
 helmCharts:
   - name: tka
     repo: https://charts.specht-labs.de
-    version: 0.1.5
+    version: 0.1.6
     releaseName: tka
     namespace: tka-system
     valuesFile: helm-values.yaml

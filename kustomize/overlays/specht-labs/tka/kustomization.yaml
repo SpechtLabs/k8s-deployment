@@ -7,3 +7,10 @@ resources:
 
 generators:
   - ./secret-generator.yaml
+
+patches:
+  - target:
+      kind: ConfigMap
+      namespace: tka-system
+      name: tka-config
+    path: tka-config.patch.yaml

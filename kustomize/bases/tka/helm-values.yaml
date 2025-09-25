@@ -22,8 +22,10 @@ resources:
 
 # TKA Configuration
 tka:
+  clusterInfo:
+    apiEndpoint: "https://kubernetes.default.svc"
+
   tailscale:
-    hostname: tka-prod
     port: 8123
     tailnet: "sphinx-map.ts.net"
 
