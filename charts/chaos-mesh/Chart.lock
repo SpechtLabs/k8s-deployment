@@ -1,6 +1,6 @@
 dependencies:
 - name: chaos-mesh
   repository: https://charts.chaos-mesh.org
-  version: 2.7.3
-digest: sha256:9529c45852176ed0f8b6fe6d2ded0ce0bd085ca5a2d6cffb7f8f5c84e58c5ec1
-generated: "2025-08-22T02:24:16.623968098Z"
+  version: 2.8.0
+digest: sha256:80544ee2378bcbb74c60ae56d242dcbbd0a104a49636e2777e4fd9ce9084f9ba
+generated: "2025-10-02T05:08:45.807356764Z"
