@@ -9,9 +9,9 @@ secretGenerator:
   name: karakeep-secrets
 
 configMapGenerator:
-  - envs:
-    - .env
-    name: karakeep-configuration
+- envs:
+  - .env
+  name: karakeep-configuration
 
 resources:
 - namespace.yaml
