@@ -1,9 +1,0 @@
-- op: replace
-  path: "/spec/tls/0/secretName"
-  value: auth-postgresql.cedi.dev-tls
-- op: replace
-  path: "/spec/tls/0/hosts/0"
-  value: auth-postgresql.cedi.dev
-- op: replace
-  path: "/spec/rules/0/host"
-  value: auth-postgresql.cedi.dev

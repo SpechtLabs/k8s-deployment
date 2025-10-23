@@ -16,15 +16,14 @@ chaos-mesh:
     ingress:
       enabled: true
 
-      ingressClassName: "nginx"
+      ingressClassName: "tailscale"
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
-        nginx.ingress.kubernetes.io/auth-signin: https://auth-chaos-mesh.cedi.dev/oauth2/start
-        nginx.ingress.kubernetes.io/auth-url: http://oauth2-proxy.oauth2-proxy-chaos-mesh.svc.cluster.local/oauth2/auth
+        tailscale.com/tags: "tag:k8s"
 
       hosts:
-        - name: chaos-mesh.specht-labs.de
+        - name: chaos-mesh
           tls: true
           tlsSecret: chaos-tls
           tlsHosts:
-            - chaos-mesh.specht-labs.de
+            - chaos-mesh
