@@ -135,7 +135,7 @@ configs:
     - domain: tka.specht-labs.de
       bucket:
         region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
+        url: https://cdn.specht-labs.de
         name: cedi-testing
         applicationId: ENV(APPLICATION_ID)
         secret: ENV(S3_SECRET)
