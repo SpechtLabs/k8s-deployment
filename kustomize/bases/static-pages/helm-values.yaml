@@ -141,8 +141,36 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
+        url: https://s3.eu-central-003.backblazeb2.com
+        path: cedi-testing
+        notFound: 404.html
+        searchPath:
+          - /index.html
+          - /index.htm
+
+      git:
+        provider: github
+        repository: SpechtLabs/tka
+        mainBranch: main
+
+      preview:
+        enabled: true
+        branch: true
+        sha: false
+        environment: false
+
+
+    - domain: dev-page.specht-labs.de
+      bucket:
+        region: eu-central-003
+        url: https://s3.eu-central-003.backblazeb2.com
+        name: cedi-testing
+        applicationId: ENV(APPLICATION_ID)
+        secret: ENV(S3_SECRET)
+
+      proxy:
         url: https://cdn.specht-labs.de
-        path: ""
+        path: cedi-testing
         notFound: 404.html
         searchPath:
           - /index.html
