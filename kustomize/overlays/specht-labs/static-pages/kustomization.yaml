@@ -7,3 +7,7 @@ resources:
 
 generators:
   - ./secret-generator.yaml
+
+images:
+  - name: ghcr.io/spechtlabs/staticpages
+    newTag: main
