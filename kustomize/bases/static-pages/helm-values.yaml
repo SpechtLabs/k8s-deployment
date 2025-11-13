@@ -3,7 +3,7 @@ staticpages:
   replicaCount: 1
   env:
     - name: OTEL_LOG_LEVEL
-      value: ""
+      value: "DEBUG"
 
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "tempo-distributor.observability.svc.cluster.local:4317"
