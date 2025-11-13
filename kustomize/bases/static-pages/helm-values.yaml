@@ -170,7 +170,7 @@ configs:
 
       proxy:
         url: https://cdn.specht-labs.de
-        path: cedi-testing
+        path: file/cedi-testing
         notFound: 404.html
         searchPath:
           - /index.html
