@@ -10,4 +10,4 @@ generators:
 
 images:
   - name: ghcr.io/spechtlabs/staticpages
-    newTag: v0.1.4
+    newTag: v0.1.5
