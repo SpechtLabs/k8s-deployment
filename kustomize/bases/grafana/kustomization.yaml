@@ -5,7 +5,7 @@ namespace: observability
 helmCharts:
   - name: grafana
     repo: https://grafana.github.io/helm-charts
-    version: 10.5.5
+    version: 10.5.8
     releaseName: grafana
     namespace: observability
     valuesFile: helm-values.yaml
