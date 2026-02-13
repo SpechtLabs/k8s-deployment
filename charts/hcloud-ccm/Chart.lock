@@ -1,6 +1,6 @@
 dependencies:
 - name: hcloud-cloud-controller-manager
   repository: https://charts.hetzner.cloud
-  version: 1.29.2
-digest: sha256:423038e8b3dd50d9b1f217221f8eaebc30c34caf3e9054c892356334c3b548ae
-generated: "2026-01-23T14:31:08.559062776Z"
+  version: 1.30.0
+digest: sha256:d709800325f76cf37b26a8fce1a56feafce0a59202a742001d23ec07c5d08453
+generated: "2026-02-12T00:45:10.432743692Z"
