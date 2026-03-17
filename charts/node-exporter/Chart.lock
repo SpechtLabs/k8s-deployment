@@ -1,6 +1,6 @@
 dependencies:
 - name: prometheus-node-exporter
   repository: https://prometheus-community.github.io/helm-charts
-  version: 4.52.0
-digest: sha256:422a1e570d02754148b7ee1940d0261b1485431f83ce9e4d5c63aa1d5d5caafb
-generated: "2026-02-27T08:35:08.402569591Z"
+  version: 4.52.1
+digest: sha256:a54978ad08eae4f29fc7edc671a520a14aa4369982c4439d6fed3db54d804b5b
+generated: "2026-03-16T18:19:09.906000307Z"
