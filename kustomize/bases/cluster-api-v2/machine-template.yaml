@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: List
+items:
+  - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudMachineTemplate
+    metadata:
+      name: worker-x86-small
+      namespace: default
+      labels: &labels
+        cluster.x-k8s.io/cluster-name: &clusterName "specht-labs"
+    spec:
+      template:
+        spec:
+          imageName: &ubunut_24_04 ubuntu-24.04
+          placementGroupName: &worker_placement_group worker-nodes
+          type: cpx22
+          sshKeys: &ssh_keys
+            - name: cedi@zia
+
+  - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudMachineTemplate
+    metadata:
+      name: control-plane-x86
+      namespace: default
+      labels: *labels
+    spec:
+      template:
+        spec:
+          imageName: *ubunut_24_04
+          placementGroupName: control-plane
+          type: cpx22
+          sshKeys: *ssh_keys

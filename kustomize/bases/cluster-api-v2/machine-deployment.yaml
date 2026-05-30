@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: List
+items:
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: &annotations
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "1"
+    labels: &labels
+      nodepool: worker-x86
+    name: worker-x86-fsn
+    namespace: default
+  spec:
+    clusterName: &clusterName specht-labs
+    replicas: &replicas 1
+    strategy: &strategy
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: &bootstrap
+          configRef:
+            apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+            kind: KubeadmConfigTemplate
+            name: worker-template
+        clusterName: *clusterName
+        failureDomain: fsn1
+        infrastructureRef: &infrastructureRef
+          apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+          kind: HCloudMachineTemplate
+          name: worker-x86-small
+        version: &version v1.35.4
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: *annotations
+    labels: *labels
+    name: worker-x86-hel
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    replicas: *replicas
+    strategy: *strategy
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: *bootstrap
+        clusterName: *clusterName
+        failureDomain: hel1
+        infrastructureRef: *infrastructureRef
+        version: *version
+
+- apiVersion: cluster.x-k8s.io/v1beta1
+  kind: MachineDeployment
+  metadata:
+    annotations: *annotations
+    labels: *labels
+    name: worker-x86-nbg
+    namespace: default
+  spec:
+    clusterName: *clusterName
+    replicas: *replicas
+    strategy: *strategy
+    selector:
+      matchLabels: null
+    template:
+      metadata:
+        labels: *labels
+      spec:
+        bootstrap: *bootstrap
+        clusterName: *clusterName
+        failureDomain: nbg1
+        infrastructureRef: *infrastructureRef
+        version: *version

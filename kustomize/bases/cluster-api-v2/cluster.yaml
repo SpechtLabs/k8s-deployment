@@ -1,0 +1,54 @@
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: specht-labs
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 10.244.0.0/16
+  controlPlaneRef:
+    apiGroup: controlplane.cluster.x-k8s.io
+    kind: KubeadmControlPlane
+    name: specht-labs-control-plane
+  infrastructureRef:
+    apiGroup: infrastructure.cluster.x-k8s.io
+    kind: HetznerCluster
+    name: specht-labs
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HetznerCluster
+metadata:
+  name: specht-labs
+  namespace: default
+spec:
+  controlPlaneEndpoint:
+    host: ""
+    port: 443
+  controlPlaneLoadBalancer:
+    enabled: true
+    region: fsn1
+    type: lb11
+  controlPlaneRegions:
+    - fsn1
+    - nbg1
+    - hel1
+  hcloudNetwork:
+    enabled: true
+    networkZone: eu-central
+    cidrBlock: 10.0.0.0/16
+    subnetCidrBlock: 10.0.0.0/24
+  hcloudPlacementGroups:
+    - name: control-plane
+      type: spread
+    - name: worker-nodes
+      type: spread
+  hetznerSecretRef:
+    key:
+      hcloudToken: hcloud
+    name: hetzner
+  sshKeys:
+    hcloud:
+    - name: cedi@zia
+    - name: cedi@ivy

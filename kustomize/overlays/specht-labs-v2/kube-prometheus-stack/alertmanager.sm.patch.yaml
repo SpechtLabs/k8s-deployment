@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prom-stack-alertmanager
+  namespace: monitoring
+spec:
+  endpoints:
+    - path: /metrics
+      port: http-web
+  namespaceSelector:
+    matchNames:
+      - monitoring
+  selector:
+    matchLabels:
+      app: kube-prometheus-stack-alertmanager
+      release: prometheus-stack
+      self-monitor: 'true'
