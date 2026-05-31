@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-issuer
+  namespace: argocd
+  annotations:
+    # Wave 1: the http01.gatewayHTTPRoute solver needs the Gateway API CRDs from
+    # envoy-gateway (wave 0).
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  source:
+    path: kustomize/overlays/specht-labs-v2/cluster-issuer
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

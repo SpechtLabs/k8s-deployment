@@ -1,0 +1,29 @@
+# v2-specific cert-manager values. Kept in sync with kustomize/bases/cert-manager/helm-values.yaml
+# but adds Gateway API support, which only the v2 cluster (Envoy Gateway) needs. The shared
+# base still serves labk3s/specht-labs (nginx ingress), so this divergence lives in the overlay.
+fullnameOverride: cert-manager
+replicaCount: 2
+installCRDs: true
+
+# Enable Gateway API support (cert-manager >= 1.15: Helm value, not a feature gate).
+# Renders a ControllerConfiguration ConfigMap mounted via --config. Requires the Gateway
+# API CRDs (installed by the envoy-gateway app) to be present. Drives the
+# http01.gatewayHTTPRoute solver used by the v2 letsencrypt-prod ClusterIssuer.
+config:
+  enableGatewayAPI: true
+
+global:
+  leaderElection:
+    namespace: cert-manager
+
+webhook:
+  replicaCount: 2
+
+cainjector:
+  replicaCount: 2
+
+prometheus:
+  enabled: true
+
+  servicemonitor:
+    enabled: true

@@ -2,5 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: cert-manager
 
+# v2 defines its own letsencrypt-prod (Gateway API HTTP-01 solver) instead of referencing
+# ../../../bases/cluster-issuer (nginx ingress solver, used by labk3s/specht-labs).
 resources:
-  - ../../../bases/cluster-issuer/
+  - letsencrypt-prod.yaml

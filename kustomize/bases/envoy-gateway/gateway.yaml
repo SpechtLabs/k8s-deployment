@@ -1,0 +1,43 @@
+# Platform shared Gateway. Listeners:
+#   :80 (http)
+#     - serves ACME HTTP-01 challenges (cert-manager injects a high-precedence
+#       /.well-known/acme-challenge/... HTTPRoute that wins over the catch-all redirect)
+#     - serves the platform HTTP->HTTPS 301 redirect (redirect-httproute.yaml)
+#   :443 per-host TLS listeners (one per app hostname)
+#     - because TLS uses ACME HTTP-01 (no wildcard), each app hostname needs its own
+#       listener. Apps that let the gateway terminate TLS add a Terminate listener +
+#       per-host cert Secret; apps that terminate their own TLS (e.g. ArgoCD, which
+#       needs gRPC + REST on one port) add a Passthrough listener matched by SNI and
+#       a TLSRoute to their backend.
+#
+# All app listeners accumulate here (single Gateway => single Envoy + single Hetzner
+# LB, ~9 EUR each, so we do NOT use a Gateway-per-app). The matching route lives with
+# the app (in its overlay/base).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: shared
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: envoy
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    # ArgoCD: TLS passthrough. argocd-server terminates its own TLS so gRPC and REST
+    # work on the same port; the gateway only routes by SNI. Paired with the TLSRoute
+    # in the argocd overlay and the cert-manager Certificate that fills argocd-server-tls.
+    - name: argocd-tls
+      protocol: TLS
+      port: 443
+      hostname: argocd.specht-labs.de
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        kinds:
+          - kind: TLSRoute
+        namespaces:
+          from: All

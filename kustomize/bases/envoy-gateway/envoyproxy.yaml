@@ -1,0 +1,19 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: hetzner-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        annotations:
+          load-balancer.hetzner.cloud/location: "nbg1"
+          load-balancer.hetzner.cloud/name: "cedi-dev-gateway-lb"
+          load-balancer.hetzner.cloud/type: "lb11"
+          load-balancer.hetzner.cloud/algorithm-type: "least_connections"
+          load-balancer.hetzner.cloud/health-check-protocol: "http"
+          load-balancer.hetzner.cloud/disable-private-ingress: "true"

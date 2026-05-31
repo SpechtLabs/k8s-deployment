@@ -4,6 +4,9 @@ namespace: argocd
 
 resources:
   - ../../../bases/argocd/
+  # v2 exposes ArgoCD through the Envoy Gateway (TLS passthrough) instead of an Ingress.
+  - certificate.yaml
+  - tlsroute.yaml
 
 generators:
   - ./secret-generator.yaml
@@ -14,3 +17,16 @@ patchesJson6902:
       namespace: argocd
       name: argocd-server
     path: webterminal-role.patch.yaml
+
+patches:
+  # Drop the nginx Ingress the chart renders (server.ingress.enabled in the shared base);
+  # v2 routes via the TLSRoute above. Base stays unchanged for labk3s/specht-labs.
+  - target:
+      kind: Ingress
+      name: argocd-server
+    patch: |
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: argocd-server

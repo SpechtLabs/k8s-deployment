@@ -47,8 +47,13 @@ spec:
               enabled: false
             webhook:
               enabled: true
+            x509:
+              clientCAFile: /etc/kubernetes/pki/ca.crt
           authorization:
             mode: Webhook
+          clusterDNS:
+            - 10.96.0.10
+          clusterDomain: cluster.local
           eventRecordQPS: 5
           maxPods: 220
           readOnlyPort: 0
