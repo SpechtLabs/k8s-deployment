@@ -30,3 +30,14 @@ patches:
       kind: Ingress
       metadata:
         name: argocd-server
+  # The shared Helm values keep the existing cluster's public URL. Override it for v2.
+  - target:
+      kind: ConfigMap
+      name: argocd-cm
+    patch: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: argocd-cm
+      data:
+        url: https://argocd.v2.specht-labs.de

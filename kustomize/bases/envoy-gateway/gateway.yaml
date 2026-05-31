@@ -33,7 +33,7 @@ spec:
     - name: argocd-tls
       protocol: TLS
       port: 443
-      hostname: argocd.specht-labs.de
+      hostname: argocd.v2.specht-labs.de
       tls:
         mode: Passthrough
       allowedRoutes:

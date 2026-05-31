@@ -15,5 +15,5 @@ spec:
           load-balancer.hetzner.cloud/name: "cedi-dev-gateway-lb"
           load-balancer.hetzner.cloud/type: "lb11"
           load-balancer.hetzner.cloud/algorithm-type: "least_connections"
-          load-balancer.hetzner.cloud/health-check-protocol: "http"
+          load-balancer.hetzner.cloud/health-check-protocol: "tcp"
           load-balancer.hetzner.cloud/disable-private-ingress: "true"
