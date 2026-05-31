@@ -1,4 +1,4 @@
-# Routes SNI argocd.specht-labs.de from the shared Gateway's passthrough listener to
+# Routes SNI argocd.v2.specht-labs.de from the shared Gateway's passthrough listener to
 # argocd-server, which terminates TLS itself (keeps gRPC + REST working on one port).
 # Route and backend are both in the argocd namespace, so no ReferenceGrant is needed;
 # attaching to the Gateway in envoy-gateway-system is allowed by that listener's
@@ -14,7 +14,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: argocd-tls
   hostnames:
-    - argocd.specht-labs.de
+    - argocd.v2.specht-labs.de
   rules:
     - backendRefs:
         - name: argocd-server

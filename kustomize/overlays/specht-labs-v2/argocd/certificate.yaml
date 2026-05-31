@@ -10,7 +10,7 @@ metadata:
 spec:
   secretName: argocd-server-tls
   dnsNames:
-    - argocd.specht-labs.de
+    - argocd.v2.specht-labs.de
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
