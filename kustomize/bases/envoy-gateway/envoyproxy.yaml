@@ -7,6 +7,10 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
+      # Keep a local proxy endpoint on every schedulable worker. The Hetzner LB
+      # targets nodes directly and externalTrafficPolicy: Local only accepts
+      # traffic on nodes with a local Envoy pod.
+      envoyDaemonSet: {}
       envoyService:
         type: LoadBalancer
         externalTrafficPolicy: Local
