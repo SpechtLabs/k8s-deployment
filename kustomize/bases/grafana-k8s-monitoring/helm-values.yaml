@@ -10,7 +10,7 @@ destinations:
       password: REPLACE_ME
     metricProcessingRules: |
       write_relabel_config {
-        regex = "container_id|image_id|uid|id"
+        regex = "container_id|image_id|uid|id|name"
         action = "labeldrop"
       }
   grafana-cloud-logs:
@@ -42,11 +42,13 @@ destinations:
             - delete_key(attributes, "image_id")
             - delete_key(attributes, "uid")
             - delete_key(attributes, "id")
+            - delete_key(attributes, "name")
           datapoint:
             - delete_key(attributes, "container_id")
             - delete_key(attributes, "image_id")
             - delete_key(attributes, "uid")
             - delete_key(attributes, "id")
+            - delete_key(attributes, "name")
   grafana-cloud-profiles:
     type: pyroscope
     url: https://profiles-prod-002.grafana.net.:443
