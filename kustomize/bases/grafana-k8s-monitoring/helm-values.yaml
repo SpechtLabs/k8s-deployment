@@ -81,7 +81,7 @@ applicationObservability:
       enabled: true
       port: 9411
 autoInstrumentation:
-  enabled: false # change me
+  enabled: true # change me
   collector: alloy-metrics
   beyla:
     deliverTracesToApplicationObservability: true
