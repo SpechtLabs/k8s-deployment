@@ -1,0 +1,149 @@
+cluster:
+  name: specht-labs
+destinations:
+  grafana-cloud-metrics:
+    type: prometheus
+    url: https://prometheus-prod-22-prod-eu-west-3.grafana.net./api/prom/push
+    auth:
+      type: basic
+      username: "817591"
+      password: REPLACE_ME
+  grafana-cloud-logs:
+    type: loki
+    url: https://logs-prod-013.grafana.net./loki/api/v1/push
+    auth:
+      type: basic
+      username: "407764"
+      password: REPLACE_ME
+  gc-otlp-endpoint:
+    type: otlp
+    url: https://otlp-gateway-prod-eu-west-3.grafana.net./otlp
+    protocol: http
+    auth:
+      type: basic
+      username: "558368"
+      password: REPLACE_ME
+    metrics:
+      enabled: true
+    logs:
+      enabled: true
+    traces:
+      enabled: true
+  grafana-cloud-profiles:
+    type: pyroscope
+    url: https://profiles-prod-004.grafana.net.:443
+    auth:
+      type: basic
+      username: "558368"
+      password: REPLACE_ME
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+  energyMetrics:
+    enabled: true
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy-metrics
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+nodeLogs:
+  enabled: true
+  collector: alloy-logs
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+kubernetesManifests:
+  enabled: true
+  collector: alloy-singleton
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+        port: 4317
+      http:
+        enabled: true
+        port: 4318
+    zipkin:
+      enabled: true
+      port: 9411
+autoInstrumentation:
+  enabled: true
+  collector: alloy-metrics
+  beyla:
+    deliverTracesToApplicationObservability: true
+profiling:
+  enabled: true
+  collector: alloy-profiles
+collectors:
+  alloy-metrics:
+    presets:
+      - clustered
+      - statefulset
+  alloy-singleton:
+    presets:
+      - singleton
+  alloy-logs:
+    presets:
+      - filesystem-log-reader
+      - daemonset
+  alloy-receiver:
+    presets:
+      - deployment
+  alloy-profiles:
+    presets:
+      - privileged
+      - daemonset
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-007.grafana.net
+      auth:
+        type: basic
+        username: "558368"
+        password: REPLACE_ME
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: grafana-cloud-metrics
+    opencost:
+      exporter:
+        defaultClusterId: specht-labs
+      prometheus:
+        existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
+        external:
+          url: https://prometheus-prod-22-prod-eu-west-3.grafana.net./api/prom
+  kepler:
+    deploy: true
+  k8s-manifest-tail:
+    deploy: true
+    config:
+      objects:
+        - apiVersion: v1
+          kind: Pod
+        - apiVersion: apps/v1
+          kind: Deployment
+        - apiVersion: apps/v1
+          kind: StatefulSet
+        - apiVersion: apps/v1
+          kind: DaemonSet
