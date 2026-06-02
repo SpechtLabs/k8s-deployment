@@ -124,7 +124,7 @@ telemetryServices:
   windows-exporter:
     deploy: true
   opencost:
-    deploy: true
+    deploy: false
     metricsSource: grafana-cloud-metrics
     opencost:
       exporter:
