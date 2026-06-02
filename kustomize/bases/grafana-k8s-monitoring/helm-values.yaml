@@ -8,6 +8,11 @@ destinations:
       type: basic
       username: "3276426" 
       password: REPLACE_ME
+    metricProcessingRules: |
+      write_relabel_config {
+        regex = "container_id|image_id|uid|id"
+        action = "labeldrop"
+      }
   grafana-cloud-logs:
     type: loki
     url: https://logs-prod-012.grafana.net./loki/api/v1/push
@@ -29,6 +34,19 @@ destinations:
       enabled: true
     traces:
       enabled: true
+    processors:
+      transform:
+        metrics:
+          resource:
+            - delete_key(attributes, "container_id")
+            - delete_key(attributes, "image_id")
+            - delete_key(attributes, "uid")
+            - delete_key(attributes, "id")
+          datapoint:
+            - delete_key(attributes, "container_id")
+            - delete_key(attributes, "image_id")
+            - delete_key(attributes, "uid")
+            - delete_key(attributes, "id")
   grafana-cloud-profiles:
     type: pyroscope
     url: https://profiles-prod-002.grafana.net.:443
