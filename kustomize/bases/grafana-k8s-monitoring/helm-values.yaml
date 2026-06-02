@@ -49,7 +49,7 @@ hostMetrics:
   energyMetrics:
     enabled: true
 costMetrics:
-  enabled: true
+  enabled: false
   collector: alloy-metrics
 annotationAutodiscovery:
   enabled: true
