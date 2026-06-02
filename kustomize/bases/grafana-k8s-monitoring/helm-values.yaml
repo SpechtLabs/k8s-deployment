@@ -47,7 +47,7 @@ hostMetrics:
   windowsHosts:
     enabled: true
   energyMetrics:
-    enabled: true
+    enabled: false
 costMetrics:
   enabled: false
   collector: alloy-metrics
@@ -134,7 +134,7 @@ telemetryServices:
         external:
           url: https://prometheus-prod-22-prod-eu-west-3.grafana.net./api/prom
   kepler:
-    deploy: true
+    deploy: false
   k8s-manifest-tail:
     deploy: true
     config:
