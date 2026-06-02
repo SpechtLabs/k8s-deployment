@@ -9,3 +9,9 @@ helmCharts:
     releaseName: grafana-k8s-monitoring
     namespace: monitoring
     valuesFile: helm-values.yaml
+
+  - name: alloy-crd
+    repo: https://grafana.github.io/helm-charts
+    version: 1.0.0
+    releaseName: grafana-alloy-crd
+    namespace: monitoring
