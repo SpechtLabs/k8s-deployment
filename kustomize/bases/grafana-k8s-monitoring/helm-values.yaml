@@ -45,11 +45,11 @@ hostMetrics:
   linuxHosts:
     enabled: true
   windowsHosts:
-    enabled: true
+    enabled: false
   energyMetrics:
-    enabled: true
+    enabled: false
 costMetrics:
-  enabled: true
+  enabled: false
   collector: alloy-metrics
 annotationAutodiscovery:
   enabled: true
