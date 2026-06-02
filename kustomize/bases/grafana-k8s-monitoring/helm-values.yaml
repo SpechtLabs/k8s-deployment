@@ -3,25 +3,25 @@ cluster:
 destinations:
   grafana-cloud-metrics:
     type: prometheus
-    url: https://prometheus-prod-22-prod-eu-west-3.grafana.net./api/prom/push
+    url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom/push
     auth:
       type: basic
-      username: "817591"
+      username: "3276426" 
       password: REPLACE_ME
   grafana-cloud-logs:
     type: loki
-    url: https://logs-prod-013.grafana.net./loki/api/v1/push
+    url: https://logs-prod-012.grafana.net./loki/api/v1/push
     auth:
       type: basic
-      username: "407764"
+      username: "1633888"
       password: REPLACE_ME
   gc-otlp-endpoint:
     type: otlp
-    url: https://otlp-gateway-prod-eu-west-3.grafana.net./otlp
+    url: https://otlp-gateway-prod-eu-west-2.grafana.net./otlp
     protocol: http
     auth:
       type: basic
-      username: "558368"
+      username: "1676101"
       password: REPLACE_ME
     metrics:
       enabled: true
@@ -31,10 +31,10 @@ destinations:
       enabled: true
   grafana-cloud-profiles:
     type: pyroscope
-    url: https://profiles-prod-004.grafana.net.:443
+    url: https://profiles-prod-002.grafana.net.:443
     auth:
       type: basic
-      username: "558368"
+      username: "1676101"
       password: REPLACE_ME
 clusterMetrics:
   enabled: true
@@ -47,9 +47,9 @@ hostMetrics:
   windowsHosts:
     enabled: true
   energyMetrics:
-    enabled: false
+    enabled: true
 costMetrics:
-  enabled: false
+  enabled: true
   collector: alloy-metrics
 annotationAutodiscovery:
   enabled: true
@@ -81,7 +81,7 @@ applicationObservability:
       enabled: true
       port: 9411
 autoInstrumentation:
-  enabled: false
+  enabled: false # change me
   collector: alloy-metrics
   beyla:
     deliverTracesToApplicationObservability: true
@@ -111,10 +111,10 @@ collectorCommon:
   alloy:
     remoteConfig:
       enabled: true
-      url: https://fleet-management-prod-007.grafana.net
+      url: https://fleet-management-prod-011.grafana.net
       auth:
         type: basic
-        username: "558368"
+        username: "1676101"
         password: REPLACE_ME
 telemetryServices:
   kube-state-metrics:
@@ -122,7 +122,7 @@ telemetryServices:
   node-exporter:
     deploy: true
   windows-exporter:
-    deploy: true
+    deploy: false
   opencost:
     deploy: false
     metricsSource: grafana-cloud-metrics
@@ -132,7 +132,7 @@ telemetryServices:
       prometheus:
         existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
         external:
-          url: https://prometheus-prod-22-prod-eu-west-3.grafana.net./api/prom
+          url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom
   kepler:
     deploy: false
   k8s-manifest-tail:
