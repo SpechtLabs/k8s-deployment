@@ -9,13 +9,12 @@ spec:
       name: letsencrypt-prod-acme-account-key
     server: https://acme-v02.api.letsencrypt.org/directory
     solvers:
-      # v2 uses the Gateway API HTTP-01 solver (Envoy Gateway), not nginx ingress.
-      # cert-manager attaches the challenge HTTPRoute to the shared Gateway's :80
-      # listener via these parentRefs.
-      - http01:
-          gatewayHTTPRoute:
-            parentRefs:
-              - name: shared
-                namespace: envoy-gateway-system
-                kind: Gateway
-                group: gateway.networking.k8s.io
+      # v2 uses the Cloudflare DNS-01 solver (mirrors labk3s/cluster-issuer) instead of an
+      # HTTP-01 solver. DNS-01 supports wildcard certs (needed for StaticPages branch
+      # previews on *.specht-labs.de / *.gold-specht.de) and removes the :80-reachability
+      # bootstrap dependency. The token needs Zone:DNS:Edit on both zones.
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token

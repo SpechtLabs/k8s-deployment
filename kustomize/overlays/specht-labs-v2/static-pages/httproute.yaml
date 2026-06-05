@@ -1,0 +1,54 @@
+# Replaces the chart's nginx Ingress on v2. Two routes reproduce the v1 routing:
+#   pages.specht-labs.de/api -> static-pages-api:8081 (management API)
+#   every served host /       -> static-pages-proxy:8080 (page content)
+# Routes and backends share the static-pages namespace, so no ReferenceGrant is needed.
+# parentRefs omit sectionName, so each route binds to every shared-Gateway listener whose
+# hostname intersects its hostnames (the StaticPages Terminate listeners in gateway.yaml).
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: static-pages-api
+  namespace: static-pages
+spec:
+  parentRefs:
+    - name: shared
+      namespace: envoy-gateway-system
+  # /api is scoped to pages.specht-labs.de only (matches v1); on other hosts /api falls
+  # through to the proxy route below.
+  hostnames:
+    - pages.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: static-pages-api
+          port: 8081
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: static-pages-proxy
+  namespace: static-pages
+spec:
+  parentRefs:
+    - name: shared
+      namespace: envoy-gateway-system
+  # Wildcards so one-level branch previews (e.g. branch.specht-labs.de) route to the proxy.
+  # The more specific /api match on the api route wins for pages.specht-labs.de (path
+  # precedence is evaluated across routes attached to the same Gateway).
+  hostnames:
+    - specht-labs.de
+    - "*.specht-labs.de"
+    - gold-specht.de
+    - "*.gold-specht.de"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: static-pages-proxy
+          port: 8080
