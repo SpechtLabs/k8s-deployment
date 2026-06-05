@@ -14,6 +14,8 @@ images:
     newTag: v0.1.5
 
 patches:
+  # v2 telemetry: repoint OTLP to the Grafana Alloy receiver + add Alloy scrape annotations.
+  - path: otel.patch.yaml
   # v2 routes via the Envoy Gateway (httproute.yaml + the shared Gateway listeners), so
   # drop the nginx Ingress the chart renders from the shared base. $patch: delete keeps the
   # base (helm-values.yaml still has ingress.enabled: true) untouched for v1/specht-labs.

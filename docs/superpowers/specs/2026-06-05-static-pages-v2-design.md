@@ -100,6 +100,7 @@ kustomize/overlays/specht-labs-v2/static-pages/
   secret-generator.yaml       # ksops -> s3.secret.yaml
   s3.secret.yaml              # SOPS-encrypted S3 creds (copied verbatim from v1 overlay)
   httproute.yaml              # HTTPRoute(s): pages /api -> api:8081; all hosts / -> proxy:8080
+  otel.patch.yaml             # v2 telemetry: OTLP endpoint -> Alloy receiver + scrape annotations
 
 kustomize/bases/envoy-gateway/
   static-pages-certs.yaml     # cert-manager Certificate -> secret static-pages-tls (wildcard SANs)
@@ -361,6 +362,44 @@ patches:
 `automated { prune: true, selfHeal: true }`, `CreateNamespace=true`. No sync-wave needed
 (cert-manager/gateway already exist by the time apps sync); the meta app-of-apps
 (`1-meta-specht-labs-cluster`) renders the directory.
+
+## Telemetry on v2 (Grafana Cloud)
+
+The shared base `helm-values.yaml` points OTLP at the v1 self-hosted Tempo
+(`tempo-distributor.observability.svc.cluster.local:4317`), which does not exist on v2.
+v2 sends telemetry to the Grafana k8s-monitoring **Alloy receiver** instead, and uses
+Grafana Alloy's **annotation autodiscovery** for Prometheus metrics (v2 has no
+ServiceMonitor / Prometheus-operator discovery). All of this is an overlay-only Deployment
+patch (`otel.patch.yaml`); the base is untouched so v1 keeps its Tempo endpoint.
+
+Verified against the StaticPages source (`~/src/gh/SpechtLabs/StaticPages`, go-otel-utils
+`otelprovider@v0.0.15`):
+
+- **Transport selection is by port substring.** `WithTraceAutomaticEnv` picks gRPC if the
+  endpoint contains `4317`, HTTP if it contains `4318`, then passes the raw value to
+  `otlptracehttp.WithEndpoint` — which takes **host:port with no scheme** and defaults to
+  HTTPS. `OTEL_EXPORTER_OTLP_PROTOCOL` is **not** read. So the HTTP config is:
+  - `OTEL_EXPORTER_OTLP_ENDPOINT: grafana-k8s-monitoring-alloy-receiver.monitoring.svc.cluster.local:4318`
+    (no `http://`)
+  - `OTEL_EXPORTER_OTLP_INSECURE: "true"` (kept from base — required for plaintext, else it
+    attempts TLS to the in-cluster receiver)
+- **Resource attributes / service name** are honoured: `newOtelResources()` reads
+  `OTEL_SERVICE_NAME`, and `resource.Default()` reads `OTEL_RESOURCE_ATTRIBUTES` via the env
+  detector. We set `OTEL_SERVICE_NAME=static-pages` and
+  `OTEL_RESOURCE_ATTRIBUTES=service.namespace=$(POD_NAMESPACE),k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME)`
+  with `POD_NAME`/`POD_NAMESPACE` from the downward API (listed before the attrs var so
+  `$(VAR)` interpolation resolves).
+- **Prometheus `/metrics` is on the API port 8081**, not a separate port. gin-prometheus
+  registers `/metrics` on the same gin router as `/api/upload`. The chart's
+  `staticpages.metrics` (a separate `-metrics` Service on 8082) is **not** enabled — the
+  binary never opens 8082. Scrape annotations therefore target **8081**:
+  `k8s.grafana.com/scrape: "true"`, `metrics.portNumber: "8081"`, `metrics.path: "/metrics"`,
+  `metrics.scheme: "http"`. `/metrics` is not exposed externally — the gateway routes only
+  `pages.specht-labs.de/api` to the API Service; `/metrics` falls through to the proxy.
+
+> Pre-existing nit (not changed): the base sets `OTEL_LOG_LEVEL: "DEBUG"` but the code
+> checks `== "debug"` (lowercase), so debug logging is effectively off. Left as-is to keep
+> v1 behaviour identical.
 
 ## Runtime data flow (once synced)
 
