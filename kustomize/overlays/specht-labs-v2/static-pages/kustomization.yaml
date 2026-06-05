@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: static-pages
+
+resources:
+  - ../../../bases/static-pages
+  - httproute.yaml
+
+generators:
+  - ./secret-generator.yaml
+
+images:
+  - name: ghcr.io/spechtlabs/staticpages
+    newTag: v0.1.5
+
+patches:
+  # v2 routes via the Envoy Gateway (httproute.yaml + the shared Gateway listeners), so
+  # drop the nginx Ingress the chart renders from the shared base. $patch: delete keeps the
+  # base (helm-values.yaml still has ingress.enabled: true) untouched for v1/specht-labs.
+  - target:
+      kind: Ingress
+      name: static-pages
+    patch: |
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: static-pages

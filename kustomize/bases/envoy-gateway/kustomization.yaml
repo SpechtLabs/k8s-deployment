@@ -19,3 +19,4 @@ resources:
   - envoyproxy.yaml
   - gateway.yaml
   - redirect-httproute.yaml
+  - static-pages-certs.yaml

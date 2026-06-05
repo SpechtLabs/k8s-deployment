@@ -4,8 +4,9 @@ metadata:
   name: cluster-issuer
   namespace: argocd
   annotations:
-    # Wave 1: the http01.gatewayHTTPRoute solver needs the Gateway API CRDs from
-    # envoy-gateway (wave 0).
+    # Wave 1: kept after envoy-gateway (wave 0) for stable ordering. The solver is now
+    # Cloudflare DNS-01 (no Gateway API dependency), but the wave is harmless and avoids
+    # churn; the cert-manager webhook is up by this point regardless.
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default

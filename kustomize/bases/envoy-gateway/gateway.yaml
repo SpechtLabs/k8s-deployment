@@ -3,12 +3,14 @@
 #     - serves ACME HTTP-01 challenges (cert-manager injects a high-precedence
 #       /.well-known/acme-challenge/... HTTPRoute that wins over the catch-all redirect)
 #     - serves the platform HTTP->HTTPS 301 redirect (redirect-httproute.yaml)
-#   :443 per-host TLS listeners (one per app hostname)
-#     - because TLS uses ACME HTTP-01 (no wildcard), each app hostname needs its own
-#       listener. Apps that let the gateway terminate TLS add a Terminate listener +
-#       per-host cert Secret; apps that terminate their own TLS (e.g. ArgoCD, which
+#   :443 TLS listeners (matched by SNI)
+#     - TLS now uses Cloudflare DNS-01, so wildcard certs are possible: a single
+#       Terminate listener per wildcard hostname (e.g. *.specht-labs.de) covers many
+#       app hosts at once. Apps that let the gateway terminate TLS add a Terminate
+#       listener + cert Secret; apps that terminate their own TLS (e.g. ArgoCD, which
 #       needs gRPC + REST on one port) add a Passthrough listener matched by SNI and
-#       a TLSRoute to their backend.
+#       a TLSRoute to their backend. A wildcard label matches exactly one DNS label, so
+#       *.specht-labs.de does NOT shadow the two-label argocd.v2.specht-labs.de.
 #
 # All app listeners accumulate here (single Gateway => single Envoy + single Hetzner
 # LB, ~9 EUR each, so we do NOT use a Gateway-per-app). The matching route lives with
@@ -40,5 +42,57 @@ spec:
         kinds:
           - group: gateway.networking.k8s.io
             kind: TLSRoute
+        namespaces:
+          from: All
+    # StaticPages: gateway-terminated TLS. All four listeners share the one wildcard
+    # Secret static-pages-tls (cert-manager, Cloudflare DNS-01, see static-pages-certs.yaml).
+    # Routes live in the static-pages overlay (httproute.yaml). Wildcard listeners match a
+    # single label; apexes need their own listeners.
+    - name: specht-labs-wildcard
+      protocol: HTTPS
+      port: 443
+      hostname: "*.specht-labs.de"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: static-pages-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: specht-labs-apex
+      protocol: HTTPS
+      port: 443
+      hostname: specht-labs.de
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: static-pages-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: gold-specht-wildcard
+      protocol: HTTPS
+      port: 443
+      hostname: "*.gold-specht.de"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: static-pages-tls
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: gold-specht-apex
+      protocol: HTTPS
+      port: 443
+      hostname: gold-specht.de
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: static-pages-tls
+      allowedRoutes:
         namespaces:
           from: All
