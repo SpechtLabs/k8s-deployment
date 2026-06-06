@@ -40,11 +40,14 @@ spec:
     - name: shared
       namespace: envoy-gateway-system
       port: 443
-  # Wildcards so one-level branch previews (e.g. branch.specht-labs.de) route to the proxy.
-  # The more specific /api match on the api route wins for pages.specht-labs.de (path
-  # precedence is evaluated across routes attached to the same Gateway).
+  # Include pages.specht-labs.de explicitly because the API route also has an exact
+  # hostname for /api. Relying on wildcard fallback for / can leave the exact-host API
+  # route as the only selected route for this host on some Gateway controllers.
+  # Wildcards still cover one-level branch previews (e.g. branch.specht-labs.de).
+  # For pages.specht-labs.de/api, the longer /api prefix on the API route wins.
   hostnames:
     - specht-labs.de
+    - pages.specht-labs.de
     - "*.specht-labs.de"
     - gold-specht.de
     - "*.gold-specht.de"
