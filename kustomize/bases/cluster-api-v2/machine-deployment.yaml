@@ -14,11 +14,12 @@ items:
   spec:
     clusterName: &clusterName specht-labs
     replicas: &replicas 1
-    strategy: &strategy
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 1
-        maxUnavailable: 0
+    rollout:
+      strategy: &strategy
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
     selector:
       matchLabels: null
     template:
@@ -48,7 +49,8 @@ items:
   spec:
     clusterName: *clusterName
     replicas: *replicas
-    strategy: *strategy
+    rollout:
+      strategy: *strategy
     selector:
       matchLabels: null
     template:
@@ -71,7 +73,8 @@ items:
   spec:
     clusterName: *clusterName
     replicas: *replicas
-    strategy: *strategy
+    rollout:
+      strategy: *strategy
     selector:
       matchLabels: null
     template:

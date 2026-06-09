@@ -27,6 +27,3 @@ spec:
       prune: false
     syncOptions:
       - CreateNamespace=true
-      # Server-side apply avoids client-side merge issues on the large, controller-mutated
-      # CAPI objects (e.g. KubeadmControlPlane / HetznerCluster).
-      - ServerSideApply=true
