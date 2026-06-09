@@ -5,4 +5,4 @@ serviceMonitor:
     instance: primary
 
 config:
-  token: "foobar2342"
+  existingSecret: hcloud-exporter
