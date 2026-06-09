@@ -9,10 +9,13 @@ spec:
         elements:
           - name: hcloud-csi
             path: kustomize/overlays/specht-labs-v2/hcloud-csi
+            namespace: kube-system
           - name: hcloud-ccm
             path: charts/hcloud-ccm
+            namespace: kube-system
           - name: hcloud-exporter
             path: kustomize/overlays/specht-labs-v2/hcloud-exporter
+            namespace: monitoring
   template:
     metadata:
       name: "{{name}}"
@@ -21,7 +24,7 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       destination:
-        namespace: "kube-system"
+        namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       project: default
       source:
