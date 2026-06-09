@@ -4,3 +4,6 @@ namespace: envoy-gateway-system
 
 resources:
   - ../../../bases/envoy-gateway/
+  - tailscale-envoyproxy.yaml
+  - tailscale-gatewayclass.yaml
+  - tailscale-gateway.yaml

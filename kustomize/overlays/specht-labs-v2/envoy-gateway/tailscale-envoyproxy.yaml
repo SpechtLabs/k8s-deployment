@@ -1,0 +1,15 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: tailscale-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: LoadBalancer
+        loadBalancerClass: tailscale
+        annotations:
+          tailscale.com/hostname: k8s
+          tailscale.com/tags: tag:core-infra
