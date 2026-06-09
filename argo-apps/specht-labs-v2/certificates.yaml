@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: certificates
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: cert-manager
+            path: kustomize/overlays/specht-labs-v2/cert-manager
+          - name: cluster-issuer
+            path: kustomize/overlays/specht-labs-v2/cluster-issuer
+  template:
+    metadata:
+      name: "{{name}}"
+      namespace: argocd
+      annotations:
+        # Wave 1: synced after envoy-gateway (wave 0) installs the Gateway API CRDs that
+        # config.enableGatewayAPI requires.
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      destination:
+        namespace: "cert-manager"
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: "{{path}}"
+        repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+        targetRevision: main
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
