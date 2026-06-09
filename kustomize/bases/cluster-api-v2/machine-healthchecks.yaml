@@ -50,7 +50,7 @@ spec:
       unhealthyLessThanOrEqualTo: 100%
   selector:
     matchLabels:
-      nodepool: specht-labs-md-0
+      nodepool: worker-x86
 ---
 
 

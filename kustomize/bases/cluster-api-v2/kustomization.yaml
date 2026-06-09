@@ -8,4 +8,3 @@ resources:
   - cluster.yaml
   - machine-deployment.yaml
   - machine-healthchecks.yaml
-  

@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-specht-labs
+  namespace: argocd
+  # IMPORTANT: No finalizer. Deleting this Argo Application must NOT cascade-delete
+  # the Cluster API objects (that would tear down the real Hetzner cluster).
+  #finalizers:
+  #  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  source:
+    path: kustomize/overlays/specht-labs-v2/cluster-api
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      # selfHeal: reconcile git → cluster automatically (version bumps, ref repoints).
+      selfHeal: true
+      # prune: MUST stay false. Pruning a Cluster / HetznerCluster / KubeadmControlPlane
+      # would destroy the cluster. Resources removed/renamed in git (e.g. the old
+      # cpx22 HCloudMachineTemplates after the cx23 swap) are left orphaned and must be
+      # deleted by hand once no Machine references them. See bases/cluster-api-v2/README.md.
+      prune: false
+    syncOptions:
+      - CreateNamespace=true
+      # Server-side apply avoids client-side merge issues on the large, controller-mutated
+      # CAPI objects (e.g. KubeadmControlPlane / HetznerCluster).
+      - ServerSideApply=true

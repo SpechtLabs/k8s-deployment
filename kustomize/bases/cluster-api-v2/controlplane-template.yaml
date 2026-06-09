@@ -51,6 +51,38 @@ spec:
       path: /etc/kubernetes/resolv.conf
       permissions: "0744"
     - content: |
+        apiVersion: kubelet.config.k8s.io/v1beta1
+        kind: KubeletConfiguration
+        authentication:
+          anonymous:
+            enabled: false
+          webhook:
+            enabled: true
+          x509:
+            clientCAFile: /etc/kubernetes/pki/ca.crt
+        authorization:
+          mode: Webhook
+        clusterDNS:
+          - 10.96.0.10
+        clusterDomain: cluster.local
+        eventRecordQPS: 5
+        maxPods: 220
+        readOnlyPort: 0
+        resolvConf: /etc/kubernetes/resolv.conf
+        serverTLSBootstrap: true
+        tlsCipherSuites:
+          - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+          - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+          - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+          - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+          - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+          - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+          - TLS_RSA_WITH_AES_256_GCM_SHA384
+          - TLS_RSA_WITH_AES_128_GCM_SHA256
+      owner: root:root
+      path: /etc/kubernetes/kubelet/config.yaml
+      permissions: "0644"
+    - content: |
         # Copyright The containerd Authors.
         #
         # Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,26 +134,26 @@ spec:
         kubeletExtraArgs:
         - name: cloud-provider
           value: external
-        - name: max-pods
-          value: "120"
-        - name: resolv-conf
-          value: /etc/kubernetes/resolv.conf
+        - name: config
+          value: /etc/kubernetes/kubelet/config.yaml
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
         - name: cloud-provider
           value: external
-        - name: max-pods
-          value: "120"
-        - name: resolv-conf
-          value: /etc/kubernetes/resolv.conf
+        - name: config
+          value: /etc/kubernetes/kubelet/config.yaml
     preKubeadmCommands:
+    # Version exports are index-pinned for the overlay `replacements`
+    # (overlays/specht-labs-v2/cluster-api/kustomization.yaml):
+    #   [1] CONTAINERD  [2] RUNC  [3] KUBERNETES_VERSION
+    # Keep these three lines in this order; do not insert commands before them.
     - set -x
     - export CONTAINERD=2.3.1
     - export RUNC=1.2.5
-    - export KUBERNETES_VERSION=$(echo v1.35.4 | sed 's/^v//')
-    - export TRIMMED_KUBERNETES_VERSION=$(echo v1.35.4 | sed 's/^v//' | awk -F . '{print
-      $1 "." $2}')
+    - export KUBERNETES_VERSION=v1.35.4
+    - export KUBE_PKG_VERSION=${KUBERNETES_VERSION#v}
+    - export TRIMMED_KUBERNETES_VERSION=$(echo $KUBE_PKG_VERSION | awk -F . '{print $1 "." $2}')
     - ARCH="$(dpkg --print-architecture)"
     - localectl set-locale LANG=en_US.UTF-8
     - localectl set-locale LANGUAGE=en_US.UTF-8
@@ -154,8 +186,8 @@ spec:
     - echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v$TRIMMED_KUBERNETES_VERSION/deb/
       /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
     - apt-get update
-    - apt-get install -y kubelet="$KUBERNETES_VERSION-*" kubeadm="$KUBERNETES_VERSION-*"
-      kubectl="$KUBERNETES_VERSION-*" bash-completion
+    - apt-get install -y kubelet="$KUBE_PKG_VERSION-*" kubeadm="$KUBE_PKG_VERSION-*"
+      kubectl="$KUBE_PKG_VERSION-*" bash-completion
     - apt-mark hold kubelet kubectl kubeadm
     - systemctl enable kubelet
     - kubeadm config images pull --kubernetes-version $KUBERNETES_VERSION
@@ -168,6 +200,6 @@ spec:
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: HCloudMachineTemplate
-        name: control-plane-x86
+        name: control-plane-cx23-ubuntu-24-04
   replicas: 3
   version: v1.35.4
