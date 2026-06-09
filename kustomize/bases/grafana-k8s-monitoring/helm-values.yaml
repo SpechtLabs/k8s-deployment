@@ -74,6 +74,11 @@ costMetrics:
 annotationAutodiscovery:
   enabled: true
   collector: alloy-metrics
+# Scrape Prometheus-Operator ServiceMonitors/PodMonitors/Probes cluster-wide
+# (e.g. ArgoCD ships its own ServiceMonitors that annotation autodiscovery misses).
+prometheusOperatorObjects:
+  enabled: true
+  collector: alloy-metrics
 clusterEvents:
   enabled: true
   collector: alloy-singleton
