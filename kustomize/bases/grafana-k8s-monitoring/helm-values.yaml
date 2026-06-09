@@ -63,7 +63,7 @@ hostMetrics:
   energyMetrics:
     enabled: false
 costMetrics:
-  enabled: false
+  enabled: true
   collector: alloy-metrics
 annotationAutodiscovery:
   enabled: true
@@ -147,15 +147,28 @@ telemetryServices:
   windows-exporter:
     deploy: false
   opencost:
-    deploy: false
+    deploy: true
     metricsSource: grafana-cloud-metrics
     opencost:
       exporter:
         defaultClusterId: specht-labs
+        extraEnv:
+          CONFIG_PATH: /tmp/custom-config
       prometheus:
         existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
         external:
           url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom
+      customPricing:
+        enabled: true
+        costModel:
+          description: Hetzner Cloud CPX22 pricing, net EUR.
+          CPU: 0.0032
+          RAM: 0.0016
+          GPU: 0
+          storage: 0
+          zoneNetworkEgress: 0
+          regionNetworkEgress: 0
+          internetNetworkEgress: 1
   kepler:
     deploy: false
   k8s-manifest-tail:

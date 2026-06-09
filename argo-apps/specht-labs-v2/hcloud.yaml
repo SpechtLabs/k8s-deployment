@@ -11,6 +11,8 @@ spec:
             path: kustomize/overlays/specht-labs-v2/hcloud-csi
           - name: hcloud-ccm
             path: charts/hcloud-ccm
+          - name: hcloud-exporter
+            path: kustomize/overlays/specht-labs-v2/hcloud-exporter
   template:
     metadata:
       name: "{{name}}"
