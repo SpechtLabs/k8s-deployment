@@ -7,10 +7,8 @@
 #     - TLS now uses Cloudflare DNS-01, so wildcard certs are possible: a single
 #       Terminate listener per wildcard hostname (e.g. *.specht-labs.de) covers many
 #       app hosts at once. Apps that let the gateway terminate TLS add a Terminate
-#       listener + cert Secret; apps that terminate their own TLS (e.g. ArgoCD, which
-#       needs gRPC + REST on one port) add a Passthrough listener matched by SNI and
-#       a TLSRoute to their backend. A wildcard label matches exactly one DNS label, so
-#       *.specht-labs.de does NOT shadow the two-label argocd.v2.specht-labs.de.
+#       listener + cert Secret; apps that terminate their own TLS add a Passthrough
+#       listener on the private tailnet Gateway.
 #
 # All app listeners accumulate here (single Gateway => single Envoy + single Hetzner
 # LB, ~9 EUR each, so we do NOT use a Gateway-per-app). The matching route lives with
@@ -29,21 +27,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-    # ArgoCD: TLS passthrough. argocd-server terminates its own TLS so gRPC and REST
-    # work on the same port; the gateway only routes by SNI. Paired with the TLSRoute
-    # in the argocd overlay and the cert-manager Certificate that fills argocd-server-tls.
-    - name: argocd-tls
-      protocol: TLS
-      port: 443
-      hostname: argocd.v2.specht-labs.de
-      tls:
-        mode: Passthrough
-      allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: All
     # StaticPages: gateway-terminated TLS. All four listeners share the one wildcard
     # Secret static-pages-tls (cert-manager, Cloudflare DNS-01, see static-pages-certs.yaml).
     # Routes live in the static-pages overlay (httproute.yaml). Wildcard listeners match a
@@ -55,7 +38,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: static-pages-tls
       allowedRoutes:
         namespaces:
@@ -67,7 +51,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: static-pages-tls
       allowedRoutes:
         namespaces:
@@ -79,7 +64,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: static-pages-tls
       allowedRoutes:
         namespaces:
@@ -91,7 +77,8 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: static-pages-tls
       allowedRoutes:
         namespaces:
