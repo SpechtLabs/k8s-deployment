@@ -1,0 +1,39 @@
+# Scrape Envoy Gateway metrics into Grafana Cloud (consumed by the
+# prometheusOperatorObjects feature in grafana-k8s-monitoring). The Envoy proxy
+# pods expose /stats/prometheus on :19001 but only carry legacy prometheus.io/*
+# annotations, which this cluster's k8s.grafana.com annotation autodiscovery
+# ignores — hence these explicit monitors. Feeds the imported Envoy dashboards.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: envoy-proxy
+  labels:
+    app.kubernetes.io/name: envoy
+spec:
+  namespaceSelector:
+    matchNames:
+      - envoy-gateway-system
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: envoy-gateway
+      app.kubernetes.io/component: proxy
+  podMetricsEndpoints:
+    - port: metrics
+      path: /stats/prometheus
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: envoy-gateway
+  labels:
+    control-plane: envoy-gateway
+spec:
+  namespaceSelector:
+    matchNames:
+      - envoy-gateway-system
+  selector:
+    matchLabels:
+      control-plane: envoy-gateway
+  endpoints:
+    - port: metrics
+      path: /metrics
