@@ -14,9 +14,11 @@ resources:
   # Shared dashboard JSON → ConfigMaps (one source of truth with the v1 cluster).
   - ../../../bases/grafana-dashboards/kubernetes-infra-apps
   - ../../../bases/grafana-dashboards/envoy-gateway
+  - ../../../bases/grafana-dashboards/infrastructure
   - grafana.yaml
   - grafanadashboards.yaml
   - grafanadashboards-envoy.yaml
+  - grafanadashboards-infra.yaml
 
 generators:
   - secret-generator.yaml
