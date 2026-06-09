@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: cilium
-            path: kustomize/overlays/specht-labs-v2/cilium
+            path: charts/cilium
             namespace: kube-system
             wave: "-1"
           - name: tailscale
@@ -29,7 +29,7 @@ spec:
         argocd.argoproj.io/sync-wave: "{{wave}}"
     spec:
       destination:
-        namespace: "cert-manager"
+        namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       project: default
       source:
