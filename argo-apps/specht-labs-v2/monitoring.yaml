@@ -12,7 +12,7 @@ spec:
             namespace: kube-system
           - name: grafana-k8s-monitoring
             path: kustomize/overlays/specht-labs-v2/grafana-k8s-monitoring
-            namespace: opentelemetry-operator-system
+            namespace: monitoring
           - name: grafana-operator
             path: kustomize/overlays/specht-labs-v2/grafana-operator
             namespace: grafana-operator
