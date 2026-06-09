@@ -8,4 +8,11 @@ resources:
 generators:
   - ./secret-generator.yaml
 
-patches: []
+patches:
+  - target:
+      kind: ServiceMonitor
+      name: hcloud-exporter
+    patch: |-
+      - op: replace
+        path: "/spec/namespaceSelector/matchNames/0"
+        value: monitoring
