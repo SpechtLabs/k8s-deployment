@@ -7,3 +7,11 @@ resources:
   - tailscale-envoyproxy.yaml
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml
+
+# Annotate the shared base's hetzner-lb EnvoyProxy with the external-dns hostnames here (not in the
+# base) so specht-labs.de ownership stays cluster-specific.
+patches:
+  - path: hetzner-lb-externaldns.patch.yaml
+    target:
+      kind: EnvoyProxy
+      name: hetzner-lb

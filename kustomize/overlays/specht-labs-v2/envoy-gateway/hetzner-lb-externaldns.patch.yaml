@@ -1,0 +1,15 @@
+# Adds the external-dns hostname annotation to the shared base's hetzner-lb EnvoyProxy. Kept in the
+# v2 overlay (not the base) so domain ownership of specht-labs.de stays cluster-specific and a
+# future cluster reusing the base won't fight over the same Cloudflare records. external-dns reads
+# both the IPv4 and IPv6 from the LB Service status, so this yields A + AAAA automatically.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: hetzner-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    kubernetes:
+      envoyService:
+        annotations:
+          external-dns.alpha.kubernetes.io/hostname: "specht-labs.de,*.specht-labs.de"

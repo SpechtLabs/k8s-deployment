@@ -21,6 +21,12 @@ spec:
             # Wave 0: installs Gateway API + Envoy Gateway CRDs before cert-manager (wave 1)
             # needs them to enable Gateway API support.
             wave: "0"
+          - name: external-dns
+            path: kustomize/overlays/specht-labs-v2/external-dns
+            namespace: external-dns
+            # Publishes the LB IPs to Cloudflare. Reconciles continuously, so it self-heals once the
+            # envoy-gateway (wave 0) LB Services obtain their IPs.
+            wave: "0"
   template:
     metadata:
       name: "{{name}}"
