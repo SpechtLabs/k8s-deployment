@@ -13,6 +13,9 @@ spec:
           - name: grafana-k8s-monitoring
             path: kustomize/overlays/specht-labs-v2/grafana-k8s-monitoring
             namespace: opentelemetry-operator-system
+          - name: grafana-operator
+            path: kustomize/overlays/specht-labs-v2/grafana-operator
+            namespace: grafana-operator
   template:
     metadata:
       name: "{{name}}"
@@ -34,3 +37,7 @@ spec:
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+          # CRDs and the custom resources that use them ship in one Application
+          # (grafana-operator); these make the apply order-independent.
+          - ServerSideApply=true
+          - SkipDryRunOnMissingResource=true

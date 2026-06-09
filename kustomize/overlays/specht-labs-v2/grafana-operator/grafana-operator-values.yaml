@@ -1,0 +1,5 @@
+# Render the CRDs into templates/ (mutable) so they ship with the chart and
+# ArgoCD installs/upgrades them. With the default (immutable: true) the CRDs
+# live in the chart's crds/ dir and are skipped by `helm template`.
+crds:
+  immutable: false
