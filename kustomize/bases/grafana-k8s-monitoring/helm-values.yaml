@@ -152,8 +152,6 @@ telemetryServices:
     opencost:
       exporter:
         defaultClusterId: specht-labs
-        extraEnv:
-          CONFIG_PATH: /tmp/custom-config
       prometheus:
         existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
         external:
