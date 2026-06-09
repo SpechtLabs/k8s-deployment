@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: kube-metrics
+  name: monitoring
   namespace: argocd
 spec:
   generators:
@@ -9,6 +9,10 @@ spec:
         elements:
           - name: metrics-server
             path: kustomize/overlays/specht-labs-v2/metrics-server
+            namespace: kube-system
+          - name: grafana-k8s-monitoring
+            path: kustomize/overlays/specht-labs-v2/grafana-k8s-monitoring
+            namespace: opentelemetry-operator-system
   template:
     metadata:
       name: "{{name}}"
@@ -17,7 +21,7 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       destination:
-        namespace: "kube-system"
+        namespace: "{{namespace}}"
         server: https://kubernetes.default.svc
       project: default
       source:
