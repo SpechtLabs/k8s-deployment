@@ -1,6 +1,6 @@
 staticpages:
   nameOverride: "static-pages"
-  replicaCount: 1
+  replicaCount: 2
   env:
     - name: OTEL_LOG_LEVEL
       value: "DEBUG"
