@@ -2899,7 +2899,7 @@
         "current": {
           "selected": false,
           "text": "Prometheus",
-          "value": "PBFA97CFB590B2093"
+          "value": "${datasource}"
         },
         "hide": 0,
         "includeAll": false,
@@ -2915,13 +2915,9 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "selected": false,
+          "text": "envoy-gateway-system",
+          "value": "envoy-gateway-system"
         },
         "datasource": {
           "uid": "$datasource"
