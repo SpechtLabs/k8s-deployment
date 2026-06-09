@@ -13,3 +13,12 @@ spec:
         annotations:
           tailscale.com/hostname: k8s
           tailscale.com/tags: tag:core-infra
+        patch:
+          type: StrategicMerge
+          value:
+            metadata:
+              annotations:
+                tailscale.com/hostname: k8s
+                tailscale.com/tags: tag:core-infra
+            spec:
+              loadBalancerClass: tailscale
