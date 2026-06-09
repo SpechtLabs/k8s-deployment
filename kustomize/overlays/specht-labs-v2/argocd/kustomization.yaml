@@ -40,7 +40,7 @@ patches:
       metadata:
         name: argocd-cm
       data:
-        url: https://argocd.v2.specht-labs.de
+        url: https://argocd.k8s.specht-labs.de
         dex.config: |
           connectors:
             - type: oidc
@@ -50,7 +50,7 @@ patches:
                 issuer: https://idp.sphinx-map.ts.net
                 clientID: $argocd-oidc:tailscale.clientID
                 clientSecret: $argocd-oidc:tailscale.clientSecret
-                redirectURI: https://argocd.v2.specht-labs.de/api/dex/callback
+                redirectURI: https://argocd.k8s.specht-labs.de/api/dex/callback
                 scopes:
                   - openid
                 getUserInfo: true
