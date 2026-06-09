@@ -51,38 +51,6 @@ spec:
       path: /etc/kubernetes/resolv.conf
       permissions: "0744"
     - content: |
-        apiVersion: kubelet.config.k8s.io/v1beta1
-        kind: KubeletConfiguration
-        authentication:
-          anonymous:
-            enabled: false
-          webhook:
-            enabled: true
-          x509:
-            clientCAFile: /etc/kubernetes/pki/ca.crt
-        authorization:
-          mode: Webhook
-        clusterDNS:
-          - 10.96.0.10
-        clusterDomain: cluster.local
-        eventRecordQPS: 5
-        maxPods: 220
-        readOnlyPort: 0
-        resolvConf: /etc/kubernetes/resolv.conf
-        serverTLSBootstrap: true
-        tlsCipherSuites:
-          - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-          - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-          - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-          - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-          - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
-          - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-          - TLS_RSA_WITH_AES_256_GCM_SHA384
-          - TLS_RSA_WITH_AES_128_GCM_SHA256
-      owner: root:root
-      path: /etc/kubernetes/kubelet/config.yaml
-      permissions: "0644"
-    - content: |
         # Copyright The containerd Authors.
         #
         # Licensed under the Apache License, Version 2.0 (the "License");
@@ -134,15 +102,19 @@ spec:
         kubeletExtraArgs:
         - name: cloud-provider
           value: external
-        - name: config
-          value: /etc/kubernetes/kubelet/config.yaml
+        - name: max-pods
+          value: "120"
+        - name: resolv-conf
+          value: /etc/kubernetes/resolv.conf
     joinConfiguration:
       nodeRegistration:
         kubeletExtraArgs:
         - name: cloud-provider
           value: external
-        - name: config
-          value: /etc/kubernetes/kubelet/config.yaml
+        - name: max-pods
+          value: "120"
+        - name: resolv-conf
+          value: /etc/kubernetes/resolv.conf
     preKubeadmCommands:
     # Version exports are index-pinned for the overlay `replacements`
     # (overlays/specht-labs-v2/cluster-api/kustomization.yaml):
