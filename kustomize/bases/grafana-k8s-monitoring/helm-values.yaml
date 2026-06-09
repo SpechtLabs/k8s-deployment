@@ -108,6 +108,10 @@ autoInstrumentation:
 profiling:
   enabled: true
   collector: alloy-profiles
+  # The chart requires at least one profiling type when profiling is enabled.
+  # eBPF matches the alloy-profiles collector's privileged + daemonset presets.
+  ebpf:
+    enabled: true
 collectors:
   alloy-metrics:
     presets:
