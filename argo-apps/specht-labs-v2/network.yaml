@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: cilium
-            path: kustomize/overlays/specht-labs-v2/cert-manager
+            path: kustomize/overlays/specht-labs-v2/cilium
             namespace: kube-system
             wave: "-1"
           - name: tailscale
@@ -16,7 +16,7 @@ spec:
             namespace: tailscale
             wave: "-1"
           - name: envoy-gateway
-            path: kustomize/overlays/specht-labs-v2/cluster-issuer
+            path: kustomize/overlays/specht-labs-v2/envoy-gateway
             namespace: envoy-gateway-system
             # Wave 0: installs Gateway API + Envoy Gateway CRDs before cert-manager (wave 1)
             # needs them to enable Gateway API support.
