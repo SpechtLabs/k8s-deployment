@@ -41,3 +41,19 @@ patches:
         name: argocd-cm
       data:
         url: https://argocd.v2.specht-labs.de
+        dex.config: |
+          connectors:
+            - type: oidc
+              id: oidc
+              name: Tailscale
+              config:
+                issuer: https://idp.sphinx-map.ts.net
+                clientID: $argocd-oidc:tailscale.clientID
+                clientSecret: $argocd-oidc:tailscale.clientSecret
+                redirectURI: https://argocd.v2.specht-labs.de/api/dex/callback
+                scopes:
+                  - openid
+                getUserInfo: true
+                Default: username
+                claimMapping:
+                  Default: username
