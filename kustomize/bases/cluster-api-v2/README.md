@@ -89,3 +89,18 @@ there is **no `cluster-api-v2` ArgoCD `Application`** under `argo-apps/`, so it 
 kubectl kustomize kustomize/overlays/specht-labs-v2/cluster-api \
   | kubectl --context <mgmt> apply --dry-run=server -f -
 ```
+
+## Hetzner credentials secret
+
+The CAPH controller authenticates to Hetzner via the `hetzner` secret in
+namespace `default`, referenced by `HetznerCluster.spec.hetznerSecretRef`. It is
+SOPS-encrypted (age) and GitOps-managed: it lives at
+`kustomize/overlays/specht-labs-v2/cluster-api/hetzner.secret.yaml` and is
+decrypted by ArgoCD's ksops plugin via that overlay's `secret-generator.yaml`.
+The `cluster-specht-labs` app applies it (`prune: false`, so it is never pruned).
+
+> **Bootstrap caveat:** on a from-scratch management cluster the secret must
+> exist before the `HetznerCluster` reconciles, but ArgoCD/ksops must be running
+> to decrypt it. For the initial bootstrap apply it once by hand
+> (`sops -d …/hetzner.secret.yaml | kubectl apply -f -`); thereafter ArgoCD owns
+> it. Rotate the token by editing the encrypted file (`sops …`) and committing.

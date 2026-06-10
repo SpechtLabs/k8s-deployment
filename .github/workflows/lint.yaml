@@ -37,9 +37,6 @@ jobs:
             if [[ $manifest == "./manifests/deploy-secrets/helm.secret.yaml" ]]; then
               continue
             fi
-            if [[ $manifest == "./manifests/deploy-secrets/hetzner.secret.yaml" ]]; then
-              continue
-            fi
             echo "$manifest"
             kubeval --ignore-missing-schemas --strict --schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/ $manifest
           done

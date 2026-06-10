@@ -5,6 +5,13 @@ namespace: default
 resources:
   - ../../../bases/cluster-api-v2/
 
+# SOPS-encrypted Hetzner API token, decrypted by ArgoCD's ksops plugin. The
+# CAPH controller reads it via HetznerCluster.spec.hetznerSecretRef (secret
+# `hetzner` in namespace default). Was previously applied by hand from
+# manifests/deploy-secrets/; now GitOps-managed by the cluster-specht-labs app.
+generators:
+  - ./secret-generator.yaml
+
 # ── Single source of truth for component versions ──────────────────────────
 # Bump these three literals to upgrade the cluster. The `replacements` below
 # propagate them into the KubeadmControlPlane, every MachineDeployment, and the
