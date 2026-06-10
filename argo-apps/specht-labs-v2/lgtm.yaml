@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: lgtm
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: mimir
+            path: kustomize/overlays/specht-labs-v2/mimir
+            namespace: lgtm
+          # LGTM stack scaffold. Uncomment each as it is migrated; add the
+          # matching overlay under kustomize/overlays/specht-labs-v2/<name>.
+          # - name: loki
+          #   path: kustomize/overlays/specht-labs-v2/loki
+          #   namespace: lgtm
+          # - name: tempo
+          #   path: kustomize/overlays/specht-labs-v2/tempo
+          #   namespace: lgtm
+          # - name: grafana
+          #   path: kustomize/overlays/specht-labs-v2/grafana
+          #   namespace: lgtm
+  template:
+    metadata:
+      name: "{{name}}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      destination:
+        namespace: "{{namespace}}"
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: "{{path}}"
+        repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+        targetRevision: main
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - SkipDryRunOnMissingResource=true
