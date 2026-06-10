@@ -4,6 +4,7 @@ namespace: monitoring
 
 resources:
   - ../../../bases/grafana-k8s-monitoring/
+  - ./pdc-agent.yaml
 
 generators:
   - ./secret-generator.yaml
