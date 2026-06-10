@@ -1683,7 +1683,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(process_cpu_seconds_total{job=\"argocd-application-controller-metrics\",namespace=~\"$namespace\"}[1m])",
+              "expr": "irate(process_cpu_seconds_total{job=\"argocd-application-controller-metrics\",namespace=~\"$namespace\"}[$__rate_interval])",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{namespace}}",
