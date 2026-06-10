@@ -38,6 +38,8 @@ Out of scope (later rounds):
 | Question | Decision |
 |----------|----------|
 | Sizing | Right-sized distributed: same microservices topology as `small.yaml`, 1 replica each, `replication_factor: 1`, small resource requests, caches off. |
+| Architecture | Kafka ingest-storage (chart 6.0.6 / Mimir 3.0 default): distributor -> Kafka -> ingester. The chart bundles a single-node KRaft Kafka (`apache/kafka-native`, no Zookeeper). Topic partitions trimmed from the demo default of 100 to 8. |
+| Chart version | `mimir-distributed` 6.0.6 (Mimir 3.0.4), pinned. |
 | Object storage | Hetzner Object Storage (S3), one bucket. Blocks off-cluster so they survive cluster rebuilds. |
 | Write path | One HTTPRoute per tenant on the existing tailnet-only Envoy Gateway (`tailnet`/`http`). Plain HTTP, private over WireGuard. Each route injects the tenant's `X-Scope-OrgID` header. |
 | Multitenancy | Enabled. Tenants created implicitly on first write. Tenant tagging done by the Gateway (per-hostname header injection), so clients need no custom-header config. |
@@ -64,28 +66,35 @@ the AppSet conventions in `monitoring.yaml` / `network.yaml`.
 
 ### Mimir topology (1 replica each)
 
-Enabled: distributor, ingester, querier, query-frontend, store-gateway,
-compactor, and the chart's front proxy (nginx/gateway) as the read/write Service.
+Enabled (replicas: 1): distributor, ingester, querier, query-frontend,
+query-scheduler, store-gateway, compactor, overrides-exporter, the front proxy
+(`gateway`, nginx), and the bundled single-node `kafka` (ingest-storage).
 
-Disabled for v1: alertmanager, ruler, chunks/index/metadata/results caches,
-bundled MinIO.
+Disabled for v1: alertmanager, ruler, `rollout_operator` (only needed for
+zone-aware rollouts), chunks/index/metadata/results caches (already off by
+default), bundled MinIO.
 
 `structuredConfig` highlights:
 - `multitenancy_enabled: true`
-- `ingester.ring.replication_factor: 1`
-- `blocks_storage.backend: s3` + `blocks_storage.s3` pointing at Hetzner
-  (`endpoint: <region>.your-objectstorage.com`, `bucket_name`,
-  `force_path_style: true` if required by Hetzner).
+- `ingester.ring.replication_factor: 1` and
+  `store_gateway.sharding_ring.replication_factor: 1`
+- `ingest_storage.kafka.auto_create_topic_default_partitions: 8` (down from 100)
+- Object storage via `common.storage.backend: s3` + `common.storage.s3`
+  pointing at Hetzner (`endpoint: <region>.your-objectstorage.com`,
+  `bucket_name`).
 - Credentials via env expansion: `access_key_id: ${AWS_ACCESS_KEY_ID}`,
-  `secret_access_key: ${AWS_SECRET_ACCESS_KEY}`, with `-config.expand-env=true`.
+  `secret_access_key: ${AWS_SECRET_ACCESS_KEY}`. The chart already sets
+  `-config.expand-env=true` on every component.
 
-Rough footprint: ~7 pods, ~4-6 GB RAM.
+Footprint: ~10 pods. `zoneAwareReplication` disabled on ingester and
+store-gateway (single zone, RF1).
 
 ### Storage
 
 - Blocks: Hetzner Object Storage bucket (e.g. `specht-labs-mimir-blocks`).
-- Local working set via hcloud-csi PVCs: ingester ~10Gi, store-gateway ~5Gi,
-  compactor ~10Gi (tunable).
+- Local working set via hcloud-csi PVCs (default StorageClass `hcloud-volumes`):
+  ingester ~10Gi, store-gateway ~5Gi, compactor ~10Gi, kafka 5Gi (chart
+  default). All tunable.
 
 ### Secrets
 
@@ -158,8 +167,12 @@ to be stronger (e.g. before exposing dad's HA more widely).
 ## Risks / notes
 
 - Single ingester + RF1 means no metrics HA: an ingester restart can lose the
-  most recent unflushed window. Acceptable for homelab; scale ingesters + RF
-  to 3 later if needed.
+  most recent unflushed window. With ingest-storage, Kafka buffers the write so
+  a restarting ingester replays from the topic, which softens this. Scale
+  ingesters + RF to 3 later if needed.
+- Single-node Kafka is a SPOF: if it's down, writes stop (ingesters consume
+  from it). Consistent with the non-HA homelab posture; revisit if uptime
+  matters more later.
 - Mimir lives on the cluster it may also monitor; for pure homelab-Pi metrics
   this is fine (the source is off-cluster).
 - Exact chart value keys (front proxy component name, env injection field) are
