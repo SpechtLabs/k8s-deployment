@@ -64,8 +64,7 @@ mimir:
       storage:
         backend: s3
         s3:
-          # CHANGE to your Hetzner Object Storage region: fsn1 / nbg1 / hel1
-          endpoint: fsn1.your-objectstorage.com
+          endpoint: hel1.your-objectstorage.com
           bucket_name: specht-labs-mimir-blocks
           access_key_id: ${AWS_ACCESS_KEY_ID}
           secret_access_key: ${AWS_SECRET_ACCESS_KEY}
