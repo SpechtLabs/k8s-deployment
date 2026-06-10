@@ -42,13 +42,18 @@ items:
 - apiVersion: cluster.x-k8s.io/v1beta2
   kind: MachineDeployment
   metadata:
-    annotations: *annotations
+    annotations:
+      # Two cx23 nodes in hel1: the extra one buys headroom for the self-hosted
+      # Mimir and keeps its S3 traffic in-region (the object-storage bucket is in
+      # hel1). min=max=2 so the autoscaler holds hel at 2, not the shared 1.
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
     labels: *labels
     name: worker-x86-hel
     namespace: default
   spec:
     clusterName: *clusterName
-    replicas: *replicas
+    replicas: 2
     rollout:
       strategy: *strategy
     selector:
