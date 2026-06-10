@@ -19,33 +19,25 @@ destinations:
         regex = "container_id|image_id"
         action = "labeldrop"
       }
-      // Cost control: these bulk infra metrics are stored in the self-hosted
-      // Mimir (destination selfhosted-mimir, tenant spechtlabs) instead of being
-      // billed by Grafana Cloud. Drop envoy_*/hcloud_* and argocd's own non-gRPC
-      // series here; keep argocd grpc_server_* (Knowledge Graph fuel). Scoped by
-      // job, not namespace, so kube-state/cAdvisor series about argocd workloads
-      // are untouched. RE2 has no negative lookahead -> temp keep-marker label.
-      write_relabel_config {
-        source_labels = ["__name__"]
-        regex = "envoy_.*"
-        action = "drop"
-      }
-      write_relabel_config {
-        source_labels = ["__name__"]
-        regex = "hcloud_.*"
-        action = "drop"
-      }
+      // Routing is done per-feature (see each feature's `destinations`): all
+      // ServiceMonitor/PodMonitor scrapes go to the self-hosted Mimir, not here.
+      // The one exception: argocd-server is also scraped to Cloud via
+      // annotation-autodiscovery (job "argocd-server", set by the
+      // scrape-to-cloud component) solely to feed the Knowledge Graph its
+      // grpc_server RED. Keep only grpc_server_* from that scrape; drop the rest
+      // (argocd's full metrics live in the self-hosted Mimir). RE2 has no
+      // negative lookahead -> temp keep-marker label.
       write_relabel_config {
         source_labels = ["job", "__name__"]
         separator = ";"
-        regex = "argocd.*;grpc_server.*"
+        regex = "argocd-server;grpc_server.*"
         target_label = "__tmp_keep_argocd"
         replacement = "keep"
       }
       write_relabel_config {
         source_labels = ["job", "__tmp_keep_argocd"]
         separator = ";"
-        regex = "argocd.*;"
+        regex = "argocd-server;"
         action = "drop"
       }
       write_relabel_config {
@@ -89,36 +81,23 @@ destinations:
       type: basic
       username: "1676101"
       password: REPLACE_ME
-  # Self-hosted Mimir on this cluster (lgtm namespace). Receives ONLY the bulk
-  # infra metrics dropped from Grafana Cloud above, under tenant `spechtlabs`.
+  # Self-hosted Mimir on this cluster (lgtm namespace), tenant `spechtlabs`.
+  # All ServiceMonitor/PodMonitor/Probe scrapes route here (prometheusOperatorObjects
+  # destination below). No filtering: routing is per-feature, not by relabel.
   # In-cluster write, no auth; tenantId sets X-Scope-OrgID.
   selfhosted-mimir:
     type: prometheus
     url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
     tenantId: spechtlabs
-    metricProcessingRules: |
-      // Keep only envoy_*/hcloud_* (any job) and argocd's own jobs, then drop
-      // argocd grpc_server_* (that stays in Cloud for the Knowledge Graph).
-      // Everything else is dropped before remote-write, so this Mimir stores
-      // just the offloaded infra metrics.
-      write_relabel_config {
-        source_labels = ["__name__", "job"]
-        separator = ";"
-        regex = "(envoy_.*|hcloud_.*);.*|.*;argocd.*"
-        action = "keep"
-      }
-      write_relabel_config {
-        source_labels = ["job", "__name__"]
-        separator = ";"
-        regex = "argocd.*;grpc_server.*"
-        action = "drop"
-      }
 clusterMetrics:
   enabled: true
   collector: alloy-metrics
+  # kube-state-metrics / cAdvisor / kubelet -> Cloud (Kubernetes Monitoring app + KG)
+  destinations: [grafana-cloud-metrics]
 hostMetrics:
   enabled: true
   collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # node-exporter -> Cloud (K8s app)
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -128,14 +107,22 @@ hostMetrics:
 costMetrics:
   enabled: true
   collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # opencost -> Cloud (K8s cost view)
 annotationAutodiscovery:
   enabled: true
   collector: alloy-metrics
-# Scrape Prometheus-Operator ServiceMonitors/PodMonitors/Probes cluster-wide
-# (e.g. ArgoCD ships its own ServiceMonitors that annotation autodiscovery misses).
+  # Opt-in path to Cloud: workloads annotated via the scrape-to-cloud component
+  # (k8s.grafana.com/scrape) are scraped here and sent to Cloud.
+  destinations: [grafana-cloud-metrics]
+# Default sink for everything that ships a ServiceMonitor/PodMonitor/Probe:
+# the self-hosted Mimir. Operators/exporters (cert-manager, external-dns, capi,
+# caph, grafana-operator, tailscale, envoy-gateway, metrics-server, mimir, ...)
+# land here automatically. To send a workload to Cloud instead, add the
+# scrape-to-cloud component (kustomize/components/scrape-to-cloud).
 prometheusOperatorObjects:
   enabled: true
   collector: alloy-metrics
+  destinations: [selfhosted-mimir]
 clusterEvents:
   enabled: true
   collector: alloy-singleton
@@ -165,6 +152,7 @@ applicationObservability:
 autoInstrumentation:
   enabled: true # change me
   collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # Beyla RED -> Cloud (App O11y + KG)
   beyla:
     deliverTracesToApplicationObservability: true
 profiling:
