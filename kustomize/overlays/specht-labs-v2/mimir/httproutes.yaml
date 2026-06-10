@@ -1,6 +1,10 @@
 # One HTTPRoute per tenant on the tailnet-only Gateway. Each injects the tenant's
 # X-Scope-OrgID so clients (Pis, Home Assistant) need no custom-header config.
 # Route + backend (mimir-gateway) are both in lgtm, so no ReferenceGrant needed.
+#
+# parentRefs group/kind, backendRefs group/kind/weight, and the default `/`
+# PathPrefix match are written out explicitly: the Gateway API webhook defaults
+# them on the live object, so omitting them leaves ArgoCD permanently OutOfSync.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -8,21 +12,30 @@ metadata:
   namespace: lgtm
 spec:
   parentRefs:
-    - name: tailnet
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
     - homelab-mimir.k8s.specht-labs.de
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestHeaderModifier
           requestHeaderModifier:
             set:
               - name: X-Scope-OrgID
                 value: homelab
       backendRefs:
-        - name: mimir-gateway
+        - group: ""
+          kind: Service
+          name: mimir-gateway
           port: 80
+          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -31,21 +44,30 @@ metadata:
   namespace: lgtm
 spec:
   parentRefs:
-    - name: tailnet
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
     - hass-mimir.k8s.specht-labs.de
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestHeaderModifier
           requestHeaderModifier:
             set:
               - name: X-Scope-OrgID
                 value: hass
       backendRefs:
-        - name: mimir-gateway
+        - group: ""
+          kind: Service
+          name: mimir-gateway
           port: 80
+          weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -54,18 +76,27 @@ metadata:
   namespace: lgtm
 spec:
   parentRefs:
-    - name: tailnet
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
     - hass-schiltach-mimir.k8s.specht-labs.de
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestHeaderModifier
           requestHeaderModifier:
             set:
               - name: X-Scope-OrgID
                 value: hass-schiltach
       backendRefs:
-        - name: mimir-gateway
+        - group: ""
+          kind: Service
+          name: mimir-gateway
           port: 80
+          weight: 1
