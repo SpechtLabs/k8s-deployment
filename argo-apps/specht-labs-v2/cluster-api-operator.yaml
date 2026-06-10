@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-api-operator
+  namespace: argocd
+  # No finalizer: deleting this Application must NOT cascade-delete the providers
+  # (that would stop reconciliation of the live Hetzner cluster).
+spec:
+  project: default
+  destination:
+    namespace: capi-operator-system
+    server: https://kubernetes.default.svc
+  source:
+    path: kustomize/overlays/specht-labs-v2/cluster-api-operator
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      selfHeal: true
+      # prune MUST stay false. Pruning a CoreProvider/InfrastructureProvider CR
+      # makes the operator uninstall the controller that reconciles the cluster.
+      # Removed/renamed providers are orphaned and cleaned by hand.
+      prune: false
+    syncOptions:
+      - CreateNamespace=true
