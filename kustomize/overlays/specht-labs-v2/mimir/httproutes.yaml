@@ -100,3 +100,38 @@ spec:
           name: mimir-gateway
           port: 80
           weight: 1
+---
+# specht-labs-v2's own infra metrics (envoy/argocd/hcloud), written in-cluster by
+# the grafana-k8s-monitoring Alloy collector. This route only adds external
+# write/query access to the tenant; ingestion does not depend on it.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mimir-spechtlabs
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - spechtlabs-mimir.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: spechtlabs
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: mimir-gateway
+          port: 80
+          weight: 1
