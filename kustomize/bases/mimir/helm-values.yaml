@@ -1,0 +1,80 @@
+# Right-sized single-replica Mimir for homelab scale (Kafka ingest-storage).
+# Structural reference: grafana mimir-distributed/small.yaml, scaled to RF1 and
+# 1 replica each. Chart-default per-component resources are already modest
+# (ingester 100m/512Mi, not small.yaml's 3.5/8Gi), so resources are NOT overridden.
+
+minio:
+  enabled: false              # blocks live in Hetzner Object Storage, not bundled MinIO
+
+alertmanager:
+  enabled: false              # not needed for v1
+ruler:
+  enabled: false              # not needed for v1
+rollout_operator:
+  enabled: false              # only needed for zone-aware rollouts (which we disable)
+
+global:
+  extraEnvFrom:
+    - secretRef:
+        name: mimir-objstore  # provides AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+
+distributor:
+  replicas: 1
+querier:
+  replicas: 1
+query_frontend:
+  replicas: 1
+query_scheduler:
+  replicas: 1
+overrides_exporter:
+  replicas: 1
+
+ingester:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+
+store_gateway:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 5Gi
+
+compactor:
+  replicas: 1
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+
+gateway:
+  replicas: 1
+
+# kafka stays enabled (chart default) for ingest-storage: single-node KRaft
+# (apache/kafka-native, no Zookeeper). Chart defaults: 5Gi PV, 1 CPU / 1Gi. Left as-is.
+
+mimir:
+  structuredConfig:
+    multitenancy_enabled: true
+    common:
+      storage:
+        backend: s3
+        s3:
+          # CHANGE to your Hetzner Object Storage region: fsn1 / nbg1 / hel1
+          endpoint: fsn1.your-objectstorage.com
+          bucket_name: specht-labs-mimir-blocks
+          access_key_id: ${AWS_ACCESS_KEY_ID}
+          secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    ingester:
+      ring:
+        replication_factor: 1
+    store_gateway:
+      sharding_ring:
+        replication_factor: 1
+    ingest_storage:
+      kafka:
+        auto_create_topic_default_partitions: 8
