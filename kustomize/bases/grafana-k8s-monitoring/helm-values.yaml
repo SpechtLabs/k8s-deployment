@@ -19,6 +19,44 @@ destinations:
         regex = "container_id|image_id"
         action = "labeldrop"
       }
+      // --- Cost control: drop leaf metrics nothing queries (Tier 1) ---
+      // Envoy proxy stats: ~4.5k series. Not a Knowledge Graph input; no
+      // dashboards/SLOs/alerts reference them.
+      write_relabel_config {
+        source_labels = ["__name__"]
+        regex = "envoy_.*"
+        action = "drop"
+      }
+      // hcloud-exporter: ~365 series, only ever manually explored.
+      write_relabel_config {
+        source_labels = ["__name__"]
+        regex = "hcloud_.*"
+        action = "drop"
+      }
+      // ArgoCD's own exporter metrics (workqueue/go/controller/rest_client
+      // histograms ~3.7k series): drop everything from the argocd.* jobs EXCEPT
+      // grpc_server_*, which the Knowledge Graph consumes for service RED.
+      // Scoped by `job` (NOT namespace) so kube-state/cAdvisor series ABOUT
+      // argocd workloads — which the K8s Monitoring app and KG entity model
+      // need — are left untouched. RE2 has no negative lookahead, so protect
+      // grpc_server_* with a temp keep-marker label, then drop the rest.
+      write_relabel_config {
+        source_labels = ["job", "__name__"]
+        separator = ";"
+        regex = "argocd.*;grpc_server.*"
+        target_label = "__tmp_keep_argocd"
+        replacement = "keep"
+      }
+      write_relabel_config {
+        source_labels = ["job", "__tmp_keep_argocd"]
+        separator = ";"
+        regex = "argocd.*;"
+        action = "drop"
+      }
+      write_relabel_config {
+        regex = "__tmp_keep_argocd"
+        action = "labeldrop"
+      }
   grafana-cloud-logs:
     type: loki
     url: https://logs-prod-012.grafana.net./loki/api/v1/push
@@ -106,7 +144,11 @@ applicationObservability:
       enabled: true
       port: 9411
 autoInstrumentation:
-  enabled: true # change me
+  # Tier 2 cost control: Beyla eBPF RED (~4.7k series) is largely redundant with
+  # span metrics from traces (applicationObservability stays enabled). Disabling
+  # loses eBPF RED + KG network-flow edges for services that emit no traces
+  # (e.g. nginx/static-pages). Re-enable if you miss RED on untraced workloads.
+  enabled: false
   collector: alloy-metrics
   beyla:
     deliverTracesToApplicationObservability: true
