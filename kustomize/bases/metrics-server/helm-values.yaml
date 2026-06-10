@@ -3,7 +3,7 @@ metrics:
 
 serviceMonitor:
   enabled: true
-  interval: 10s
+  interval: 60s
 
   additionalLabels:
     instance: primary

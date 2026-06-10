@@ -1,5 +1,11 @@
 cluster:
   name: specht-labs
+global:
+  # Pin metrics collection to 1/min to cap Grafana Cloud DPM (cost lever).
+  # This is also the chart default; set explicitly so a chart bump can't
+  # silently lower it. Per-feature/ServiceMonitor intervals inherit this
+  # unless they set their own.
+  scrapeInterval: 60s
 destinations:
   grafana-cloud-metrics:
     type: prometheus

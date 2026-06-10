@@ -37,6 +37,7 @@ dex:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
@@ -55,6 +56,7 @@ redis:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
@@ -82,6 +84,7 @@ repoServer:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
@@ -118,6 +121,7 @@ server:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
@@ -145,6 +149,7 @@ applicationSet:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
@@ -173,6 +178,7 @@ controller:
     enabled: true
     serviceMonitor:
       enabled: true
+      interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
 
       additionalLabels:
         instance: primary
