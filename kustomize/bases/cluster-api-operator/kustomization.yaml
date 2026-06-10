@@ -19,3 +19,4 @@ resources:
   - bootstrap-provider.yaml
   - controlplane-provider.yaml
   - infrastructure-provider.yaml
+  - caph-pdb.yaml

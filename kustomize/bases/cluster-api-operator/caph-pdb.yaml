@@ -1,0 +1,19 @@
+# Keep at least one CAPH controller (and thus webhook endpoint) up during
+# voluntary disruptions (node drains for upgrades). Pairs with the 2-replica +
+# anti-affinity HA in infrastructure-provider.yaml. The deployment is created by
+# the operator from the InfrastructureProvider CR, so skip the dry-run until it
+# (and the caph-system namespace) exist.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: caph-controller-manager
+  namespace: caph-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/provider: infrastructure-hetzner
+      control-plane: caph-controller-manager
