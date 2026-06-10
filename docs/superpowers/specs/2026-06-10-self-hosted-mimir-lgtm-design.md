@@ -111,9 +111,9 @@ first write. Initial tenant IDs:
 
 | Tenant ID | Source | Ingest hostname |
 |-----------|--------|-----------------|
-| `homelab` | Raspberry Pi homelab | `homelab.mimir.k8s.specht-labs.de` |
-| `hass` | My Home Assistant | `hass.mimir.k8s.specht-labs.de` |
-| `hass-schiltach` | Dad's Home Assistant (Schiltach) | `hass-schiltach.mimir.k8s.specht-labs.de` |
+| `homelab` | Raspberry Pi homelab | `homelab-mimir.k8s.specht-labs.de` |
+| `hass` | My Home Assistant | `hass-mimir.k8s.specht-labs.de` |
+| `hass-schiltach` | Dad's Home Assistant (Schiltach) | `hass-schiltach-mimir.k8s.specht-labs.de` |
 
 Per-tenant limits (ingestion rate, max series, retention) are available via
 Mimir's runtime `overrides` config but are left at defaults for v1.
@@ -160,7 +160,7 @@ to be stronger (e.g. before exposing dad's HA more widely).
 - Rendered config shows `multitenancy_enabled: true`, `replication_factor: 1`,
   and the Hetzner S3 endpoint.
 - Post-sync: Mimir pods Ready, `/ready` green.
-- A test write to `http://homelab.mimir.k8s.specht-labs.de/api/v1/push` returns
+- A test write to `http://homelab-mimir.k8s.specht-labs.de/api/v1/push` returns
   200, and a query for that sample with `X-Scope-OrgID: homelab` returns it,
   while the same query under another tenant returns nothing (isolation holds).
 

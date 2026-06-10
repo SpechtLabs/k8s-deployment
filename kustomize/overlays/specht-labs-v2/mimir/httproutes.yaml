@@ -12,7 +12,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - homelab.mimir.k8s.specht-labs.de
+    - homelab-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier
@@ -35,7 +35,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass.mimir.k8s.specht-labs.de
+    - hass-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier
@@ -58,7 +58,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-schiltach.mimir.k8s.specht-labs.de
+    - hass-schiltach-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier

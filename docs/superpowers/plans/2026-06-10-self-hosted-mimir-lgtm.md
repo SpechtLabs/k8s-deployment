@@ -258,7 +258,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - homelab.mimir.k8s.specht-labs.de
+    - homelab-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier
@@ -281,7 +281,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass.mimir.k8s.specht-labs.de
+    - hass-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier
@@ -304,7 +304,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-schiltach.mimir.k8s.specht-labs.de
+    - hass-schiltach-mimir.k8s.specht-labs.de
   rules:
     - filters:
         - type: RequestHeaderModifier
@@ -480,9 +480,9 @@ an lgtm namespace so the Pi homelab and Home Assistant instances can remote-writ
 to durable Hetzner Object Storage instead of Grafana Cloud.
 
 Tenants (X-Scope-OrgID injected per hostname on the tailnet Gateway):
-- homelab            -> homelab.mimir.k8s.specht-labs.de
-- hass               -> hass.mimir.k8s.specht-labs.de
-- hass-schiltach     -> hass-schiltach.mimir.k8s.specht-labs.de
+- homelab            -> homelab-mimir.k8s.specht-labs.de
+- hass               -> hass-mimir.k8s.specht-labs.de
+- hass-schiltach     -> hass-schiltach-mimir.k8s.specht-labs.de
 
 Only Mimir is live; the LGTM ApplicationSet has Loki/Tempo/Grafana stubbed.
 
@@ -501,7 +501,7 @@ kubectl -n lgtm get pods                       # all Running/Ready
 kubectl -n lgtm get pvc                        # ingester/store-gateway/compactor/kafka Bound
 kubectl -n lgtm rollout status statefulset/mimir-ingester
 # Tenant isolation smoke test (from a tailnet host):
-#   write a sample to http://homelab.mimir.k8s.specht-labs.de/api/v1/push
+#   write a sample to http://homelab-mimir.k8s.specht-labs.de/api/v1/push
 #   query it back with X-Scope-OrgID: homelab  -> returns the sample
 #   query it back with X-Scope-OrgID: hass      -> returns nothing
 ```
