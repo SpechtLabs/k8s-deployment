@@ -3,7 +3,7 @@ staticpages:
   replicaCount: 2
   env:
     - name: OTEL_LOG_LEVEL
-      value: "DEBUG"
+      value: "INFO"
 
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: "tempo-distributor.observability.svc.cluster.local:4317"
@@ -50,246 +50,70 @@ configs:
   output:
     format: long
 
+  # Shared settings for every page. Each entry under `pages` deep-merges over
+  # this block, so a page only needs the fields that differ (domain + repo).
+  # Requires the staticpages image with pageDefaults support (v0.2.0+).
+  pageDefaults:
+    bucket:
+      region: eu-central-003
+      url: https://s3.eu-central-003.backblazeb2.com
+      name: cedi-testing
+      applicationId: ENV(APPLICATION_ID)
+      secret: ENV(S3_SECRET)
+
+    proxy:
+      url: https://cdn.specht-labs.de
+      path: file/cedi-testing
+      notFound: 404.html
+      # ".html"/".htm" resolve clean URLs (/guides/x -> /guides/x.html);
+      # "/index.*" resolve directory indexes.
+      searchPath:
+        - .html
+        - .htm
+        - /index.html
+        - /index.htm
+    git:
+      provider: github
+      mainBranch: main
+    preview:
+      enabled: true
+      branch: true
+      sha: false
+      environment: false
+
   pages:
     - domain: specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/spechtlabs.github.io
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: pages.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/StaticPages
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: calendarapi.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/CalendarAPI
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: tka.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/tka
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: dev-page.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/tka
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: golint.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/golint-sl
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: gold-specht.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/GoldSpecht
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: granary.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/granary
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
 
     - domain: prose.specht-labs.de
-      bucket:
-        region: eu-central-003
-        url: https://s3.eu-central-003.backblazeb2.com
-        name: cedi-testing
-        applicationId: ENV(APPLICATION_ID)
-        secret: ENV(S3_SECRET)
-
-      proxy:
-        url: https://cdn.specht-labs.de
-        path: file/cedi-testing
-        notFound: 404.html
-        searchPath:
-          - /index.html
-          - /index.htm
-
       git:
-        provider: github
         repository: SpechtLabs/prose
-        mainBranch: main
-
-      preview:
-        enabled: true
-        branch: true
-        sha: false
-        environment: false
