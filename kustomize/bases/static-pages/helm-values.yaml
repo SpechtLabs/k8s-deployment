@@ -60,7 +60,7 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
-        url: https://f003.backblazeb2.com
+        url: https://cdn.specht-labs.de
         path: file/cedi-testing
         notFound: 404.html
         searchPath:
@@ -87,7 +87,7 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
-        url: https://f003.backblazeb2.com
+        url: https://cdn.specht-labs.de
         path: file/cedi-testing
         notFound: 404.html
         searchPath:
@@ -114,7 +114,7 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
-        url: https://f003.backblazeb2.com
+        url: https://cdn.specht-labs.de
         path: file/cedi-testing
         notFound: 404.html
         searchPath:
@@ -141,8 +141,8 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
-        url: https://s3.eu-central-003.backblazeb2.com
-        path: cedi-testing
+        url: https://cdn.specht-labs.de
+        path: file/cedi-testing
         notFound: 404.html
         searchPath:
           - /index.html
@@ -222,7 +222,7 @@ configs:
         secret: ENV(S3_SECRET)
 
       proxy:
-        url: https://f003.backblazeb2.com
+        url: https://cdn.specht-labs.de
         path: file/cedi-testing
         notFound: 404.html
         searchPath:
