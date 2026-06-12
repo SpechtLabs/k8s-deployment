@@ -5,7 +5,7 @@ namespace: static-pages
 helmCharts:
   - name: static-pages
     repo: https://charts.specht-labs.de
-    version: 0.1.7
+    version: 0.1.8
     releaseName: static-pages
     namespace: static-pages
     valuesFile: helm-values.yaml
