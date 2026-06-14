@@ -10,7 +10,7 @@ generators:
 
 images:
   - name: ghcr.io/spechtlabs/staticpages
-    newTag: v0.2.0
+    newTag: v0.2.1
 
 patches:
   # v1 routes via the nginx Ingress (rendered from the base), not Gateway API. The base
