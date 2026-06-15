@@ -10,7 +10,7 @@ generators:
 
 images:
   - name: ghcr.io/spechtlabs/staticpages
-    newTag: v0.2.0
+    newTag: v0.2.1
 
 patches:
   # v2 telemetry: repoint OTLP to the Grafana Alloy receiver + add Alloy scrape annotations.
