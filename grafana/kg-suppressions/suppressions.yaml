@@ -1,0 +1,85 @@
+# Knowledge Graph (Asserts) alert suppressions — managed as code, synced via gcx.
+#
+# These silence Entity Graph assertions that are benign-by-design or are cascades of a
+# signal already covered elsewhere (SLOs / health-target alerts). They do NOT touch the
+# underlying telemetry — the metrics and traces still flow; only the graph-coloring
+# assertion is disabled. Each entry documents WHY it is noise.
+#
+# matchLabels is an exact AND-match over the listed assertion labels; unlisted labels are
+# ignored. Available labels include: alertname, service, job, asserts_error_type,
+# asserts_request_context, asserts_request_type, asserts_entity_type.
+#
+# Sync:  gcx kg suppressions create -f grafana/kg-suppressions/suppressions.yaml
+# List:  gcx kg suppressions list
+disabledAlertConfigs:
+  # mimir — the compactor polls object storage for a per-tenant deletion marker that does
+  # not exist; object storage answers 404, which is the expected "no deletion requested"
+  # result, but Beyla records the 404 as a span error. Pure false positive.
+  - name: mimir-tenant-deletion-marker-404
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: mimir
+      asserts_request_context: "HEAD /specht-labs-mimir-blocks/spechtlabs/markers/tenant-deletion-mark.json"
+
+  # tailscale operator — latency anomalies on shipping its own logs to Tailscale's SaaS
+  # (log.tailscale.com). External-dependency latency on a control-loop, not a cluster fault.
+  - name: tailscale-operator-saas-log-latency
+    matchLabels:
+      alertname: LatencyAverageAnomaly
+      service: operator
+      job: tailscale/operator
+
+  # argocd control plane (repo-server + application-controller) — the internal gRPC/Redis
+  # service mesh emits span_errors on manifest generation, Redis cache calls, repo-server
+  # RPCs, and (currently) the OTLP trace export to the v1 Tempo endpoint that the v2 argocd
+  # overlay repoints via GitOps. None are user-facing; argocd's real health is its sync/app
+  # status + metrics, not these spans. Suppress span_errors breaches + anomalies for both.
+  # NOTE: the OTLP-export breach is also a real misconfig being fixed in
+  # kustomize/overlays/specht-labs-v2/argocd — merging that PR removes the underlying error;
+  # this suppression only stops it (and the rest of the mesh noise) from coloring the graph.
+  - name: argocd-repo-server-span-errors
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: argocd-repo-server
+      asserts_error_type: span_errors
+  - name: argocd-repo-server-span-anomalies
+    matchLabels:
+      alertname: ErrorRatioAnomaly
+      service: argocd-repo-server
+  - name: argocd-application-controller-span-errors
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: argocd-application-controller
+      asserts_error_type: span_errors
+  - name: argocd-application-controller-span-anomalies
+    matchLabels:
+      alertname: ErrorRatioAnomaly
+      service: argocd-application-controller
+
+  # grafana-operator — occasional client errors talking to the Grafana Cloud API
+  # (spechtlabs.grafana.net) at ~1 req/min. Low-volume external API blips, self-recovering.
+  - name: grafana-operator-grafanacloud-client-errors
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: grafana-operator
+      asserts_error_type: client_errors
+
+  # static-pages — outbound calls to the Cloudflare CDN (cdn.specht-labs.de) hit connection
+  # resets (~220ms, HTTP keepalive churn); the app transparently retries / falls back to
+  # direct Backblaze B2, so page-serving availability stays 100% (see grafana/slos —
+  # Static Pages Proxy Availability). Also covers unauthenticated bot 4xx (/api/upload 403,
+  # 404s). Graph noise only; real user impact is owned by the proxy SLOs + health alerts.
+  # Follow-up (low priority, out of repo): expose IdleConnTimeout in the staticpages proxy
+  # so idle CDN connections close before Cloudflare resets them.
+  - name: static-pages-cdn-resets-and-4xx
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: static-pages
+
+  # envoy (shared gateway) — only red because it proxies to static-pages above; Grafana's
+  # own RCA suggestion on the entity confirms the cascade ("envoy has outbound calls to
+  # static-pages that has issues"). Suppress the inherited breach.
+  - name: envoy-gateway-static-pages-cascade
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: envoy

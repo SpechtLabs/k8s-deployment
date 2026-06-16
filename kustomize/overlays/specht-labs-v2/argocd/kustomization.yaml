@@ -80,3 +80,22 @@ patches:
               k8s.grafana.com/scrape: "true"
               k8s.grafana.com/metrics.portName: "metrics"
               k8s.grafana.com/job: "argocd-server"
+  # v2 telemetry: the shared base points ArgoCD's OTLP trace export at the v1 self-hosted
+  # Tempo (tempo-distributor.observability:4317), which does not exist on v2. Every ArgoCD
+  # component's trace export therefore fails ~100%, surfacing in the Knowledge Graph as a
+  # continuous ErrorRatioBreach on the outbound
+  # /opentelemetry.proto.collector.trace.v1.TraceService/Export call (repo-server et al.).
+  # Repoint to the cluster's Grafana Alloy receiver — the same OTLP destination the
+  # static-pages overlay uses — over plaintext gRPC (4317). Base stays unchanged for
+  # labk3s/specht-labs, which keep the self-hosted Tempo endpoint.
+  - target:
+      kind: ConfigMap
+      name: argocd-cmd-params-cm
+    patch: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: argocd-cmd-params-cm
+      data:
+        otlp.address: "grafana-k8s-monitoring-alloy-receiver.monitoring.svc.cluster.local:4317"
+        otlp.insecure: "true"
