@@ -1,7 +1,7 @@
 apiVersion: slo.ext.grafana.app/v1alpha1
 kind: SLO
 metadata:
-  name: static-pages-proxy-availability
+  name: spproxyavailability
 spec:
   name: Static Pages — Proxy Availability
   description: >-
@@ -13,6 +13,8 @@ spec:
     Objective derived from the post-fix steady state (≈100% since 2026-06-12,
     commit 70e6a25); the 99.9% target leaves a tight budget that would surface a
     recurrence of that incident quickly.
+  destinationDatasource:
+    uid: grafanacloud-prom
   query:
     type: ratio
     ratio:

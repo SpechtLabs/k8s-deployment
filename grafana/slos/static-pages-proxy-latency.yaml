@@ -1,7 +1,7 @@
 apiVersion: slo.ext.grafana.app/v1alpha1
 kind: SLO
 metadata:
-  name: static-pages-proxy-latency
+  name: spproxylatency
 spec:
   name: Static Pages — Proxy Latency
   description: >-
@@ -13,6 +13,8 @@ spec:
     p99 ≈ 2.25s. The 95% target sits just below the observed baseline, so normal
     operation passes while a latency regression (e.g. slow-origin / cold-read
     fan-out on the 404 fallback path) burns budget.
+  destinationDatasource:
+    uid: grafanacloud-prom
   query:
     type: ratio
     ratio:
