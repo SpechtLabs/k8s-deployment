@@ -31,19 +31,19 @@ spec:
     region: fsn1
     type: lb11
   controlPlaneRegions:
-    - fsn1
-    - nbg1
-    - hel1
+  - fsn1
+  - nbg1
+  - hel1
   hcloudNetwork:
     enabled: true
     networkZone: eu-central
     cidrBlock: 10.0.0.0/16
     subnetCidrBlock: 10.0.0.0/24
   hcloudPlacementGroups:
-    - name: control-plane
-      type: spread
-    - name: worker-nodes
-      type: spread
+  - name: control-plane
+    type: spread
+  - name: worker-nodes
+    type: spread
   hetznerSecretRef:
     key:
       hcloudToken: hcloud

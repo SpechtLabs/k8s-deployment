@@ -12,7 +12,7 @@ destinations:
     url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom/push
     auth:
       type: basic
-      username: "3276426" 
+      username: "3276426"
       password: REPLACE_ME
     metricProcessingRules: |
       write_relabel_config {
