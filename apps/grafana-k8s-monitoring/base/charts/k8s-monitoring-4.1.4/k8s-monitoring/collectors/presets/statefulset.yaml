@@ -1,8 +1,0 @@
----
-# StatefulSet preset
-
-# -- Configures Alloy to run as a StatefulSet, with a default of 1 replica.
-# @section -- Alloy Configuration
-controller:
-  type: statefulset
-  replicas: 1

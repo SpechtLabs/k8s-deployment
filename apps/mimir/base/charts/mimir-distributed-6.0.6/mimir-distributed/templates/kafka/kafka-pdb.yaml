@@ -1,3 +1,0 @@
-{{- if .Values.kafka.enabled -}}
-{{- include "mimir.lib.podDisruptionBudget" (dict "ctx" $ "component" "kafka") }}
-{{- end }}

@@ -1,3 +1,0 @@
-{{- if .Values.store_gateway.enabled }}
-{{- include "mimir.lib.serviceMonitor" (dict "ctx" $ "component" "store-gateway" "memberlist" true) }}
-{{- end }}
