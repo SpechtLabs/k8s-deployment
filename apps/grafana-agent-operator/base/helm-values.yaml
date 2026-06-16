@@ -1,0 +1,3 @@
+fullnameOverride: grafana-agent-operator
+extraArgs:
+  - --namespace=observability

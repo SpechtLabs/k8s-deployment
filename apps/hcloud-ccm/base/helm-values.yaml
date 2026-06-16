@@ -1,0 +1,44 @@
+kind: Deployment
+replicaCount: 1
+# The CCM must initialize nodes (assign InternalIP, remove the
+# cloudprovider/uninitialized taint) BEFORE Cilium can start: with the private
+# Hetzner network attached, nodes have two NICs (eth0 + enp7s0) and Cilium's
+# kube-proxy-replacement can only auto-select its direct-routing device once the
+# node has an InternalIP. The CCM is hostNetwork, so it needs no CNI itself.
+# Without tolerating node.cilium.io/agent-not-ready it can never schedule while
+# the CNI is down -> deadlock. additionalTolerations is appended to the chart's
+# built-in default tolerations, so we only add the one Cilium needs.
+additionalTolerations:
+  - key: node.cilium.io/agent-not-ready
+    effect: NoSchedule
+    operator: Exists
+env:
+  HCLOUD_TOKEN:
+    valueFrom:
+      secretKeyRef:
+        name: hetzner
+        key: hcloud
+monitoring:
+  # When enabled, the hccm Pod will serve metrics on port :8233
+  enabled: true
+  podMonitor:
+    enabled: true
+    spec:
+      podMetricsEndpoints:
+        - port: metrics
+networking:
+  enabled: true
+  clusterCIDR: 10.244.0.0/16
+  network:
+    valueFrom:
+      secretKeyRef:
+        name: hetzner
+        key: network
+# Resource requests for the deployed hccm Pod.
+resources:
+  requests:
+    cpu: 100m
+    memory: 50Mi
+robot:
+  # Set to true to enable support for Robot (Dedicated) servers.
+  enabled: false

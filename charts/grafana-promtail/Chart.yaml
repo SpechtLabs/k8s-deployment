@@ -1,7 +1,0 @@
-apiVersion: v2
-name: addon-grafana-promtail
-version: 6.15.5
-dependencies:
-  - name: promtail
-    repository: "https://grafana.github.io/helm-charts"
-    version: 6.17.1
