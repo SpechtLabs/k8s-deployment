@@ -1,0 +1,270 @@
+global:
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+
+  domain: argocd.specht-labs.de
+
+  image:
+    repository: "ghcr.io/spechtlabs/argocd-custom-container"
+    imagePullPolicy: "Always"
+    tag: "main"
+
+  logging:
+    format: json
+
+  deploymentStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+
+dex:
+  enabled: true
+
+  containerSecurityContext:
+    runAsNonRoot: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+redis:
+  serviceAccount:
+    create: true
+
+  exporter:
+    enabled: false
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+repoServer:
+  replicas: 1
+
+  volumes:
+    - name: helm-secrets
+      secret:
+        secretName: helm-secrets
+
+  volumeMounts:
+    - mountPath: /helm-secrets/
+      name: helm-secrets
+
+  env:
+    - name: XDG_CONFIG_HOME
+      value: /home/argocd/.config
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+  containerSecurityContext:
+    runAsUser: 1000
+
+server:
+  replicas: 2
+
+  certificate:
+    enabled: false
+
+  ingress:
+    enabled: true
+    https: true
+    ingressClassName: nginx
+
+    pathType: ImplementationSpecific
+    hosts:
+      - argocd.specht-labs.de
+
+    tls: true
+
+    annotations:
+      "cert-manager.io/cluster-issuer": "letsencrypt-prod"
+      "nginx.ingress.kubernetes.io/backend-protocol": HTTPS
+      "nginx.ingress.kubernetes.io/ssl-passthrough": "true"
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+  containerSecurityContext:
+    runAsUser: 1000
+
+applicationSet:
+  replicas: 1
+
+  containerSecurityContext:
+  runAsNonRoot: false
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+      - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+controller:
+  # -- The number of application controller pods to run.
+  # If changing the number of replicas you must pass the number as `ARGOCD_CONTROLLER_REPLICAS` as an environment variable
+  replicas: 1
+
+  dynamicClusterDistribution: true
+
+  containerSecurityContext:
+    runAsNonRoot: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+        - ALL
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 60s # chart default is 30s; pin to 1/min to cap Grafana DPM
+
+      additionalLabels:
+        instance: primary
+
+      selector:
+        scope: k8s-cedi-dev
+
+notifications:
+  enabled: false
+
+configs:
+  cm:
+    exec.enabled: "true"
+    kustomize.buildOptions: "--enable-alpha-plugins --enable-helm"
+
+    dex.config: |
+      connectors:
+        - type: oidc
+          id: oidc
+          name: Tailscale
+          config:
+            issuer: https://idp.sphinx-map.ts.net
+            clientID: foo
+            clientSecret: bar
+            redirectURI: https://argocd.sphinx-map.ts.net/api/dex/callback
+            scopes:
+              - openid
+            getUserInfo: true
+            Default: username
+            claimMapping:
+              Default: username
+
+    resource.exclusions: |
+      - apiGroups:
+          - cilium.io
+        kinds:
+          - CiliumIdentity
+        clusters:
+          - "*"
+
+  params:
+    create: true
+    otlp.address: "tempo-distributor.observability.svc.cluster.local:4317"
+
+  rbac:
+    create: true
+    policy.default: role:readonly
+    scopes: "[username,email]"
+    policy.csv: |
+      p, role:org-admin, *, *, *, allow
+      p, role:viewer, *, get, *, allow
+
+      g, cedi@github, role:org-admin
+      g, cedi@github.idp.sphinx-map.ts.net, role:org-admin
+      g, cedi, role:org-admin
+
+  repositories:
+    bitnami:
+      name: bitnami
+      type: helm
+      url: https://charts.bitnami.com/bitnami
+    grafana:
+      name: grafana
+      type: helm
+      url: https://grafana.github.io/helm-charts
+    argo:
+      name: Argo
+      type: helm
+      url: https://argoproj.github.io/argo-helm
+    jetstack:
+      name: jetstack
+      type: helm
+      url: https://charts.jetstack.io
+    ingress-nginx:
+      name: ingress-nginx
+      type: helm
+      url: https://kubernetes.github.io/ingress-nginx
+    deliveryhero:
+      name: deliveryhero
+      type: helm
+      url: https://charts.deliveryhero.io/
+    prometheus:
+      name: prometheus
+      type: helm
+      url: https://prometheus-community.github.io/helm-charts
+    syself:
+      name: syself
+      type: helm
+      url: https://charts.syself.com

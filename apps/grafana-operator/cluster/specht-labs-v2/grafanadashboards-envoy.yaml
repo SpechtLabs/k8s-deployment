@@ -1,0 +1,54 @@
+# Envoy Gateway dashboards (https://gateway.envoyproxy.io/latest/tasks/observability/grafana-integration/).
+# JSON vendored once in bases/grafana-dashboards/envoy-gateway/ and delivered via
+# configMapRef. instanceSelector binds them to the external Grafana Cloud instance.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-proxy-global
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: envoy-gateway
+  configMapRef:
+    name: envoy-proxy-global-dashboard
+    key: envoy-proxy-global.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-clusters
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: envoy-gateway
+  configMapRef:
+    name: envoy-clusters-dashboard
+    key: envoy-clusters.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-gateway-global
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: envoy-gateway
+  configMapRef:
+    name: envoy-gateway-global-dashboard
+    key: envoy-gateway-global.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: envoy-resources-monitor
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: envoy-gateway
+  configMapRef:
+    name: envoy-resources-monitor-dashboard
+    key: resources-monitor.gen.json

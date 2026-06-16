@@ -1,0 +1,109 @@
+forceDeployDatasources: false
+forceDeployDashboards: false
+defaultDashboardsEnabled: true
+defaultDashboardsTimezone: utc
+
+adminPassword: prom-operator
+
+replica: 1
+
+autoscaling:
+  enabled: false
+
+grafana.ini:
+  paths:
+    data: /var/lib/grafana/
+    logs: /var/log/grafana
+    plugins: /var/lib/grafana/plugins
+    provisioning: /etc/grafana/provisioning
+  analytics:
+    check_for_updates: true
+  log:
+    mode: console
+  grafana_net:
+    url: https://grafana.net
+  server:
+    domain: "https://grafana.specht-labs.de/"
+    root_url: "https://grafana.specht-labs.de/"
+  auth.github:
+    enabled: true
+    allow_sign_up: true
+    allow_assign_grafana_admin: true
+    scopes: user:email,read:org
+    auth_url: https://github.com/login/oauth/authorize
+    token_url: https://github.com/login/oauth/access_token
+    api_url: https://api.github.com/user
+    allowed_organizations: spechtlabs
+    role_attribute_path: contains(groups[*], '@spechtlabs/admin') && 'Admin' || contains(groups[*], '@spechtlabs/contributor') && 'Editor' || 'Viewer'
+  feature_toggles:
+    enable: tempoSearch tempoBackendSearch tempoApmTable
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - grafana.specht-labs.de
+  paths:
+    - /
+  tls:
+    - secretName: grafana-tls-secret
+      hosts:
+        - grafana.specht-labs.de
+
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    folderAnnotation: grafana_folder
+    provider:
+      name: sidecarProvider
+      orgId: 1
+      folder: ""
+      type: file
+      disableDelete: false
+      disableUpdates: false
+      foldersFromFilesStructure: true
+
+  datasources:
+    enabled: true
+    label: grafana_datasource
+    labelValue: "1"
+
+  plugins:
+    enabled: true
+    label: grafana_plugin
+    labelValue: "1"
+
+env:
+  GF_INSTALL_PLUGINS: "grafana-polystat-panel"
+
+envValueFrom:
+  GF_AUTH_GITHUB_CLIENT_ID:
+    secretKeyRef:
+      name: oauth-credentials
+      key: auth_github_client_id
+
+  GF_AUTH_GITHUB_CLIENT_SECRET:
+    secretKeyRef:
+      name: oauth-credentials
+      key: auth_github_client_secret
+
+  GF_AUTH_GITHUB_ALLOWED_ORGANIZATIONS:
+    secretKeyRef:
+      name: oauth-credentials
+      key: auth_github_allowed_organizations
+
+  GF_AUTH_GITHUB_TEAM_IDS:
+    secretKeyRef:
+      name: oauth-credentials
+      key: auth_github_team_ids
+
+serviceMonitor:
+  enabled: true
+  scrapeTimeout: 30s
+
+  additionalLabels:
+    instance: primary

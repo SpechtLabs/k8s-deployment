@@ -1,0 +1,23 @@
+{{- if .Values.staticpages.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "staticpages.fullname" . }}-metrics
+  labels:
+    {{- include "staticpages.labels" . | nindent 6 }}
+    {{- with .Values.staticpages.metrics.service.labels }}
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- with .Values.staticpages.metrics.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  ports:
+  - name: {{ .Values.staticpages.metrics.service.portName }}
+    protocol: TCP
+    port: {{ .Values.staticpages.metrics.service.servicePort }}
+    targetPort: {{ .Values.staticpages.metrics.service.portName }}
+  selector:
+    {{- include "staticpages.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -1,0 +1,26 @@
+{{- if and .Values.staticpages.metrics.enabled .Values.staticpages.metrics.rules.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  {{- if .Values.staticpages.metrics.rules.namespace }}
+  namespace: {{ .Values.staticpages.metrics.rules.namespace }}
+  {{- end }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+    {{- if .Values.staticpages.metrics.rules.selector }}
+{{- toYaml .Values.staticpages.metrics.rules.selector | nindent 4 }}
+    {{- end }}
+    {{- if .Values.staticpages.metrics.rules.additionalLabels }}
+{{- toYaml .Values.staticpages.metrics.rules.additionalLabels | nindent 4 }}
+    {{- end }}
+  {{- with .Values.staticpages.metrics.rules.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  groups:
+  - name: argocd
+    rules:
+{{- toYaml .Values.staticpages.metrics.rules.spec | nindent 6 }}
+{{- end }}

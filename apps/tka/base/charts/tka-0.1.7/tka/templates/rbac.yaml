@@ -1,0 +1,123 @@
+{{- if .Values.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tka.fullname" . }}
+  labels:
+    {{- include "tka.labels" . | nindent 4 }}
+  {{- with .Values.rbac.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+# TKA custom resources
+- apiGroups:
+  - tka.specht-labs.de
+  resources:
+  - tkasignins
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tka.specht-labs.de
+  resources:
+  - tkasignins/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - tka.specht-labs.de
+  resources:
+  - tkasignins/status
+  verbs:
+  - get
+  - patch
+  - update
+# Core resources for user provisioning
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts/token
+  verbs:
+  - create
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# Leader election permissions
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+# BROAD PERMISSIONS: TKA needs cluster-admin level permissions to grant any role to users
+# This is required because Kubernetes RBAC prevents granting permissions you don't have
+- apiGroups:
+  - "*"
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- nonResourceURLs:
+  - "*"
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "tka.fullname" . }}
+  labels:
+    {{- include "tka.labels" . | nindent 4 }}
+  {{- with .Values.rbac.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "tka.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "tka.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

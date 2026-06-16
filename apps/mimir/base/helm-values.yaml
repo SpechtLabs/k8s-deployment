@@ -1,0 +1,149 @@
+# Right-sized single-replica Mimir for homelab scale (Kafka ingest-storage).
+# Structural reference: grafana mimir-distributed/small.yaml, scaled to RF1 and
+# 1 replica each.
+#
+# Resources: every component has an explicit MEMORY LIMIT. This is the guardrail
+# that keeps a Mimir burst (e.g. an Alloy WAL-replay flood) from ballooning a pod
+# and OOM-ing the whole cx23 node (which killed the kubelet on 2026-06-10). No CPU
+# limits (avoids throttling); CPU requests only for scheduling/fair-share. Sized so
+# even ingester+kafka co-located on one 3.9Gi node still leave headroom for the
+# kubelet/cilium.
+
+minio:
+  enabled: false              # blocks live in Hetzner Object Storage, not bundled MinIO
+
+alertmanager:
+  enabled: false              # not needed for v1
+ruler:
+  enabled: false              # not needed for v1
+rollout_operator:
+  enabled: false              # only needed for zone-aware rollouts (which we disable)
+
+global:
+  extraEnvFrom:
+    - secretRef:
+        name: mimir-objstore  # provides AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+
+distributor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+querier:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+query_frontend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+query_scheduler:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 96Mi
+    limits:
+      memory: 256Mi
+overrides_exporter:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+ingester:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+  # The heaviest component (holds the in-memory TSDB + Kafka consume buffer).
+  # Capped at 1.25Gi so a replay flood OOM-kills THIS pod, never the node.
+  resources:
+    requests:
+      cpu: 200m
+      memory: 640Mi
+    limits:
+      memory: 1280Mi
+
+store_gateway:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 640Mi
+
+compactor:
+  replicas: 1
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 640Mi
+
+gateway:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+
+# kafka stays enabled (chart default) for ingest-storage: single-node KRaft
+# (apache/kafka-native, no Zookeeper). 5Gi PV. Chart default requested a full CPU
+# + 1Gi with no limit; trim to fit cx23 and cap memory at 1Gi.
+kafka:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+mimir:
+  structuredConfig:
+    multitenancy_enabled: true
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: hel1.your-objectstorage.com
+          bucket_name: specht-labs-mimir-blocks
+          access_key_id: ${AWS_ACCESS_KEY_ID}
+          secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    ingester:
+      ring:
+        replication_factor: 1
+    store_gateway:
+      sharding_ring:
+        replication_factor: 1
+    ingest_storage:
+      kafka:
+        auto_create_topic_default_partitions: 8

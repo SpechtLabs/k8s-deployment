@@ -1,0 +1,57 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: cedi-dev
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 10.244.0.0/16
+        # - fd00:244::/64 # explicitly to not forget later
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: cedi-dev-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HetznerCluster
+    name: cedi-dev
+
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HetznerCluster
+metadata:
+  name: cedi-dev
+  namespace: default
+spec:
+  controlPlaneEndpoint:
+    port: 443
+  controlPlaneLoadBalancer:
+    enabled: true
+    region: fsn1
+    type: lb11
+  controlPlaneRegions:
+    - fsn1
+    - nbg1
+    - hel1
+  hcloudNetwork:
+    enabled: true
+    networkZone: eu-central
+    cidrBlock: 10.0.0.0/16
+    subnetCidrBlock: 10.0.0.0/24
+  hcloudPlacementGroups:
+    - name: control-plane
+      type: spread
+    - name: worker-nodes
+      type: spread
+  hetznerSecretRef:
+    key:
+      hcloudToken: hcloud
+    name: hetzner
+  sshKeys:
+    hcloud:
+      - name: cedi@mae
+      - name: cedi@ivy
+      - name: cedi@devpi
+      - name: ghaction

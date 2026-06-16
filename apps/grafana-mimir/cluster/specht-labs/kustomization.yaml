@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: observability
+
+generators:
+  - ./secret-generator.yaml
+
+resources:
+  - ../../base
+  - tailscale-ingress.yaml
+  - prometheus-rules.yaml
+
+patches:
+  - target:
+      kind: HorizontalPodAutoscaler
+      group: autoscaling
+      version: v2beta1
+      name: ".*"
+    patch: |-
+      - op: replace
+        path: "/apiVersion"
+        value: "autoscaling/v2"
+      - op: remove
+        path: "/spec/metrics/0/resource/targetAverageUtilization"
+      - op: add
+        path: /spec/metrics/0/resource/target
+        value:
+          type: Utilization
+          averageUtilization: 60

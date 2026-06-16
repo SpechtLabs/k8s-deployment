@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: static-pages
+
+resources:
+  - ../../base
+
+generators:
+  - ./secret-generator.yaml
+
+images:
+  - name: ghcr.io/spechtlabs/staticpages
+    newTag: v0.2.1
+
+patches:
+  # v2 telemetry: repoint OTLP to the Grafana Alloy receiver + add Alloy scrape annotations.
+  - path: otel.patch.yaml
+  # v2 routes via the shared Envoy Gateway using the HTTPRoutes the chart renders from the
+  # base gateway values, so drop the nginx Ingress the chart also renders. $patch: delete
+  # leaves the base ingress.enabled: true intact for v1/specht-labs (which prunes the routes).
+  - target:
+      kind: Ingress
+      name: static-pages
+    patch: |
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: static-pages

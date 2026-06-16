@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: envoy-gateway-system
+
+resources:
+  - ../../base/
+  - tailscale-envoyproxy.yaml
+  - tailscale-gatewayclass.yaml
+  - tailscale-gateway.yaml
+  - metrics-monitors.yaml
+
+# Annotate the shared base's hetzner-lb EnvoyProxy with the external-dns hostnames here (not in the
+# base) so specht-labs.de ownership stays cluster-specific.
+patches:
+  - path: hetzner-lb-externaldns.patch.yaml
+    target:
+      kind: EnvoyProxy
+      name: hetzner-lb

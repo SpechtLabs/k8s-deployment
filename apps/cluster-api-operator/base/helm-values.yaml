@@ -1,0 +1,15 @@
+# Operator only — no core/bootstrap/controlPlane/infrastructure values, so the
+# chart installs just the operator. Providers are declared as explicit CRs
+# (core-provider.yaml etc.) for transparent diffs and per-provider version pins.
+logLevel: 2
+replicaCount: 1
+leaderElection:
+  enabled: true
+resources:
+  manager:
+    limits:
+      cpu: 100m
+      memory: 300Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi

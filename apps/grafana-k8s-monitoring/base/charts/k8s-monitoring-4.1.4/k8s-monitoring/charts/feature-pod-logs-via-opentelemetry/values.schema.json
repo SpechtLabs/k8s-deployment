@@ -1,0 +1,77 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "annotationSelector": {
+            "type": "string"
+        },
+        "annotations": {
+            "type": "object"
+        },
+        "discoveryMethod": {
+            "type": "string"
+        },
+        "excludeNamespaces": {
+            "type": "array"
+        },
+        "global": {
+            "type": "object",
+            "properties": {
+                "namespaceOverride": {
+                    "type": "string"
+                }
+            }
+        },
+        "labels": {
+            "type": "object",
+            "properties": {
+                "app_kubernetes_io_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "namespaceAnnotations": {
+            "type": "object"
+        },
+        "namespaceLabels": {
+            "type": "object"
+        },
+        "namespaces": {
+            "type": "array"
+        },
+        "nodeAnnotations": {
+            "type": "object"
+        },
+        "nodeLabels": {
+            "type": "object"
+        },
+        "onlyGatherNewLogLines": {
+            "type": "boolean"
+        },
+        "otelAnnotations": {
+            "type": "boolean"
+        },
+        "staticAttributes": {
+            "type": "object"
+        },
+        "staticAttributesFrom": {
+            "type": "object"
+        },
+        "secretFilter": {
+            "properties": {
+                "allowlist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "redactWith": {
+                    "type": [
+                        "null",
+                        "string"
+                    ]
+                }
+            }
+        }
+    }
+}

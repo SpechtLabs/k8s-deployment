@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.staticpages.autoscaling.enabled }}
+  replicas: {{ .Values.staticpages.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "staticpages.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.staticpages.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "staticpages.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.staticpages.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "staticpages.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.staticpages.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.staticpages.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.staticpages.securityContext | nindent 12 }}
+          image: "{{ .Values.staticpages.image.repository }}:{{ .Values.staticpages.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.staticpages.image.pullPolicy }}
+          args:
+            - serve
+            - --api
+            - --proxy
+          {{- with .Values.staticpages.extraArgs }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.staticpages.service.proxyPort }}
+              protocol: TCP
+            - name: api
+              containerPort: {{ .Values.staticpages.service.apiPort }}
+              protocol: TCP
+            {{- if .Values.staticpages.metrics.enabled }}
+            - name: {{ .Values.staticpages.metrics.service.portName }}
+              containerPort: {{ .Values.staticpages.metrics.service.servicePort }}
+              protocol: TCP
+            {{- end }}
+          resources:
+            {{- toYaml .Values.staticpages.resources | nindent 12 }}
+          env:
+
+            {{- with .Values.global.extraEnv }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.staticpages.env }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          envFrom:
+            {{- with .Values.global.extraEnvFrom }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.staticpages.extraEnvFrom }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /data/
+              readOnly: true
+            - name: tmp-volume
+              mountPath: /tmp
+      {{- with .Values.staticpages.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.staticpages.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.staticpages.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "staticpages.fullname" . }}-cm
+            items:
+              - key: config.yaml
+                path: config.yaml
+        - name: tmp-volume
+          emptyDir: {}

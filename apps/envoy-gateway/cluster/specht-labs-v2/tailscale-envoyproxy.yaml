@@ -1,0 +1,31 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: tailscale-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: LoadBalancer
+        loadBalancerClass: tailscale
+        annotations:
+          tailscale.com/hostname: k8s
+          tailscale.com/tags: tag:core-infra
+          # external-dns (source=service) publishes this wildcard for the tailnet Gateway.
+          external-dns.alpha.kubernetes.io/hostname: "*.k8s.specht-labs.de"
+          # Pin the targets to the k8s-load-balancer tailnet device's stable IPs. Required because
+          # the Service status exposes a hostname + IPv4 (which would race into an A/CNAME conflict)
+          # and carries no IPv6. Comma-separated targets are split by family -> A + AAAA. Update
+          # these if the tailnet device is ever recreated (see tailscale status --json).
+          external-dns.alpha.kubernetes.io/target: "100.74.67.24,fd7a:115c:a1e0::c039:4319"
+        patch:
+          type: StrategicMerge
+          value:
+            metadata:
+              annotations:
+                tailscale.com/hostname: k8s-load-balancer
+                tailscale.com/tags: tag:core-infra
+            spec:
+              loadBalancerClass: tailscale

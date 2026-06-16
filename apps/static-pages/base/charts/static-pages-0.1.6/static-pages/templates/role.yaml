@@ -1,0 +1,79 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - redirects
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - redirects/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - redirects/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - shortlinks
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - shortlinks/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - staticpages.cedi.dev
+    resources:
+      - shortlinks/status
+    verbs:
+      - get
+      - patch
+      - update

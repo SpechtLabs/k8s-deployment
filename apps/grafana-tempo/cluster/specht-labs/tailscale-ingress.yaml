@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tempo-distributor
+  annotations:
+    tailscale.com/tags: "tag:o11y-endpoint"
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: tempo-distributor
+      http:
+        paths:
+          - path: /otlp-http
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tempo-distributor
+                port:
+                  number: 4318
+          - path: /otlp-grpc
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tempo-distributor
+                port:
+                  number: 4317
+  tls:
+    - hosts:
+        - tempo-distributor
+      secretName: tempo-distributor-tls

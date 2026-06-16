@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "staticpages.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "staticpages.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}

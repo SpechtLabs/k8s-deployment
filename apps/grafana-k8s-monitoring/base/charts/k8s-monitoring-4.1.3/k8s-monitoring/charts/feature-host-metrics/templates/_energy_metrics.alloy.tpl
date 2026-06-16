@@ -1,0 +1,98 @@
+{{ define "feature.hostMetrics.energyMetrics.allowList" }}
+{{- $allowList := list }}
+{{ if .Values.energyMetrics.metricsTuning.useDefaultAllowList }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kepler.yaml" | fromYamlArray) -}}
+{{ end }}
+{{ if .Values.energyMetrics.metricsTuning.includeMetrics }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.energyMetrics.metricsTuning.includeMetrics -}}
+{{ end }}
+{{ $allowList | uniq | toYaml }}
+{{ end }}
+
+{{- define "feature.hostMetrics.energyMetrics.alloy" }}
+{{- if .Values.energyMetrics.enabled }}
+{{- $namespace := .Values.energyMetrics.namespace }}
+{{- if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = .Release.Namespace }}
+{{- end }}
+{{- $metricAllowList := include "feature.hostMetrics.energyMetrics.allowList" . | fromYamlArray }}
+{{- $metricDenyList := .Values.energyMetrics.metricsTuning.excludeMetrics }}
+{{- $labelSelectors := list }}
+{{- if .Values.energyMetrics.labelMatchers }}
+  {{- range $k, $v := .Values.energyMetrics.labelMatchers }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- else if dig "kepler" "deploy" false (.telemetryServices | default dict) }}
+  {{- $labelSelectors = append $labelSelectors "app.kubernetes.io/name=kepler" }}
+{{- end }}
+
+// Energy metrics via Kepler
+discovery.kubernetes "kepler" {
+  role = "pod"
+  selectors {
+    role = "pod"
+    label = {{ $labelSelectors | join "," | quote }}
+  }
+{{- if $namespace }}
+  namespaces {
+    names = [{{ $namespace | quote }}]
+  }
+{{- end }}
+{{- include "feature.hostMetrics.attachNodeMetadata" . | trim | nindent 2 }}
+} // discovery.kubernetes "kepler"
+
+discovery.relabel "kepler" {
+  targets = discovery.kubernetes.kepler.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+
+{{- include "feature.hostMetrics.nodeDiscoveryRules" . | trim | nindent 2 }}
+{{- if .Values.energyMetrics.extraDiscoveryRules }}
+  {{- .Values.energyMetrics.extraDiscoveryRules | nindent 2 }}
+{{- end }}
+} // discovery.relabel "kepler"
+
+prometheus.scrape "kepler" {
+  targets      = discovery.relabel.kepler.output
+  job_name     = {{ .Values.energyMetrics.jobLabel | quote }}
+  honor_labels = true
+  scrape_interval = {{ .Values.energyMetrics.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.energyMetrics.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
+  clustering {
+    enabled = true
+  }
+{{- if or $metricAllowList $metricDenyList .Values.energyMetrics.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.kepler.receiver]
+} // prometheus.scrape "kepler"
+
+prometheus.relabel "kepler" {
+  max_cache_size = {{ .Values.energyMetrics.maxCacheSize | default .Values.global.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.energyMetrics.extraMetricProcessingRules }}
+  {{ .Values.energyMetrics.extraMetricProcessingRules | nindent 2 }}
+{{- end }}
+{{- end }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.relabel "kepler"
+{{- end }}
+{{- end }}

@@ -1,0 +1,6 @@
+---
+registry: quay.io
+image: promhippie/hcloud-exporter
+prerelease: false
+
+...

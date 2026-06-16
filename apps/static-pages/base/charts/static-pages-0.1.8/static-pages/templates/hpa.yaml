@@ -1,0 +1,28 @@
+{{- if .Values.staticpages.autoscaling.enabled }}
+apiVersion: {{ include "apiVersion.autoscaling" . }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "staticpages.fullname" . }}
+  minReplicas: {{ .Values.staticpages.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.staticpages.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.staticpages.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.staticpages.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.staticpages.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.staticpages.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

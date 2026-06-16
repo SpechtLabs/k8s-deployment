@@ -1,0 +1,39 @@
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
+{{- range $featureKey := include "features.list" $ | fromYamlArray }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
+  {{- if eq $collectorName $featureCollectorName }}
+    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
+  {{- end }}
+{{- end }}
+
+{{/* Save the top level object and add the collector name */}}
+{{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "Template" $.Template "collectorName" $collectorName }}
+{{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
+{{- $alloyConfig := "" }}
+{{- range $featureKey := include "features.list" . | fromYamlArray }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
+  {{- if eq $collectorName $featureCollectorName }}
+    {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
+  {{- end }}
+{{- end }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.rules" (deepCopy $ | merge (dict "collectorName" $collectorName)) | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
+
+{{- $alloyConfig = include "replaceComponent.apply" (dict "config" $alloyConfig "replacements" $.Values.replaceComponent "collectorName" $collectorName) }}
+
+{{/* Remove all trailing whitespace */}}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "collector.alloy.fullname" $values }}
+  namespace: {{ include "helper.namespace" $ }}
+data:
+  config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
+{{- end }}

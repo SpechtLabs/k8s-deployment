@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator
+  namespace: tailscale
+spec:
+  template:
+    spec:
+      containers:
+        - name: operator
+          env:
+            - name: PROXY_TAGS
+              value: tag:k3s
+            - name: OPERATOR_INITIAL_TAGS
+              value: tag:k3s-operator
+            - name: OPERATOR_HOSTNAME
+              value: lab-tailscale-operator

@@ -1,0 +1,21 @@
+# Wildcard cert backing the StaticPages Terminate listeners on the shared Gateway.
+# Issued via Cloudflare DNS-01 (see the v2 letsencrypt-prod ClusterIssuer), so it can
+# include wildcards — one cert covers every StaticPages host plus one-level branch
+# previews. The Secret lands in envoy-gateway-system (the Gateway's namespace) so the
+# listeners can reference it without a ReferenceGrant.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: static-pages-tls
+  namespace: envoy-gateway-system
+spec:
+  secretName: static-pages-tls
+  dnsNames:
+    - specht-labs.de
+    - "*.specht-labs.de"
+    - gold-specht.de
+    - "*.gold-specht.de"
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io

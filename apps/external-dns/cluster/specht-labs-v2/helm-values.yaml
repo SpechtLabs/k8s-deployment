@@ -1,0 +1,40 @@
+fullnameOverride: external-dns
+
+provider:
+  name: cloudflare
+
+# Reuse the Cloudflare API token (same value as cert-manager's cloudflare-api-token secret),
+# mounted from the copied SOPS secret in this namespace.
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-token
+        key: api-token
+
+# Only watch Services (no ingress/gateway/httproute sources) so external-dns publishes nothing but
+# the hostnames explicitly annotated onto the two Envoy LoadBalancer services.
+sources:
+  - service
+extraArgs:
+  - --service-type-filter=LoadBalancer
+
+# Scope strictly to specht-labs.de so gold-specht.de (also editable by the token) is never touched.
+domainFilters:
+  - specht-labs.de
+
+# Never delete records; still updates a record if a LoadBalancer IP changes.
+policy: upsert-only
+
+# TXT ownership registry. txtPrefix is REQUIRED here: the managed set includes wildcard records
+# (*.specht-labs.de, *.k8s.specht-labs.de) whose ownership TXT can't live at the literal "*" name.
+registry: txt
+txtOwnerId: specht-labs-v2
+txtPrefix: edns-
+
+# A + AAAA are managed by default; Cloudflare proxying is off by default (DNS-only) -> matches the
+# decision (Tailscale records can't be proxied; public records terminate TLS at Envoy).
+
+# Match the cluster's observability conventions (Prometheus operator CRDs are present).
+serviceMonitor:
+  enabled: true

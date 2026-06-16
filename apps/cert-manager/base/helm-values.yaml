@@ -1,0 +1,19 @@
+fullnameOverride: cert-manager
+replicaCount: 2
+installCRDs: true
+
+global:
+  leaderElection:
+    namespace: cert-manager
+
+webhook:
+  replicaCount: 2
+
+cainjector:
+  replicaCount: 2
+
+prometheus:
+  enabled: true
+
+  servicemonitor:
+    enabled: true

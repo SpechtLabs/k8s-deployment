@@ -1,0 +1,11 @@
+apiVersion: v2
+appVersion: 1.0.0
+description: Kubernetes Observability feature for gathering logs using PodLogs objects.
+maintainers:
+- email: pete.wall@grafana.com
+  name: petewall
+name: feature-pod-logs-objects
+sources:
+- https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-objects
+type: application
+version: 1.0.0

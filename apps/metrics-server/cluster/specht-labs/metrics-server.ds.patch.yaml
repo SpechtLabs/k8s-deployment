@@ -1,0 +1,18 @@
+---
+# Make it a DaemonSet so a copy runs on every node - more resilient
+- op: replace
+  path: "/kind"
+  value: DaemonSet
+- op: remove
+  path: "/spec/replicas"
+
+# Add tolerations to run this on on control-plane nodes too
+- op: add
+  path: "/spec/template/spec/tolerations"
+  value:
+    - effect: NoExecute
+      operator: Exists
+    - effect: NoSchedule
+      operator: Exists
+    - key: CriticalAddonsOnly
+      operator: Exists

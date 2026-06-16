@@ -1,0 +1,145 @@
+staticpages:
+  nameOverride: "static-pages"
+  replicaCount: 2
+  env:
+    - name: OTEL_LOG_LEVEL
+      value: "INFO"
+
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "tempo-distributor.observability.svc.cluster.local:4317"
+
+    - name: OTEL_EXPORTER_OTLP_INSECURE
+      value: "true"
+
+    - name: APPLICATION_ID
+      valueFrom:
+        secretKeyRef:
+          key: app-id
+          name: s3-credentials
+
+    - name: S3_SECRET
+      valueFrom:
+        secretKeyRef:
+          key: s3-secret
+          name: s3-credentials
+
+  ingress:
+    enabled: true
+    className: "nginx"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    hosts:
+      - host: pages.specht-labs.de
+
+    tls:
+      - secretName: staticpages-tls
+        hosts:
+          - pages.specht-labs.de
+
+  # Gateway API routing. Rendered alongside the nginx Ingress above; each cluster
+  # overlay prunes the variant it does not use (v1/specht-labs deletes the HTTPRoutes
+  # and keeps the Ingress; v2/specht-labs-v2 deletes the Ingress and keeps these
+  # routes, attaching to the shared Envoy Gateway). Kept here so configs.pages stays
+  # single-source for both clusters.
+  gateway:
+    enabled: true
+    create: false
+    route:
+      parentRefs:
+        # Pin :443 so routes attach only to the HTTPS listener and do not shadow the
+        # platform :80 -> :443 redirect route on the shared Gateway.
+        - name: shared
+          namespace: envoy-gateway-system
+          port: 443
+    api:
+      hostnames:
+        - pages.specht-labs.de
+    proxy:
+      hostnames:
+        - specht-labs.de
+        - pages.specht-labs.de
+        - "*.specht-labs.de"
+        - gold-specht.de
+        - "*.gold-specht.de"
+
+## Static Pages Config
+configs:
+  proxy:
+    maxIdleConns: 1000
+    maxIdleConnsPerHost: 500
+    timeout: 30s
+    compression: false
+
+  output:
+    format: long
+
+  # Shared settings for every page. Each entry under `pages` deep-merges over
+  # this block, so a page only needs the fields that differ (domain + repo).
+  # Requires the staticpages image with pageDefaults support (v0.2.0+).
+  pageDefaults:
+    bucket:
+      region: eu-central-003
+      url: https://s3.eu-central-003.backblazeb2.com
+      name: cedi-testing
+      applicationId: ENV(APPLICATION_ID)
+      secret: ENV(S3_SECRET)
+
+    proxy:
+      url: https://cdn.specht-labs.de
+      path: file/cedi-testing
+      notFound: 404.html
+      # ".html"/".htm" resolve clean URLs (/guides/x -> /guides/x.html);
+      # "/index.*" resolve directory indexes.
+      searchPath:
+        - .html
+        - .htm
+        - /index.html
+        - /index.htm
+    git:
+      provider: github
+      mainBranch: main
+    preview:
+      enabled: true
+      branch: true
+      sha: false
+      environment: false
+
+  pages:
+    - domain: specht-labs.de
+      git:
+        repository: SpechtLabs/spechtlabs.github.io
+
+    - domain: pages.specht-labs.de
+      git:
+        repository: SpechtLabs/StaticPages
+
+    - domain: calendarapi.specht-labs.de
+      git:
+        repository: SpechtLabs/CalendarAPI
+
+    - domain: tka.specht-labs.de
+      git:
+        repository: SpechtLabs/tka
+
+    - domain: dev-page.specht-labs.de
+      git:
+        repository: SpechtLabs/tka
+
+    - domain: golint.specht-labs.de
+      git:
+        repository: SpechtLabs/golint-sl
+
+    - domain: gold-specht.de
+      git:
+        repository: SpechtLabs/GoldSpecht
+
+    - domain: granary.specht-labs.de
+      git:
+        repository: SpechtLabs/granary
+
+    - domain: prose.specht-labs.de
+      git:
+        repository: SpechtLabs/prose

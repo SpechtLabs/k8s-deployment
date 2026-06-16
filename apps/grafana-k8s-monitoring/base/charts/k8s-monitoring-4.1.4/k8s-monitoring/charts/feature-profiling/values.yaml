@@ -1,0 +1,244 @@
+---
+global:
+  # -- Override the namespace for namespaced resources created by this chart.
+  # @section -- Global Settings
+  namespaceOverride: ""
+
+annotations:
+  # -- The prefix for all annotations.
+  # @section -- General settings
+  prefix: "profiles.grafana.com"
+
+# Settings for gathering profiles using eBPF
+# @section -- eBPF
+ebpf:
+  # -- Gather profiles using eBPF
+  # @section -- eBPF
+  enabled: false
+
+  # -- How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all
+  # Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the
+  # `profiles.grafana.com/cpu.ebpf.enabled="false"` annotation on that pod. If using `annotation`, only pods with the
+  # `profiles.grafana.com/cpu.ebpf.enabled="true"` annotation will have profiles collected with eBPF.
+  # @section -- eBPF
+  targetingScheme: annotation
+
+  # Configure the annotations that will control how the targets are discovered and how profiles are collected.
+  # All annotations will be `<prefix>/cpu.ebpf.<action>`, for example, to "enable" collecting profiles using eBPF, set
+  # the annotation `profiles.grafana.com/cpu.ebpf.scrape: "true"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling collecting of profiles with eBPF.
+    # @default -- `"profiles.grafana.com/cpu.ebpf.enabled"`
+    # @section -- eBPF
+    enable: "enabled"
+
+  # -- Select pods to profile based on pod labels.
+  # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
+  # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
+  # `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`.
+  # @section -- eBPF
+  labelSelectors: {}
+
+  # -- Select pods to profile based on pod annotations.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
+  # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
+  # `color="green"`.
+  # @section -- eBPF
+  annotationSelectors: {}
+
+  # -- Select pods to profile based on their namespaces.
+  # @section -- eBPF
+  namespaces: []
+
+  # -- Which namespaces to exclude looking for pods.
+  # @section -- eBPF
+  excludeNamespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- eBPF
+  extraDiscoveryRules: ""
+
+  # -- C++ demangle mode. Available options are: none, simplified, templates, full
+  # @section -- eBPF
+  demangle: none
+
+  # -- Sample rate for eBPF profiling. This controls how frequently samples are collected.
+  # @section -- eBPF
+  sampleRate: 19
+
+  # -- A flag to enable or disable .NET profiling.
+  # @section -- eBPF
+  dotnetEnabled: true
+  # -- A flag to enable or disable Hotspot profiling.
+  # @section -- eBPF
+  hotspotEnabled: true
+  # -- A flag to enable or disable Perl profiling.
+  # @section -- eBPF
+  perlEnabled: true
+  # -- A flag to enable or disable PHP profiling.
+  # @section -- eBPF
+  phpEnabled: true
+  # -- A flag to enable or disable Python profiling.
+  # @section -- eBPF
+  pythonEnabled: true
+  # -- A flag to enable or disable Ruby profiling.
+  # @section -- eBPF
+  rubyEnabled: true
+  # -- A flag to enable or disable V8 profiling.
+  # @section -- eBPF
+  v8Enabled: true
+
+java:
+  # -- Gather profiles by attaching async-profiler to the Java runtime.
+  # @section -- Java
+  enabled: false
+
+  # -- How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes
+  # pods will be targeted for Java profiles, and you can exclude certain pods by setting the
+  # `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the
+  # `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles.
+  # @section -- Java
+  targetingScheme: annotation
+
+  # Configure the annotations that will control how the Java targets are discovered and how profiles are collected.
+  # All annotations will be `<prefix>/java.<action>`, for example, to "enable" scraping of Java profiles, set the
+  # annotation `profiles.grafana.com/java.enabled: "true"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling of Java profile collection.
+    # @section -- Java
+    enable: "enabled"
+
+  # -- Select pods to profile based on pod labels.
+  # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
+  # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
+  # `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`.
+  # @section -- Java
+  labelSelectors: {}
+
+  # -- Select pods to profile based on pod annotations.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
+  # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
+  # `color="green"`.
+  # @section -- Java
+  annotationSelectors: {}
+
+  # -- Select pods to profile based on their namespaces.
+  # @section -- Java
+  namespaces: []
+
+  # -- Which namespaces to exclude looking for pods.
+  # @section -- Java
+  excludeNamespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- Java
+  extraDiscoveryRules: ""
+
+  # Configuration for the async-profiler
+  profilingConfig:
+    # -- How frequently to collect profiles from the targets.
+    # @section -- Java
+    interval: 60s
+    # -- CPU profiling sample rate. It’s converted from Hz to interval and passed as an `-i` argument to async-profiler.
+    # @section -- Java
+    sampleRate: 100
+    # -- A flag to enable CPU profiling, using `itimer` async-profiler event by default.
+    # @section -- Java
+    cpu: true
+    # -- Allocation profiling sampling configuration. It's passed as an `--alloc` argument to async-profiler.
+    # @section -- Java
+    alloc: 512k
+    # -- Lock profiling sampling configuration. It’s passed as a `--lock` argument to async-profiler.
+    # @section -- Java
+    lock: 10ms
+    # -- Sets the CPU profiling event. Can be one of `itimer`, `cpu` or `wall`.
+    # @section -- Java
+    event: itimer
+
+pprof:
+  # -- Gather profiles by scraping pprof HTTP endpoints
+  # @section -- pprof
+  enabled: false
+
+  # -- Profile types to gather
+  # @section -- pprof
+  types:
+    memory: true
+    block: true
+    goroutine: true
+    mutex: true
+    cpu: true
+    fgprof: true
+    godeltaprof_memory: false
+    godeltaprof_mutex: false
+    godeltaprof_block: false
+
+  # Configure the annotations that will control how the pprof targets are discovered and how profiles are scraped.
+  # All annotations will be `<prefix>/<type>.<action>`, for example, to "enable" scraping of CPU profiles, set the
+  # annotation `profiles.grafana.com/cpu.scrape: "true"` on the pod. To set the path for memory profiles, set the
+  # annotation `profiles.grafana.com/memory.path: "/debug/pprof/mem"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling scraping of profiles of a given type.
+    # @section -- pprof
+    enable: "scrape"
+    # -- The annotation action for choosing the port number for scraping profiles of a given type.
+    # @section -- pprof
+    portNumber: "port"
+    # -- The annotation action for choosing the port name for scraping profiles of a given type.
+    # @section -- pprof
+    portName: "port_name"
+    # -- The annotation action for choosing the path for scraping profiles of a given type.
+    # @section -- pprof
+    path: "path"
+    # -- The annotation action for choosing the scheme for scraping profiles of a given type.
+    # @section -- pprof
+    scheme: "scheme"
+    # -- The annotation action for choosing the container for scraping profiles of a given type.
+    # @section -- pprof
+    container: "container"
+
+  # -- Select pods to profile based on pod labels.
+  # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
+  # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
+  # `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`.
+  # @section -- pprof
+  labelSelectors: {}
+
+  # -- Select pods to profile based on pod annotations.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
+  # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
+  # `color="green"`.
+  # @section -- pprof
+  annotationSelectors: {}
+
+  # -- Select pods to profile based on their namespaces.
+  # @section -- pprof
+  namespaces: []
+
+  # -- Which namespaces to exclude looking for pods.
+  # @section -- pprof
+  excludeNamespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- pprof
+  extraDiscoveryRules: ""
+
+  # -- How frequently to collect profiles.
+  # @section -- pprof
+  scrapeInterval: "15s"
+
+  # -- Timeout for collecting profiles.
+  # Must be larger than the scrape interval.
+  # @section -- pprof
+  scrapeTimeout: "18s"
+
+  # -- The bearer token file to use when scraping profiles.
+  # @section -- pprof
+  bearerTokenFile: "/var/run/secrets/kubernetes.io/serviceaccount/token"

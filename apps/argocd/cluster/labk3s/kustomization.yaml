@@ -1,0 +1,89 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+
+resources:
+  - ../../base/
+
+generators:
+  - ./secret-generator.yaml
+
+patches:
+  - path: delete-sm-server.yaml
+  - path: delete-sm-repo-server.yaml
+  - path: delete-sm-redis.yaml
+  - path: delete-sm-dex.yaml
+  - path: delete-sm-app-controller.yaml
+  - path: delete-sm-appset-controller.yaml
+  - target:
+      kind: Role
+      namespace: argocd
+      name: argocd-server
+    path: webterminal-role.patch.yaml
+
+  - target:
+      kind: Ingress
+      namespace: argocd
+      name: argocd-server
+    patch: |-
+      - op: replace
+        path: "/spec/ingressClassName"
+        value: tailscale
+
+      - op: remove
+        path: "/spec/rules/0/host"
+
+      - op: replace
+        path: "/spec/tls/0/hosts/0"
+        value: lab-argocd
+
+      - op: add
+        path: "/metadata/annotations/tailscale.com~1funnel"
+        value: true
+
+      - op: add
+        path: "/metadata/annotations/tailscale.com~1tags"
+        value: "tag:homelab"
+
+  - target:
+      kind: ConfigMap
+      name: argocd-cm
+    patch: |-
+      - op: replace
+        path: "/data/dex.config"
+        value: |
+          connectors:
+            - type: oidc
+              id: oidc
+              name: Tailscale
+              config:
+                issuer: https://idp.sphinx-map.ts.net
+                clientID: foo
+                clientSecret: bar
+                redirectURI: https://lab-argocd.sphinx-map.ts.net/api/dex/callback
+                scopes:
+                  - openid
+                getUserInfo: true
+                Default: username
+                claimMapping:
+                  Default: username
+
+      - op: replace
+        path: "/data/url"
+        value: https://lab-argocd.sphinx-map.ts.net
+
+  - target:
+      kind: ConfigMap
+      name: argocd-rbac-cm
+    patch: |-
+      - op: replace
+        path: "/data/policy.csv"
+        value: |-
+          p, role:org-admin, *, *, *, allow
+          p, role:viewer, *, get, *, allow
+          g, cedi@github, role:org-admin
+          g, cedi, role:org-admin
+
+      - op: replace
+        path: "/data/scopes"
+        value: "[username,email]"

@@ -1,0 +1,234 @@
+cluster:
+  name: specht-labs
+global:
+  # Pin metrics collection to 1/min to cap Grafana Cloud DPM (cost lever).
+  # This is also the chart default; set explicitly so a chart bump can't
+  # silently lower it. Per-feature/ServiceMonitor intervals inherit this
+  # unless they set their own.
+  scrapeInterval: 60s
+destinations:
+  grafana-cloud-metrics:
+    type: prometheus
+    url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom/push
+    auth:
+      type: basic
+      username: "3276426" 
+      password: REPLACE_ME
+    metricProcessingRules: |
+      write_relabel_config {
+        regex = "container_id|image_id"
+        action = "labeldrop"
+      }
+      // Routing is done per-feature (see each feature's `destinations`): all
+      // ServiceMonitor/PodMonitor scrapes go to the self-hosted Mimir, not here.
+      // The one exception: argocd-server is also scraped to Cloud via
+      // annotation-autodiscovery (job "argocd-server", set by the
+      // scrape-to-cloud component) solely to feed the Knowledge Graph its
+      // grpc_server RED. Keep only grpc_server_* from that scrape; drop the rest
+      // (argocd's full metrics live in the self-hosted Mimir). RE2 has no
+      // negative lookahead -> temp keep-marker label.
+      write_relabel_config {
+        source_labels = ["job", "__name__"]
+        separator = ";"
+        regex = "argocd-server;grpc_server.*"
+        target_label = "__tmp_keep_argocd"
+        replacement = "keep"
+      }
+      write_relabel_config {
+        source_labels = ["job", "__tmp_keep_argocd"]
+        separator = ";"
+        regex = "argocd-server;"
+        action = "drop"
+      }
+      write_relabel_config {
+        regex = "__tmp_keep_argocd"
+        action = "labeldrop"
+      }
+  grafana-cloud-logs:
+    type: loki
+    url: https://logs-prod-012.grafana.net./loki/api/v1/push
+    auth:
+      type: basic
+      username: "1633888"
+      password: REPLACE_ME
+  gc-otlp-endpoint:
+    type: otlp
+    url: https://otlp-gateway-prod-eu-west-2.grafana.net./otlp
+    protocol: http
+    auth:
+      type: basic
+      username: "1676101"
+      password: REPLACE_ME
+    metrics:
+      enabled: true
+    logs:
+      enabled: true
+    traces:
+      enabled: true
+    processors:
+      transform:
+        metrics:
+          resource:
+            - delete_key(attributes, "container_id")
+            - delete_key(attributes, "image_id")
+          datapoint:
+            - delete_key(attributes, "container_id")
+            - delete_key(attributes, "image_id")
+  grafana-cloud-profiles:
+    type: pyroscope
+    url: https://profiles-prod-002.grafana.net.:443
+    auth:
+      type: basic
+      username: "1676101"
+      password: REPLACE_ME
+  # Self-hosted Mimir on this cluster (lgtm namespace), tenant `spechtlabs`.
+  # All ServiceMonitor/PodMonitor/Probe scrapes route here (prometheusOperatorObjects
+  # destination below). No filtering: routing is per-feature, not by relabel.
+  # In-cluster write, no auth; tenantId sets X-Scope-OrgID.
+  selfhosted-mimir:
+    type: prometheus
+    url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+    tenantId: spechtlabs
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  # kube-state-metrics / cAdvisor / kubelet -> Cloud (Kubernetes Monitoring app + KG)
+  destinations: [grafana-cloud-metrics]
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # node-exporter -> Cloud (K8s app)
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: false
+  energyMetrics:
+    enabled: false
+costMetrics:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # opencost -> Cloud (K8s cost view)
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy-metrics
+  # Opt-in path to Cloud: workloads annotated via the scrape-to-cloud component
+  # (k8s.grafana.com/scrape) are scraped here and sent to Cloud.
+  destinations: [grafana-cloud-metrics]
+# Default sink for everything that ships a ServiceMonitor/PodMonitor/Probe:
+# the self-hosted Mimir. Operators/exporters (cert-manager, external-dns, capi,
+# caph, grafana-operator, tailscale, envoy-gateway, metrics-server, mimir, ...)
+# land here automatically. To send a workload to Cloud instead, add the
+# scrape-to-cloud component (kustomize/components/scrape-to-cloud).
+prometheusOperatorObjects:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [selfhosted-mimir]
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+nodeLogs:
+  enabled: true
+  collector: alloy-logs
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+kubernetesManifests:
+  enabled: true
+  collector: alloy-singleton
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+        port: 4317
+      http:
+        enabled: true
+        port: 4318
+    zipkin:
+      enabled: true
+      port: 9411
+autoInstrumentation:
+  enabled: true # change me
+  collector: alloy-metrics
+  destinations: [grafana-cloud-metrics]   # Beyla RED -> Cloud (App O11y + KG)
+  beyla:
+    deliverTracesToApplicationObservability: true
+profiling:
+  enabled: true
+  collector: alloy-profiles
+  # The chart requires at least one profiling type when profiling is enabled.
+  # eBPF matches the alloy-profiles collector's privileged + daemonset presets.
+  ebpf:
+    enabled: true
+collectors:
+  alloy-metrics:
+    presets:
+      - clustered
+      - statefulset
+  alloy-singleton:
+    presets:
+      - singleton
+  alloy-logs:
+    presets:
+      - filesystem-log-reader
+      - daemonset
+  alloy-receiver:
+    presets:
+      - deployment
+  alloy-profiles:
+    presets:
+      - privileged
+      - daemonset
+collectorCommon:
+  alloy:
+    remoteConfig:
+      enabled: true
+      url: https://fleet-management-prod-011.grafana.net
+      auth:
+        type: basic
+        username: "1676101"
+        password: REPLACE_ME
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: false
+  opencost:
+    deploy: true
+    metricsSource: grafana-cloud-metrics
+    opencost:
+      exporter:
+        defaultClusterId: specht-labs
+      prometheus:
+        existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
+        external:
+          url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom
+      customPricing:
+        enabled: true
+        costModel:
+          description: Hetzner Cloud CPX22 pricing, net EUR.
+          CPU: 0.0032
+          RAM: 0.0016
+          GPU: 0
+          storage: 0
+          zoneNetworkEgress: 0
+          regionNetworkEgress: 0
+          internetNetworkEgress: 1
+  kepler:
+    deploy: false
+  k8s-manifest-tail:
+    deploy: true
+    config:
+      objects:
+        - apiVersion: v1
+          kind: Pod
+        - apiVersion: apps/v1
+          kind: Deployment
+        - apiVersion: apps/v1
+          kind: StatefulSet
+        - apiVersion: apps/v1
+          kind: DaemonSet

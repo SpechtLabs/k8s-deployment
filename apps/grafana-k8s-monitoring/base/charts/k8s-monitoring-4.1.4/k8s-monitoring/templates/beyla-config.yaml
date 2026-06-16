@@ -1,0 +1,18 @@
+{{- if .Values.autoInstrumentation.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beyla.fullname" .Subcharts.autoInstrumentation.Subcharts.beyla }}
+  namespace: {{ include "beyla.namespace" .Subcharts.autoInstrumentation.Subcharts.beyla }}
+  labels:
+    {{- include "beyla.labels" .Subcharts.autoInstrumentation.Subcharts.beyla | nindent 4 }}
+    app.kubernetes.io/component: config
+  {{- with .Values.autoInstrumentation.beyla.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  beyla-config.yml: |-
+    {{- include "k8s-monitoring.beyla.config" . | nindent 4 }}
+{{- end }}

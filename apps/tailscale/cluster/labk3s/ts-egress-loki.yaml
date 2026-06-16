@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: loki-gateway.sphinx-map.ts.net
+    tailscale.com/tags: tag:o11y-agent
+  name: k3s-loki-egress
+spec:
+  externalName: placeholder # any value - will be overwritten by operator
+  type: ExternalName

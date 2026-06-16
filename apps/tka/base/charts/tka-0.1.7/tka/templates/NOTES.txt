@@ -1,0 +1,54 @@
+1. TKA has been deployed successfully!
+
+   The TKA server is running as: {{ include "tka.fullname" . }}
+   Namespace: {{ .Release.Namespace }}
+
+2. TKA is accessible ONLY via Tailscale network at:
+   {{- if eq (.Values.tka.tailscale.port | int) 443 }}
+   https://{{ .Values.tka.tailscale.hostname }}.{{ .Values.tka.tailscale.tailnet }}
+   {{- else }}
+   http://{{ .Values.tka.tailscale.hostname }}.{{ .Values.tka.tailscale.tailnet }}:{{ .Values.tka.tailscale.port }}
+   {{- end }}
+
+3. To use TKA, install the CLI and configure shell integration: https://tka.specht-labs.de/tutorials/quick
+
+4. Authenticate with TKA using shell integration:
+
+   # For ephemeral access (auto-cleanup on exit)
+   tka shell
+
+{{- if not .Values.tka.tailscale.tailnet }}
+
+⚠️  WARNING: You haven't set tka.tailscale.tailnet in your values.
+   Please update your values.yaml with your Tailscale tailnet domain.
+
+{{- end }}
+
+{{- if not .Values.secrets.tailscale.authKey }}
+{{- if .Values.secrets.tailscale.create }}
+
+⚠️  WARNING: No Tailscale auth key provided.
+   Please update the secret {{ include "tka.tailscaleSecretName" . }} with a valid TS_AUTHKEY.
+
+{{- else }}
+
+ℹ️  INFO: Using existing secret {{ .Values.secrets.tailscale.secretName }}.
+   Ensure it contains a valid TS_AUTHKEY.
+
+{{- end }}
+{{- end }}
+
+{{- if .Values.serviceMonitor.enabled }}
+
+📊 Monitoring: ServiceMonitor created for Prometheus scraping.
+   Metrics available at: http://{{ include "tka.fullname" . }}:{{ .Values.service.metricsPort }}/metrics
+
+{{- end }}
+
+💡 SCALING NOTE: TKA runs as a single replica due to Tailscale node identity
+   constraints. The deployment uses 'Recreate' strategy to avoid duplicate nodes.
+
+For more information:
+- Documentation: https://tka.specht-labs.de
+- GitHub: https://github.com/SpechtLabs/tka
+- Issues: https://github.com/SpechtLabs/tka/issues

@@ -1,0 +1,13 @@
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "helper.fullname" . }}-release-info
+  namespace: {{ include "helper.namespace" . }}
+data:
+{{- if .Values.cluster.name }}
+  cluster: {{ .Values.cluster.name | quote }}
+{{- end }}
+  self-reporting-metric.prom: |+{{ printf "%s\n" (include "features.selfReporting.metrics" . | trim) | nindent 4 }}
+{{ end }}

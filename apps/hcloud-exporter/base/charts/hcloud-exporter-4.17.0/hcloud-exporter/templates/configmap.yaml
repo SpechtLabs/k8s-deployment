@@ -1,0 +1,13 @@
+{{- if .Values.files -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "hcloud-exporter.fullname" . }}-files
+  labels:
+    {{- include "hcloud-exporter.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.files }}
+  {{ $key }}: |
+    {{- $value | nindent 4 }}
+  {{- end }}
+{{- end -}}

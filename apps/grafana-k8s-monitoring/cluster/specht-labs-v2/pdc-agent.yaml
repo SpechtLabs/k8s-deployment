@@ -1,0 +1,72 @@
+# Grafana Private Data Source Connect agent. Opens an outbound tunnel so Grafana
+# Cloud can query datasources private to this cluster (e.g. the self-hosted Mimir
+# in the lgtm namespace) without exposing them publicly.
+# Adapted from github.com/grafana/pdc-agent production/kubernetes example.
+# token / cluster / hosted-grafana-id come from the SOPS secret grafana-pdc-agent
+# (cluster = prod-eu-west-2). Resources trimmed from the upstream 1 CPU/1Gi: the
+# agent is a lightweight SSH tunnel and the cx23 workers are tight.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-pdc-agent
+  labels:
+    app: grafana-pdc-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: grafana-pdc-agent
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        name: grafana-pdc-agent
+    spec:
+      securityContext:
+        runAsUser: 30000
+        runAsGroup: 30000
+        fsGroup: 30000
+      containers:
+        - name: grafana-pdc-agent
+          image: grafana/pdc-agent:latest
+          imagePullPolicy: Always
+          env:
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-pdc-agent
+                  key: token
+            - name: CLUSTER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-pdc-agent
+                  key: cluster
+            - name: HOSTED_GRAFANA_ID
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-pdc-agent
+                  key: hosted-grafana-id
+          args:
+            - -cluster
+            - $(CLUSTER)
+            - -token
+            - $(TOKEN)
+            - -gcloud-hosted-grafana-id
+            - $(HOSTED_GRAFANA_ID)
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - all
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi

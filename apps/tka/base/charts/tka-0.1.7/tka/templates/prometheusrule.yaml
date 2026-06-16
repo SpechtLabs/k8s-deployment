@@ -1,0 +1,86 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "tka.fullname" . }}
+  labels:
+    {{- include "tka.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+  - name: tka.rules
+    rules:
+{{- if .Values.prometheusRule.privilegedRoleAlert.enabled }}
+    # Alert when someone logs in with privileged role (configurable)
+    - alert: TKAPrivilegedRoleLogin
+      expr: increase(tka_login_attempts_total{cluster_role="{{ .Values.prometheusRule.privilegedRoleAlert.clusterRole | default "cluster-admin" }}", outcome="success"}[1m]) > 0
+      for: {{ .Values.prometheusRule.privilegedRoleAlert.duration | default "0s" }}
+      labels:
+        severity: {{ .Values.prometheusRule.privilegedRoleAlert.severity | default "warning" }}
+      annotations:
+        summary: "Privileged role login detected"
+        description: "Someone has logged in with {{ .Values.prometheusRule.privilegedRoleAlert.clusterRole | default "cluster-admin" }} role"
+        runbook_url: "{{ .Values.prometheusRule.privilegedRoleAlert.runbookUrl | default "" }}"
+
+    # Alert when there are multiple active privileged role sessions
+    - alert: TKAMultiplePrivilegedSessions
+      expr: tka_active_user_sessions{cluster_role="{{ .Values.prometheusRule.privilegedRoleAlert.clusterRole | default "cluster-admin" }}"} > {{ .Values.prometheusRule.privilegedRoleAlert.maxActiveSessions | default 2 }}
+      for: {{ .Values.prometheusRule.privilegedRoleAlert.duration | default "5m" }}
+      labels:
+        severity: {{ .Values.prometheusRule.privilegedRoleAlert.severity | default "warning" }}
+      annotations:
+        summary: "Multiple privileged role sessions active"
+        description: "There are {{ "{{" }} $value {{ "}}" }} active {{ .Values.prometheusRule.privilegedRoleAlert.clusterRole | default "cluster-admin" }} sessions, which exceeds the expected limit"
+        runbook_url: "{{ .Values.prometheusRule.privilegedRoleAlert.runbookUrl | default "" }}"
+{{- end }}
+
+{{- if .Values.prometheusRule.serverDownAlert.enabled }}
+    # Alert when TKA server is down
+    - alert: TKAServerDown
+      expr: up{job=~".*tka.*"} == 0
+      for: {{ .Values.prometheusRule.serverDownAlert.duration | default "1m" }}
+      labels:
+        severity: {{ .Values.prometheusRule.serverDownAlert.severity | default "critical" }}
+      annotations:
+        summary: "TKA server is down"
+        description: "TKA server has been down for more than {{ .Values.prometheusRule.serverDownAlert.duration | default "1m" }}"
+{{- end }}
+
+{{- if .Values.prometheusRule.errorRateAlert.enabled }}
+    # Alert on high error rate
+    - alert: TKAHighErrorRate
+      expr: |
+        (
+          rate(tka_login_attempts_total{outcome="error"}[5m]) /
+          rate(tka_login_attempts_total[5m])
+        ) > {{ .Values.prometheusRule.errorRateAlert.threshold | default 0.1 }}
+      for: {{ .Values.prometheusRule.errorRateAlert.duration | default "2m" }}
+      labels:
+        severity: {{ .Values.prometheusRule.errorRateAlert.severity | default "warning" }}
+      annotations:
+        summary: "High error rate in TKA login attempts"
+        description: "TKA login error rate is {{ "{{" }} $value | humanizePercentage {{ "}}" }} over the last 5 minutes"
+{{- end }}
+
+{{- if .Values.prometheusRule.forbiddenRateAlert.enabled }}
+    # Alert on authentication failures (potential security issue)
+    - alert: TKAHighForbiddenRate
+      expr: |
+        (
+          rate(tka_login_attempts_total{outcome="forbidden"}[5m]) /
+          rate(tka_login_attempts_total[5m])
+        ) > {{ .Values.prometheusRule.forbiddenRateAlert.threshold | default 0.2 }}
+      for: {{ .Values.prometheusRule.forbiddenRateAlert.duration | default "5m" }}
+      labels:
+        severity: {{ .Values.prometheusRule.forbiddenRateAlert.severity | default "warning" }}
+      annotations:
+        summary: "High authentication failure rate"
+        description: "TKA authentication failure rate is {{ "{{" }} $value | humanizePercentage {{ "}}" }} over the last 5 minutes, which may indicate unauthorized access attempts"
+{{- end }}
+
+{{- if .Values.prometheusRule.customRules }}
+{{ toYaml .Values.prometheusRule.customRules | indent 4 }}
+{{- end }}
+{{- end }}

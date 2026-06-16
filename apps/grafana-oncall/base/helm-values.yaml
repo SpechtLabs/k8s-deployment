@@ -1,0 +1,242 @@
+nameOverride: "oncall"
+
+# Grafana is included into this release for the convenience.
+# It is recommended to host it separately from this release
+grafana:
+  enabled: false
+
+# Whether to install ingress controller
+ingress-nginx:
+  enabled: false
+
+# Install cert-manager as a part of the release
+cert-manager:
+  enabled: false
+
+base_url: oncall.grafana.cedi.dev
+
+externalGrafana:
+  url: https://grafana.cedi.dev
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+migrate:
+  enabled: true
+
+oncall:
+  secrets:
+    existingSecret: "grafana-oncall"
+    secretKey: "SECRET_KEY"
+    mirageSecretKey: "MIRAGE_SECRET_KEY"
+
+  slack:
+    enabled: true
+    existingSecret: slack-credentials
+    clientIdKey: clientId
+    clientSecretKey: clientSecret
+    signingSecretKey: signingSecret
+    redirectHost: https://oncall.grafana.cedi.dev
+
+  telegram:
+    enabled: true
+    webhookUrl: https://oncall.grafana.cedi.dev
+    existingSecret: oncall-telegram-token
+    tokenKey: token
+
+engine:
+  replicaCount: 1
+
+database:
+  type: postgresql
+
+mariadb:
+  enabled: false
+
+postgresql:
+  enabled: true
+  architecture: standalone
+
+  primary:
+    nodeSelector:
+      kubernetes.io/arch: amd64
+
+    tolerations:
+      - key: "arch"
+        operator: "Equal"
+        value: "amd64"
+        effect: "NoSchedule"
+
+  auth:
+    database: oncall
+
+    enablePostgresUser: true
+    postgresPassword: "foobar1337"
+
+    username: user
+    password: foobar2342
+
+  metrics:
+    enabled: true
+
+    serviceMonitor:
+      enabled: true
+
+      additionalLabels:
+        instance: primary
+
+    prometheusRule:
+      enabled: true
+      rules:
+        - alert: HugeReplicationLag
+          expr: pg_replication_lag{service="{{ printf "%s-metrics" (include "common.names.fullname" .) }}"} / 3600 > 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            description: replication for {{ include "common.names.fullname" . }} PostgreSQL is lagging by {{ "{{ $value }}" }} hour(s).
+            summary: PostgreSQL replication is lagging by {{ "{{ $value }}" }} hour(s).
+
+redis:
+  enabled: true
+  architecture: standalone
+
+  auth:
+    enabled: true
+    password: "foobar2342"
+
+  master:
+    persistence:
+      enabled: true
+      storageClass: hcloud-volumes
+      size: 10Gi
+
+  replica:
+    persistence:
+      enabled: true
+      storageClass: hcloud-volumes
+      size: 10Gi
+
+  metrics:
+    enabled: true
+
+    serviceMonitor:
+      enabled: true
+
+      additionalLabels:
+        instance: primary
+
+    prometheusRule:
+      enabled: true
+      rules:
+        - alert: RedisDown
+          expr: redis_up{service="{{ template "common.names.fullname" . }}-metrics"} == 0
+          for: 2m
+          labels:
+            severity: error
+          annotations:
+            summary: Redis&reg; instance {{ "{{ $labels.instance }}" }} down
+            description: Redis&reg; instance {{ "{{ $labels.instance }}" }} is down
+        - alert: RedisMemoryHigh
+          expr: >
+            redis_memory_used_bytes{service="{{ template "common.names.fullname" . }}-metrics"} * 100
+            /
+            redis_memory_max_bytes{service="{{ template "common.names.fullname" . }}-metrics"}
+            > 90
+          for: 2m
+          labels:
+            severity: error
+          annotations:
+            summary: Redis&reg; instance {{ "{{ $labels.instance }}" }} is using too much memory
+            description: |
+              Redis&reg; instance {{ "{{ $labels.instance }}" }} is using {{ "{{ $value }}" }}% of its available memory.
+        - alert: RedisKeyEviction
+          expr: |
+            increase(redis_evicted_keys_total{service="{{ template "common.names.fullname" . }}-metrics"}[5m]) > 0
+          for: 1s
+          labels:
+            severity: error
+          annotations:
+            summary: Redis&reg; instance {{ "{{ $labels.instance }}" }} has evicted keys
+            description: |
+              Redis&reg; instance {{ "{{ $labels.instance }}" }} has evicted {{ "{{ $value }}" }} keys in the last 5 minutes.
+
+rabbitmq:
+  enabled: true
+
+  auth:
+    username: user
+    password: foobar2342
+
+  persistence:
+    enabled: true
+    storageClass: hcloud-volumes
+    size: 10Gi
+
+  metrics:
+    enabled: true
+
+    serviceMonitor:
+      enabled: true
+
+      additionalLabels:
+        instance: primary
+
+    prometheusRule:
+      enabled: true
+      rules:
+        - alert: RabbitmqDown
+          expr: rabbitmq_up{service="{{ template "common.names.fullname" . }}"} == 0
+          for: 5m
+          labels:
+            severity: error
+          annotations:
+            summary: Rabbitmq down (instance {{ "{{ $labels.instance }}" }})
+            description: RabbitMQ node down
+        - alert: ClusterDown
+          expr: |
+            sum(rabbitmq_running{service="{{ template "common.names.fullname" . }}"})
+            < {{ .Values.replicaCount }}
+          for: 5m
+          labels:
+            severity: error
+          annotations:
+            summary: Cluster down (instance {{ "{{ $labels.instance }}" }})
+            description: |
+                Less than {{ .Values.replicaCount }} nodes running in RabbitMQ cluster
+                VALUE = {{ "{{ $value }}" }}
+        - alert: ClusterPartition
+          expr: rabbitmq_partitions{service="{{ template "common.names.fullname" . }}"} > 0
+          for: 5m
+          labels:
+            severity: error
+          annotations:
+            summary: Cluster partition (instance {{ "{{ $labels.instance }}" }})
+            description: |
+                Cluster partition
+                VALUE = {{ "{{ $value }}" }}
+        - alert: OutOfMemory
+          expr: |
+            rabbitmq_node_mem_used{service="{{ template "common.names.fullname" . }}"}
+            / rabbitmq_node_mem_limit{service="{{ template "common.names.fullname" . }}"}
+            * 100 > 90
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Out of memory (instance {{ "{{ $labels.instance }}" }})
+            description: |
+                Memory available for RabbmitMQ is low (< 10%)\n  VALUE = {{ "{{ $value }}" }}
+                LABELS: {{ "{{ $labels }}" }}
+        - alert: TooManyConnections
+          expr: rabbitmq_connectionsTotal{service="{{ template "common.names.fullname" . }}"} > 1000
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Too many connections (instance {{ "{{ $labels.instance }}" }})
+            description: |
+                RabbitMQ instance has too many connections (> 1000)
+                VALUE = {{ "{{ $value }}" }}\n  LABELS: {{ "{{ $labels }}" }}

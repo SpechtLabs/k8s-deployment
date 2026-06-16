@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  name: karakeep-web-ingress
+  namespace: karakeep
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: keep.specht-labs.de
+      http:
+        paths:
+          - backend:
+              service:
+                name: web
+                port:
+                  number: 3000
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - keep.specht-labs.de
+      secretName: karakeep-web-tls

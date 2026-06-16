@@ -1,0 +1,99 @@
+{{- define "alloy-operator.rbac.alloyObjectRules" -}}
+# Rules which allow the management of ConfigMaps, ServiceAccounts, and Services.
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "serviceaccounts", "services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Rules which allow the management of DaemonSets, Deployments, and StatefulSets.
+- apiGroups: ["apps"]
+  resources: ["daemonsets", "deployments", "statefulsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Rules which allow the management of Horizontal Pod Autoscalers.
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- if .Capabilities.APIVersions.Has "autoscaling.k8s.io/v1" }}
+# Rules which allow the management of VerticalPodAutoscalers.
+- apiGroups: ["autoscaling.k8s.io"]
+  resources: ["verticalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- end }}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+# Rules which allow the management of ServiceMonitor.
+- apiGroups: ["monitoring.coreos.com"]
+  resources: ["servicemonitors"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- end }}
+# Rules which allow the management of Ingresses and NetworkPolicies.
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses", "networkpolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Rules which allow the management of PodDisruptionBudgets.
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Rules which allow the management of ClusterRoles, ClusterRoleBindings, Roles, and RoleBindings.
+# `bind` and `escalate` are required so the operator can create ClusterRoles/Roles for the Alloy
+# instances it manages. Kubernetes' privilege-escalation prevention requires the creator to either
+# already hold every permission it grants, or to have `escalate` (for roles) and `bind` (for
+# rolebindings). The operator's role doesn't enumerate every permission Alloy ever needs, so these
+# two verbs are required for the operator to function. `impersonate` and other dangerous verbs are
+# intentionally omitted.
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "bind", "escalate"]
+{{- end }}
+
+{{- if .Values.rbac.create }}
+  {{- if .Values.rbac.createClusterRoles }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "alloy-operator.fullname" . }}
+rules:{{ include "alloy-operator.rbac.alloyObjectRules" $ | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "alloy-operator.fullname" . }}
+  labels:{{ include "alloy-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "alloy-operator.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "alloy-operator.serviceAccountName" . }}
+    namespace: {{ include "alloy-operator.namespace" . }}
+  {{- else }}
+    {{- $namespaces := .Values.namespaces }}
+    {{- if .Values.ownNamespaceOnly }}
+      {{- $namespaces = list (include "alloy-operator.namespace" $) }}
+    {{- end }}
+    {{- range $namespace := $namespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "alloy-operator.fullname" $ }}
+  namespace: {{ $namespace }}
+  labels:{{ include "alloy-operator.labels" $ | nindent 4 }}
+rules:{{ include "alloy-operator.rbac.alloyObjectRules" $ | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "alloy-operator.fullname" $ }}
+  namespace: {{ $namespace }}
+  labels:{{ include "alloy-operator.labels" $ | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "alloy-operator.fullname" $ }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "alloy-operator.serviceAccountName" $ }}
+    namespace: {{ include "alloy-operator.namespace" $ }}
+    {{- end }}
+  {{- end }}
+{{- end }}

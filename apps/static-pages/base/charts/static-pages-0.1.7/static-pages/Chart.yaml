@@ -1,0 +1,33 @@
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: GitHub
+      url: https://github.com/SpechtLabs/StaticPages
+    - name: Documentation
+      url: http://staticpages.specht-labs.de
+  artifacthub.io/maintainers: |
+    - name: SpechtLabs
+      email: contact@specht-labs.de
+  category: Web Applications
+apiVersion: v2
+appVersion: v0.2.0
+description: 'A Helm chart for deploying the StaticPages hosting platform. StaticPages
+  serves pre-built static sites via reverse proxy to an S3-compatible backend, supporting
+  preview and production builds via subdomains like <branch>.domain.tld. '
+home: https://github.com/SpechtLabs/StaticPages
+keywords:
+- staticpage
+- static site
+- s3
+- html
+- hosting
+- reverse-proxy
+kubeVersion: '>=1.23.0'
+maintainers:
+- name: SpechtLabs
+  url: https://specht-labs.de
+name: static-pages
+sources:
+- https://github.com/SpechtLabs/StaticPages
+type: application
+version: 0.1.7

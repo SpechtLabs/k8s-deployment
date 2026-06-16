@@ -1,0 +1,101 @@
+{{ define "feature.clusterMetrics.kube_state_metrics.allowList" }}
+{{- $allowList := list }}
+{{ if (index .Values "kube-state-metrics").metricsTuning.useDefaultAllowList }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kube-state-metrics.yaml" | fromYamlArray) -}}
+{{ end }}
+{{ if (index .Values "kube-state-metrics").metricsTuning.includeMetrics }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (index .Values "kube-state-metrics").metricsTuning.includeMetrics -}}
+{{ end }}
+{{ $allowList | uniq | toYaml }}
+{{ end }}
+
+{{- define "feature.clusterMetrics.kube_state_metrics.alloy" }}
+{{- if (index .Values "kube-state-metrics").enabled }}
+{{- $namespace := (index .Values "kube-state-metrics").namespace }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+  {{- $namespace = (dig "kube-state-metrics" "namespaceOverride" false (.telemetryServices | default dict) | default .Release.Namespace) }}
+{{- end }}
+{{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
+{{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
+{{- $labelSelectors := list }}
+{{- range $label, $value := (index .Values "kube-state-metrics").labelMatchers }}
+  {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value) }}
+{{- end }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
+  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
+  {{- $labelSelectors = append $labelSelectors "app.kubernetes.io/name=kube-state-metrics" }}
+{{- end }}
+discovery.kubernetes "kube_state_metrics" {
+  role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
+
+  selectors {
+    role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
+    label = {{ $labelSelectors | join "," | quote }}
+  }
+{{- if $namespace }}
+  namespaces {
+    names = [{{ $namespace | quote }}]
+  }
+{{- end }}
+} // discovery.kubernetes "kube_state_metrics"
+
+discovery.relabel "kube_state_metrics" {
+  targets = discovery.kubernetes.kube_state_metrics.targets
+
+  rule {
+    action = "replace"
+    replacement = "kubernetes"
+    target_label = "source"
+  }
+  {{- (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
+} // discovery.relabel "kube_state_metrics"
+
+prometheus.scrape "kube_state_metrics" {
+  targets = discovery.relabel.kube_state_metrics.output
+  job_name = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
+  scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ (index .Values "kube-state-metrics").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+  scrape_protocols = {{ include "helper.scrapeProtocols" . }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
+  convert_classic_histograms_to_nhcb = {{ .Values.global.convertClassicHistogramsToNhcb }}
+  scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
+  bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
+  tls_config {
+    insecure_skip_verify = true
+  }
+
+  clustering {
+    enabled = true
+  }
+
+{{- if or $metricAllowList $metricDenyList (index .Values "kube-state-metrics").extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+} // prometheus.scrape "kube_state_metrics"
+
+prometheus.relabel "kube_state_metrics" {
+  max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
+
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
+
+{{- if (index .Values "kube-state-metrics").extraMetricProcessingRules }}
+  {{ (index .Values "kube-state-metrics").extraMetricProcessingRules | nindent 2}}
+{{- end }}
+{{- end }}
+  forward_to = argument.metrics_destinations.value
+} // prometheus.relabel "kube_state_metrics"
+{{- end }}
+{{- end }}

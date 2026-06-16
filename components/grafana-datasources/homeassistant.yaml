@@ -1,0 +1,38 @@
+apiVersion: 1
+datasources:
+  - name: "Mimir (hass)"
+    type: prometheus
+    uid: mimir-hass
+    isDefault: false
+    url: http://mimir-nginx.observability.svc.cluster.local/prometheus
+    access: proxy
+    editable: false
+    jsonData:
+      timeInterval: 10s
+      manageAlerts: true
+      prometheusType: mimir
+      customQueryParameters:
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: hass-elbschloss
+
+  - name: "Loki (hass)"
+    type: loki
+    uid: loki-hass
+    url: http://loki-gateway.observability.svc.cluster.local
+    access: proxy
+    editable: false
+    jsonData:
+      derivedFields:
+        - name: "trace_id"
+          matcherRegex: "trace_id=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+        - name: "span_id"
+          matcherRegex: "span_id=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: tempo
+      maxLines: 1000
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: hass-elbschloss

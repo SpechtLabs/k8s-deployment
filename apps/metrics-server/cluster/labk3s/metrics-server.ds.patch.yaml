@@ -1,0 +1,11 @@
+---
+# Add tolerations to run this on on control-plane nodes too
+- op: add
+  path: "/spec/template/spec/tolerations"
+  value:
+    - effect: NoExecute
+      operator: Exists
+    - effect: NoSchedule
+      operator: Exists
+    - key: CriticalAddonsOnly
+      operator: Exists

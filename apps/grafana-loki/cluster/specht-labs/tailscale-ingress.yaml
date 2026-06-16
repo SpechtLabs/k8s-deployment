@@ -1,0 +1,18 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: loki-gateway
+  annotations:
+    tailscale.com/tags: "tag:o11y-endpoint"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: loki-gateway
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - loki-gateway
+      secretName: loki-gateway-tls

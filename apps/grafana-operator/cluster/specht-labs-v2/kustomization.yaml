@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: grafana-operator
+
+helmCharts:
+  - name: grafana-operator
+    repo: https://grafana.github.io/helm-charts
+    version: 5.24.0
+    releaseName: grafana-operator
+    namespace: grafana-operator
+    valuesFile: grafana-operator-values.yaml
+
+resources:
+  # Shared dashboard JSON → ConfigMaps (one source of truth with the v1 cluster).
+  - ../../../../components/grafana-dashboards/kubernetes-infra-apps
+  - ../../../../components/grafana-dashboards/envoy-gateway
+  - ../../../../components/grafana-dashboards/infrastructure
+  - ../../../../components/grafana-dashboards/static-pages
+  - grafana.yaml
+  # Folder hierarchy (Infrastructure / Kubernetes Platform › Envoy Gateway / Applications).
+  - grafana-folders.yaml
+  - grafanadashboards.yaml
+  - grafanadashboards-envoy.yaml
+  - grafanadashboards-infra.yaml
+  - grafanadashboards-static-pages.yaml
+  # First-party app health targets (instantaneous checks). SLO burn alerts are
+  # owned by the Grafana Cloud SLO plugin (gcx), not here. See grafana/slos/.
+  - grafanaalertrules-static-pages.yaml
+
+generators:
+  - secret-generator.yaml

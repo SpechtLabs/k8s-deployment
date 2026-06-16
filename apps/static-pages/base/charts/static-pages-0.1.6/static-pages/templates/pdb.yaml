@@ -1,0 +1,24 @@
+{{- if .Values.staticpages.pdb.enabled }}
+apiVersion: {{ include "apiVersion.pdb" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 6 }}
+    {{- with .Values.staticpages.pdb.labels }}
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- with .Values.staticpages.pdb.annotations }}
+  annotations:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+spec:
+  {{- with .Values.staticpages.pdb.maxUnavailable }}
+  maxUnavailable: {{ . }}
+  {{- else }}
+  minAvailable: {{ .Values.staticpages.pdb.minAvailable | default 0 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "staticpages.selectorLabels" . | nindent 6 }}
+{{- end }}

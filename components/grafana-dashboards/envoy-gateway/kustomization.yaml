@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Envoy Gateway example dashboards, vendored from
+# github.com/envoyproxy/gateway -> charts/gateway-addons-helm/dashboards @ v1.8.1
+# (matches the deployed gateway-helm version in bases/envoy-gateway). The
+# hardcoded Prometheus datasource UID in envoy-gateway-global.json was replaced
+# with ${datasource} for portability. Consumed by the grafana-operator
+# GrafanaDashboard configMapRef on the v2 / Grafana Cloud cluster.
+configMapGenerator:
+  - name: envoy-proxy-global-dashboard
+    options:
+      disableNameSuffixHash: true
+    files:
+      - envoy-proxy-global.json
+  - name: envoy-clusters-dashboard
+    options:
+      disableNameSuffixHash: true
+    files:
+      - envoy-clusters.json
+  - name: envoy-gateway-global-dashboard
+    options:
+      disableNameSuffixHash: true
+    files:
+      - envoy-gateway-global.json
+  - name: envoy-resources-monitor-dashboard
+    options:
+      disableNameSuffixHash: true
+    files:
+      - resources-monitor.gen.json

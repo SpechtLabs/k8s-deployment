@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "staticpages.fullname" . }}-api
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.staticpages.service.apiPort }}
+      targetPort: api
+      protocol: TCP
+      name: api
+  selector:
+    {{- include "staticpages.selectorLabels" . | nindent 4 }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "staticpages.fullname" . }}-proxy
+  labels:
+    {{- include "staticpages.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.staticpages.service.proxyPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "staticpages.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,50 @@
+{{- if and .Values.staticpages.metrics.enabled .Values.staticpages.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "staticpages.fullname" . }}
+  {{- if .Values.staticpages.metrics.serviceMonitor.namespace }}
+  namespace: {{ .Values.staticpages.metrics.serviceMonitor.namespace }}
+  {{- end }}
+  labels:
+    {{- include "staticpages.labels" . | nindent 6 }}
+    {{- with .Values.staticpages.metrics.serviceMonitor.selector }}
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.staticpages.metrics.serviceMonitor.additionalLabels }}
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+
+  {{- with .Values.staticpages.metrics.serviceMonitor.annotations }}
+  annotations:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+spec:
+  endpoints:
+    - port: {{ .Values.staticpages.metrics.service.portName }}
+      {{- with .Values.staticpages.metrics.serviceMonitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      path: /metrics
+      {{- with .Values.staticpages.metrics.serviceMonitor.relabelings }}
+      relabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.staticpages.metrics.serviceMonitor.metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.staticpages.metrics.serviceMonitor.scheme }}
+      scheme: {{ . }}
+      {{- end }}
+      {{- with .Values.staticpages.metrics.serviceMonitor.tlsConfig }}
+      tlsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "staticpages.selectorLabels" . | nindent 8 }}
+{{- end }}

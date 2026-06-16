@@ -1,0 +1,42 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: mimir-otel
+spec:
+  mode: deployment
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      jaeger:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:14250
+          thrift_binary:
+            endpoint: 0.0.0.0:6832
+          thrift_compact:
+            endpoint: 0.0.0.0:6831
+          thrift_http:
+            endpoint: 0.0.0.0:14268
+
+    processors:
+
+    exporters:
+      debug:
+        verbosity: detailed
+      otlphttp:
+        endpoint: tempo-distributor.observability.svc.cluster.local:4318
+
+    service:
+      pipelines:
+        traces:
+          receivers:
+            - jaeger
+            - otlp
+          exporters:
+            - debug
+            - otlphttp

@@ -1,0 +1,9 @@
+- op: remove
+  path: "/spec/acme/solvers/0/http01"
+- op: add
+  path: "/spec/acme/solvers/0/dns01"
+  value:
+    cloudflare:
+      apiTokenSecretRef:
+        name: cloudflare-api-token
+        key: api-token

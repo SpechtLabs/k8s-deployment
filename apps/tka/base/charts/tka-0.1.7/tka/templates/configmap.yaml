@@ -1,0 +1,73 @@
+{{- $hasClusterInfo := and .Values.tka.clusterInfo.apiEndpoint (ne .Values.tka.clusterInfo.apiEndpoint "") }}
+{{- $hasConfigMapRef := and .Values.tka.configMapRef.enabled .Values.tka.configMapRef.name .Values.tka.configMapRef.namespace }}
+
+{{- if and $hasClusterInfo $hasConfigMapRef }}
+{{- fail "You cannot configure both clusterInfo.apiEndpoint and configMapRef at the same time. Please use only one configuration method." }}
+{{- end }}
+
+{{- if not (or $hasClusterInfo $hasConfigMapRef) }}
+{{- fail "You must configure either clusterInfo.apiEndpoint or configMapRef to enable cluster connectivity." }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tka.configMapName" . }}
+  labels:
+    {{- include "tka.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    debug: {{ .Values.tka.debug }}
+
+    tailscale:
+      hostname: {{ .Values.tka.tailscale.hostname | quote }}
+      port: {{ .Values.tka.tailscale.port }}
+      stateDir: {{ .Values.tka.tailscale.stateDir | quote }}
+      {{- if .Values.tka.tailscale.tailnet }}
+      tailnet: {{ .Values.tka.tailscale.tailnet | quote }}
+      {{- end }}
+      capName: {{ .Values.tka.tailscale.capName | quote }}
+
+    server:
+      readTimeout: {{ .Values.tka.server.readTimeout | quote }}
+      readHeaderTimeout: {{ .Values.tka.server.readHeaderTimeout | quote }}
+      writeTimeout: {{ .Values.tka.server.writeTimeout | quote }}
+      idleTimeout: {{ .Values.tka.server.idleTimeout | quote }}
+
+    otel:
+      endpoint: {{ .Values.tka.otel.endpoint | quote }}
+      insecure: {{ .Values.tka.otel.insecure }}
+
+    operator:
+      namespace: {{ .Values.tka.operator.namespace | quote }}
+      clusterName: {{ .Values.tka.operator.clusterName | quote }}
+      contextPrefix: {{ .Values.tka.operator.contextPrefix | quote }}
+      userPrefix: {{ .Values.tka.operator.userPrefix | quote }}
+
+    api:
+      retryAfterSeconds: {{ .Values.tka.api.retryAfterSeconds }}
+
+    output:
+      theme: {{ .Values.tka.output.theme | quote }}
+      long: {{ .Values.tka.output.long }}
+      quiet: {{ .Values.tka.output.quiet }}
+      markdownlint-fix: {{ .Values.tka.output.markdownlintFix }}
+
+    health:
+      port: {{ .Values.tka.health.port }}
+
+    clusterInfo:
+      {{- if and .Values.tka.clusterInfo.apiEndpoint (ne .Values.tka.clusterInfo.apiEndpoint "") }}
+      apiEndpoint: {{ .Values.tka.clusterInfo.apiEndpoint | quote }}
+      caData: {{ .Values.tka.clusterInfo.caData | quote }}
+      insecureSkipTLSVerify: {{ .Values.tka.clusterInfo.insecureSkipTLSVerify }}
+      labels: {{ toYaml .Values.tka.clusterInfo.labels | nindent 8 }}
+      {{- else if and .Values.tka.configMapRef.enabled .Values.tka.configMapRef.name .Values.tka.configMapRef.namespace }}
+      configMapRef:
+        name: {{ .Values.tka.configMapRef.name | quote }}
+        namespace: {{ .Values.tka.configMapRef.namespace | quote }}
+        keys:
+          apiEndpoint: {{ .Values.tka.configMapRef.keys.apiEndpoint | quote }}
+          caData: {{ .Values.tka.configMapRef.keys.caData | quote }}
+          insecure: {{ .Values.tka.configMapRef.keys.insecure | quote }}
+      labels: {{ toYaml .Values.tka.configMapRef.labels | nindent 8 }}
+      {{- end }}
