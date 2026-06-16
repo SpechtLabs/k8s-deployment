@@ -9,7 +9,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: kustomize/overlays/labk3s/argocd
+    path: apps/argocd/cluster/labk3s
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:
