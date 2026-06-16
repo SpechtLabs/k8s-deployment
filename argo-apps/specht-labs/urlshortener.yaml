@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: urlshortener
-            path: kustomize/overlays/specht-labs/urlshortener
+            path: apps/urlshortener/cluster/specht-labs
           - name: shortlinks
             path: manifests/shortlinks
           - name: redirects

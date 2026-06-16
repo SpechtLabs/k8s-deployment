@@ -13,7 +13,7 @@ spec:
     namespace: default
     server: https://kubernetes.default.svc
   source:
-    path: kustomize/overlays/specht-labs-v2/cluster-api
+    path: apps/cluster-api-v2/cluster/specht-labs-v2
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:

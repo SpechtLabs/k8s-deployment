@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: mimir
-            path: kustomize/overlays/specht-labs-v2/mimir
+            path: apps/mimir/cluster/specht-labs-v2
             namespace: lgtm
           # LGTM stack scaffold. Uncomment each as it is migrated; add the
           # matching overlay under kustomize/overlays/specht-labs-v2/<name>.

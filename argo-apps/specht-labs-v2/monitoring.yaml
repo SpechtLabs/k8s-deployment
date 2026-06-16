@@ -8,13 +8,13 @@ spec:
     - list:
         elements:
           - name: metrics-server
-            path: kustomize/overlays/specht-labs-v2/metrics-server
+            path: apps/metrics-server/cluster/specht-labs-v2
             namespace: kube-system
           - name: grafana-k8s-monitoring
-            path: kustomize/overlays/specht-labs-v2/grafana-k8s-monitoring
+            path: apps/grafana-k8s-monitoring/cluster/specht-labs-v2
             namespace: monitoring
           - name: grafana-operator
-            path: kustomize/overlays/specht-labs-v2/grafana-operator
+            path: apps/grafana-operator/cluster/specht-labs-v2
             namespace: grafana-operator
   template:
     metadata:

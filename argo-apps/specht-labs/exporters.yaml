@@ -10,7 +10,7 @@ spec:
           - name: node-exporter
             path: charts/node-exporter
           - name: hcloud-exporter
-            path: kustomize/overlays/specht-labs/hcloud-exporter
+            path: apps/hcloud-exporter/cluster/specht-labs
   template:
     metadata:
       name: "{{name}}"

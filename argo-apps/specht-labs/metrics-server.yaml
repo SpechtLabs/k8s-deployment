@@ -8,9 +8,9 @@ spec:
     - list:
         elements:
           - name: metrics-server
-            path: kustomize/overlays/specht-labs/metrics-server
+            path: apps/metrics-server/cluster/specht-labs
           - name: kube-state-metrics
-            path: kustomize/overlays/specht-labs/kube-state-metrics
+            path: apps/kube-state-metrics/cluster/specht-labs
   template:
     metadata:
       name: "{{name}}"

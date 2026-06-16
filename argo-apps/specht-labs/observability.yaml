@@ -10,17 +10,17 @@ spec:
           - name: grafana-agent-operator
             path: charts/grafana-agent-operator
           - name: grafana-promtail
-            path: kustomize/overlays/specht-labs/grafana-promtail
+            path: apps/grafana-promtail/cluster/specht-labs
           - name: grafana-loki
-            path: kustomize/overlays/specht-labs/grafana-loki
+            path: apps/grafana-loki/cluster/specht-labs
           - name: grafana-tempo
-            path: kustomize/overlays/specht-labs/grafana-tempo
+            path: apps/grafana-tempo/cluster/specht-labs
           - name: grafana-vulture
             path: charts/grafana-vulture
           - name: grafana-mimir
-            path: kustomize/overlays/specht-labs/grafana-mimir
+            path: apps/grafana-mimir/cluster/specht-labs
           - name: grafana
-            path: kustomize/overlays/specht-labs/grafana
+            path: apps/grafana/cluster/specht-labs
           #- name: grafana-oncall
           #  path: kustomize/overlays/grafana-oncall
   template:

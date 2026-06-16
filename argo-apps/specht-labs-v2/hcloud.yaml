@@ -8,13 +8,13 @@ spec:
     - list:
         elements:
           - name: hcloud-csi
-            path: kustomize/overlays/specht-labs-v2/hcloud-csi
+            path: apps/hcloud-csi/cluster/specht-labs-v2
             namespace: kube-system
           - name: hcloud-ccm
             path: charts/hcloud-ccm
             namespace: kube-system
           - name: hcloud-exporter
-            path: kustomize/overlays/specht-labs-v2/hcloud-exporter
+            path: apps/hcloud-exporter/cluster/specht-labs-v2
             namespace: monitoring
   template:
     metadata:
