@@ -17,7 +17,8 @@ resources:
   - ../../../bases/grafana-dashboards/infrastructure
   - ../../../bases/grafana-dashboards/static-pages
   - grafana.yaml
-  - grafana-applications-folder.yaml
+  # Folder hierarchy (Infrastructure / Kubernetes Platform › Envoy Gateway / Applications).
+  - grafana-folders.yaml
   - grafanadashboards.yaml
   - grafanadashboards-envoy.yaml
   - grafanadashboards-infra.yaml

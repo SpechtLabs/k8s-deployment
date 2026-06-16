@@ -10,7 +10,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Infrastructure"
+  folderRef: infrastructure
   configMapRef:
     name: hcloud-server-dashboard-json
     key: hcloud-server-dashboard.json

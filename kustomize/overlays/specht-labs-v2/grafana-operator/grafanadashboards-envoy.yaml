@@ -9,7 +9,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Envoy Gateway"
+  folderRef: envoy-gateway
   configMapRef:
     name: envoy-proxy-global-dashboard
     key: envoy-proxy-global.json
@@ -22,7 +22,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Envoy Gateway"
+  folderRef: envoy-gateway
   configMapRef:
     name: envoy-clusters-dashboard
     key: envoy-clusters.json
@@ -35,7 +35,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Envoy Gateway"
+  folderRef: envoy-gateway
   configMapRef:
     name: envoy-gateway-global-dashboard
     key: envoy-gateway-global.json
@@ -48,7 +48,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Envoy Gateway"
+  folderRef: envoy-gateway
   configMapRef:
     name: envoy-resources-monitor-dashboard
     key: resources-monitor.gen.json

@@ -10,7 +10,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Kubernetes Infra Apps"
+  folderRef: kubernetes-platform
   configMapRef:
     name: argocd-dashboard-json
     key: argocd-dashboard.json
@@ -23,7 +23,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folder: "Kubernetes Infra Apps"
+  folderRef: kubernetes-platform
   configMapRef:
     name: cert-manager-dashboard-json
     key: cert-manager-dashboard.json
