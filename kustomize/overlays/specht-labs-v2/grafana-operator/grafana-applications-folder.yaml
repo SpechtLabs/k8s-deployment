@@ -1,0 +1,13 @@
+# Shared "Applications" folder for first-party app telemetry (dashboards + alert
+# rules) on the external Grafana Cloud instance. Both the Static Pages dashboard
+# and its health-check alert group reference this via folderRef so they land in
+# the same place.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaFolder
+metadata:
+  name: applications
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  title: "Applications"

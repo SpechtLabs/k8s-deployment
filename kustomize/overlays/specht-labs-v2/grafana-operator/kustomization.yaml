@@ -15,10 +15,16 @@ resources:
   - ../../../bases/grafana-dashboards/kubernetes-infra-apps
   - ../../../bases/grafana-dashboards/envoy-gateway
   - ../../../bases/grafana-dashboards/infrastructure
+  - ../../../bases/grafana-dashboards/static-pages
   - grafana.yaml
+  - grafana-applications-folder.yaml
   - grafanadashboards.yaml
   - grafanadashboards-envoy.yaml
   - grafanadashboards-infra.yaml
+  - grafanadashboards-static-pages.yaml
+  # First-party app health targets (instantaneous checks). SLO burn alerts are
+  # owned by the Grafana Cloud SLO plugin (gcx), not here. See grafana/slos/.
+  - grafanaalertrules-static-pages.yaml
 
 generators:
   - secret-generator.yaml

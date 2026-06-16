@@ -1,0 +1,47 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: static-pages-proxy-availability
+spec:
+  name: Static Pages — Proxy Availability
+  description: >-
+    Share of page-serving requests that did NOT return a 5xx, measured on the
+    Beyla http_server_request_duration_seconds counter for service_name
+    "static-pages". 404 is treated as a valid served response (a static host
+    legitimately answers "not found"); only 5xx (origin/gateway failures such as
+    the resolved 502 incident) consume the error budget.
+    Objective derived from the post-fix steady state (≈100% since 2026-06-12,
+    commit 70e6a25); the 99.9% target leaves a tight budget that would surface a
+    recurrence of that incident quickly.
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{service_name="static-pages", http_response_status_code!~"5.."}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{service_name="static-pages"}
+      groupByLabels: []
+  objectives:
+    - value: 0.999
+      window: 28d
+  labels:
+    - key: service
+      value: static-pages
+    - key: tier
+      value: proxy
+    - key: sli
+      value: availability
+  alerting:
+    labels:
+      - key: service
+        value: static-pages
+    fastBurn:
+      annotations:
+        - key: summary
+          value: Static Pages availability error budget is burning fast (5xx spike).
+    slowBurn:
+      annotations:
+        - key: summary
+          value: Static Pages availability error budget is burning slowly.

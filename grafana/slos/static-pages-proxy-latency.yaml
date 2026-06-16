@@ -1,0 +1,47 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: static-pages-proxy-latency
+spec:
+  name: Static Pages — Proxy Latency
+  description: >-
+    Share of page-serving requests served in under 1 second, measured as the
+    le="1.0" bucket of http_server_request_duration_seconds over all requests
+    for service_name "static-pages". This is a latency-as-ratio SLI: a request
+    is "good" if it completed within the 1s threshold.
+    Baseline over the clean window (last 3d): ≈97.4% under 1s, p90 ≈ 0.49s,
+    p99 ≈ 2.25s. The 95% target sits just below the observed baseline, so normal
+    operation passes while a latency regression (e.g. slow-origin / cold-read
+    fan-out on the 404 fallback path) burns budget.
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_bucket{service_name="static-pages", le="1.0"}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{service_name="static-pages"}
+      groupByLabels: []
+  objectives:
+    - value: 0.95
+      window: 28d
+  labels:
+    - key: service
+      value: static-pages
+    - key: tier
+      value: proxy
+    - key: sli
+      value: latency
+  alerting:
+    labels:
+      - key: service
+        value: static-pages
+    fastBurn:
+      annotations:
+        - key: summary
+          value: Static Pages latency error budget is burning fast (requests slower than 1s).
+    slowBurn:
+      annotations:
+        - key: summary
+          value: Static Pages latency error budget is burning slowly.
