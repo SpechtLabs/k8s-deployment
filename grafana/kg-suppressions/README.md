@@ -25,6 +25,7 @@ up via the [static-pages SLOs](../slos) and health alerts — not be hidden here
 | `tailscale-operator-saas-log-latency` | Latency anomaly shipping logs to `log.tailscale.com` (Tailscale SaaS) — external dependency, not a cluster fault. |
 | `argocd-repo-server-span-errors` / `-span-anomalies` | Internal gRPC/Redis mesh + (pending-fix) OTLP-export span errors on repo-server. |
 | `argocd-application-controller-span-errors` / `-span-anomalies` | Cascade of repo-server RPC failures on the application controller. |
+| `argocd-server-span-errors` / `-span-anomalies` | API-server internal gRPC/Redis span mesh (AGGREGATED). |
 | `grafana-operator-grafanacloud-client-errors` | ~1 req/min client errors to the Grafana Cloud API; self-recovering. |
 | `static-pages-cdn-resets-and-4xx` | CDN keepalive resets (app falls back to direct B2 — SLO stays 100%) + bot 4xx. |
 | `envoy-gateway-static-pages-cascade` | Shared gateway is red only because it proxies to static-pages above. |

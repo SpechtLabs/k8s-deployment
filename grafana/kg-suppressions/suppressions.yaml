@@ -39,7 +39,7 @@ disabledAlertConfigs:
       service: operator
       job: tailscale/operator
 
-  # argocd control plane (repo-server + application-controller) — the internal gRPC/Redis
+  # argocd control plane (repo-server + application-controller + server) — the internal gRPC/Redis
   # service mesh emits span_errors on manifest generation, Redis cache calls, repo-server
   # RPCs, and (currently) the OTLP trace export to the v1 Tempo endpoint that the v2 argocd
   # overlay repoints via GitOps. None are user-facing; argocd's real health is its sync/app
@@ -65,6 +65,15 @@ disabledAlertConfigs:
     matchLabels:
       alertname: ErrorRatioAnomaly
       service: argocd-application-controller
+  - name: argocd-server-span-errors
+    matchLabels:
+      alertname: ErrorRatioBreach
+      service: argocd-server
+      asserts_error_type: span_errors
+  - name: argocd-server-span-anomalies
+    matchLabels:
+      alertname: ErrorRatioAnomaly
+      service: argocd-server
 
   # grafana-operator — occasional client errors talking to the Grafana Cloud API
   # (spechtlabs.grafana.net) at ~1 req/min. Low-volume external API blips, self-recovering.
