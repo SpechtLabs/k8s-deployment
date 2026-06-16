@@ -74,6 +74,34 @@ disabledAlertConfigs:
     matchLabels:
       alertname: ErrorRatioAnomaly
       service: argocd-server
+  # Latency assertions on the same control-plane mesh — average-latency breaches/anomalies
+  # on internal outbound calls (Redis, repo-server RPCs, k8s API, dex). Same non-actionable
+  # homelab-variability noise as the span errors above; covered for all three components so
+  # new latency flaps don't re-redden the graph. Real argocd responsiveness is its own UI/metrics.
+  - name: argocd-repo-server-latency-breach
+    matchLabels:
+      alertname: LatencyAverageBreach
+      service: argocd-repo-server
+  - name: argocd-repo-server-latency-anomalies
+    matchLabels:
+      alertname: LatencyAverageAnomaly
+      service: argocd-repo-server
+  - name: argocd-application-controller-latency-breach
+    matchLabels:
+      alertname: LatencyAverageBreach
+      service: argocd-application-controller
+  - name: argocd-application-controller-latency-anomalies
+    matchLabels:
+      alertname: LatencyAverageAnomaly
+      service: argocd-application-controller
+  - name: argocd-server-latency-breach
+    matchLabels:
+      alertname: LatencyAverageBreach
+      service: argocd-server
+  - name: argocd-server-latency-anomalies
+    matchLabels:
+      alertname: LatencyAverageAnomaly
+      service: argocd-server
 
   # grafana-operator — occasional client errors talking to the Grafana Cloud API
   # (spechtlabs.grafana.net) at ~1 req/min. Low-volume external API blips, self-recovering.
