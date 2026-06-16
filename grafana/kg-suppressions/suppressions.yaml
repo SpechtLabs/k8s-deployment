@@ -21,6 +21,16 @@ disabledAlertConfigs:
       service: mimir
       asserts_request_context: "HEAD /specht-labs-mimir-blocks/spechtlabs/markers/tenant-deletion-mark.json"
 
+  # mimir — p99 latency-buildup on its internal POST /api/v1/push path (~190ms p99 at
+  # ~0.3 req/s). The object-storage ops are sub-millisecond; this is the auto-threshold
+  # anomaly detector flagging the naturally variable internal push latency of a small
+  # single-cluster Mimir. Not user-facing — Mimir's authoritative latency signal is its
+  # own dashboards/SLOs, not this entity-graph assertion.
+  - name: mimir-internal-push-p99-buildup
+    matchLabels:
+      alertname: LatencyP99ErrorBuildup
+      service: mimir
+
   # tailscale operator — latency anomalies on shipping its own logs to Tailscale's SaaS
   # (log.tailscale.com). External-dependency latency on a control-loop, not a cluster fault.
   - name: tailscale-operator-saas-log-latency

@@ -21,6 +21,7 @@ up via the [static-pages SLOs](../slos) and health alerts — not be hidden here
 | Suppression | Why it is noise |
 |-------------|-----------------|
 | `mimir-tenant-deletion-marker-404` | Compactor polls object storage for a deletion marker that doesn't exist; the expected 404 is miscounted as a span error. |
+| `mimir-internal-push-p99-buildup` | Auto-threshold p99 anomaly on Mimir's internal `/api/v1/push` (~190ms); object storage is fast. Real latency signal is Mimir's own dashboards/SLOs. |
 | `tailscale-operator-saas-log-latency` | Latency anomaly shipping logs to `log.tailscale.com` (Tailscale SaaS) — external dependency, not a cluster fault. |
 | `argocd-repo-server-span-errors` / `-span-anomalies` | Internal gRPC/Redis mesh + (pending-fix) OTLP-export span errors on repo-server. |
 | `argocd-application-controller-span-errors` / `-span-anomalies` | Cascade of repo-server RPC failures on the application controller. |
