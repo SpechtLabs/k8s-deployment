@@ -173,7 +173,7 @@ jobs:
         run: exit 1
 
   kubeval_kustomize:
-    name: "run kubeval on Kustomize overlays"
+    name: "run kubeval on app overlays"
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -187,7 +187,7 @@ jobs:
         run: |
           set -e
           touch kubeval.txt
-          for kust in ./kustomize/overlays/*/*
+          for kust in ./apps/*/cluster/*
           do
             echo "$kust"
             kustomize build --enable-alpha-plugins --enable-helm $kust | kubeval --ignore-missing-schemas --strict | tee -a kubeval.txt
