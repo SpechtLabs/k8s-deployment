@@ -41,7 +41,7 @@ kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/master/manif
 kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/applicationset-crd.yaml
 kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/application-crd.yaml
 kubectl create namespace argocd
-kustomize build --enable-alpha-plugins --enable-helm kustomize/overlays/argocd | kubectl apply -n argocd -f -
+kustomize build --enable-alpha-plugins --enable-helm apps/argocd/cluster/<cluster> | kubectl apply -n argocd -f -
 ```
 
 3. Install some important keys so the deployments work

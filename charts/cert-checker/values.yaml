@@ -29,7 +29,7 @@ cert-checker:
       instance: primary
 
   grafanaDashboard:
-    enabled: false # can be found in kustomize/bases/grafana-dashboards/dashboards/cert-checker.json
+    enabled: false # can be found in components/grafana-dashboards/infrastructure/cert-checker.json
 
   ingress:
     enabled: false

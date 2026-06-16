@@ -2,7 +2,7 @@
 
 Research notes and rationale behind the Static Pages SLOs in
 [`../grafana/slos/`](../grafana/slos/) and the
-[`Static Pages / Overview`](../kustomize/bases/grafana-dashboards/static-pages/static-pages.json)
+[`Static Pages / Overview`](../components/grafana-dashboards/static-pages/static-pages.json)
 dashboard. Every number here is taken from live telemetry (Grafana Cloud
 `grafanacloud-prom`, `service_name="static-pages"`), not assumed.
 

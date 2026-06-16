@@ -18,9 +18,10 @@ This is the configuration of my playground Kubernetes Cluster.
 - **.vscode/**: Visual Studio Code settings.
   - `settings.json`: Settings for Visual Studio Code.
 
-- **argo-apps/**: Contains Argo CD application configurations.
-  - `specht-labs/`: Configuration for the `specht-labs` environment.
-  - `labk3s/`: Configuration for the `labk3s` environment.
+- **argo-apps/**: Argo CD application configurations, grouped per cluster.
+  - `specht-labs-v2/`: the `specht-labs-v2` cluster.
+  - `specht-labs/`: the `specht-labs` cluster.
+  - `labk3s/`: the `labk3s` cluster.
 
 - **charts/**: Helm charts for various applications.
   - `cert-checker/`: Helm chart for cert-checker.
@@ -41,8 +42,13 @@ This is the configuration of my playground Kubernetes Cluster.
 
 - **hack/**: Scripts and utilities for development and maintenance.
 
-- **kustomize/**: Kustomize configurations.
-  - `bases/`: Base configurations for Kustomize.
+- **apps/**: Per-app Kustomize configs, each self-contained.
+  - `<app>/base/`: shared base for the app (Helm values plus the vendored chart).
+  - `<app>/cluster/<cluster>/`: per-cluster overlay layered on the base.
+
+- **components/**: Kustomize resources shared across apps — Grafana dashboards, datasources, and the scrape-to-cloud component.
+
+- **kustomize/**: Legacy `bases/` + `overlays/` tree, kept temporarily while the migration to `apps/` settles; slated for removal.
 
 - **manifests/**: Kubernetes manifests.
 
