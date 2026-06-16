@@ -20,63 +20,15 @@ jobs:
           format: standard
           config_file: .yamllint.yml
 
-  kubeval_manifests:
-    name: "run kubeval on plain K8s manifests"
+  check:
+    name: "kubeconform"
     runs-on: ubuntu-latest
     needs: lint
     steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Manifests
-        run: |
-          for manifest in ./manifests/*/*.yaml
-          do
-            if [[ $manifest == "./manifests/deploy-secrets/helm.secret.yaml" ]]; then
-              continue
-            fi
-            echo "$manifest"
-            kubeval --ignore-missing-schemas --strict --schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/ $manifest
-          done
+      - uses: jdx/mise-action@v2
 
-  kubeval_charts:
-    name: "run kubeval on charts"
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Charts
-        run: |
-          for chart in ./charts/*/
-          do
-            echo "$chart"
-              for app in $stage*/
-              do
-                  helm template $chart --values $chart/values.yaml | kubeval --ignore-missing-schemas --strict --schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/
-              done
-          done
-
-  kubeval_kustomize:
-    name: "run kubeval on app overlays"
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Kustomize
-        run: |
-          for kust in ./apps/*/cluster/*
-          do
-            echo "$kust"
-            kustomize build --enable-alpha-plugins --enable-helm $kust | kubeval --ignore-missing-schemas --strict --schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/
-            echo "\n"
-          done
+      - name: kubeconform
+        run: mise run check

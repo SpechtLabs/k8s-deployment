@@ -1,7 +1,0 @@
-apiVersion: v2
-name: addon-cilium
-version: 1.15.0
-dependencies:
-  - name: cilium
-    version: 1.19.4
-    repository: https://helm.cilium.io/

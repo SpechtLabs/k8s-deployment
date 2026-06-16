@@ -3,59 +3,64 @@
 [![Lint](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/lint.yaml/badge.svg)](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/lint.yaml)
 [![CodeQL](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/github-code-scanning/codeql)
 
-This is the configuration of my playground Kubernetes Cluster.
+GitOps configuration for my playground Kubernetes clusters, reconciled by Argo CD.
 
-## Repository Structure
+## Layout
 
-- **.devcontainer/**: Contains the development container configuration.
-  - `devcontainer.json`: Configuration for the development container.
-  - `Dockerfile`: Dockerfile for the development container.
+Each application is self-contained under `apps/<app>/`: a shared `base/` (a Kustomize
+overlay that inflates the upstream Helm chart via the `helmCharts` generator, or plain
+manifests) and one `cluster/<cluster>/` overlay per cluster that layers on the base.
+Argo CD points at `apps/<app>/cluster/<cluster>`; everything for one app lives in one
+subtree.
 
-- **.github/**: GitHub-specific configurations and workflows.
-  - `auto_assign.yml`: Configuration for auto-assigning issues and pull requests.
-  - `workflows/`: Contains GitHub Actions workflows.
+- **apps/** — per-app Kustomize configuration.
+  - `<app>/base/` — shared base (Helm values + the inflated chart, or manifests).
+  - `<app>/cluster/<cluster>/` — per-cluster overlay.
+- **components/** — Kustomize resources shared across apps (Grafana dashboards and
+  datasources, the `scrape-to-cloud` component).
+- **argo-apps/** — the Argo CD `Application`/`ApplicationSet` definitions, grouped per
+  cluster (`specht-labs-v2/`, `specht-labs/`, `labk3s/`). This is the GitOps entrypoint.
+- **manifests/** — plain Kubernetes manifests applied outside the app layout (redirects,
+  shortlinks, bootstrap secrets).
+- **grafana/** — Grafana Cloud resources managed with `gcx` (SLOs, knowledge-graph
+  suppressions).
+- **docs/** — runbooks and guides (`first-deployment.md`, `working-with-argocd.md`,
+  `age-secrets.md`, …).
+- **hack/** — helper scripts (SOPS encrypt/decrypt, devcontainer init).
 
-- **.vscode/**: Visual Studio Code settings.
-  - `settings.json`: Settings for Visual Studio Code.
+## Tooling
 
-- **argo-apps/**: Argo CD application configurations, grouped per cluster.
-  - `specht-labs-v2/`: the `specht-labs-v2` cluster.
-  - `specht-labs/`: the `specht-labs` cluster.
-  - `labk3s/`: the `labk3s` cluster.
+All CLI tooling is pinned in `mise.toml` (kustomize, helm, kubeconform, sops, age, ksops,
+kubectl, clusterctl, argocd). Install it with:
 
-- **charts/**: Helm charts for various applications.
-  - `cert-checker/`: Helm chart for cert-checker.
-  - `chaos-mesh/`: Helm chart for chaos-mesh.
-  - `cilium/`: Helm chart for cilium.
-  - `grafana-agent-operator/`: Helm chart for grafana-agent-operator.
-  - `grafana-promtail/`: Helm chart for grafana-promtail.
-  - `grafana-vulture/`: Helm chart for grafana-vulture.
-  - `hcloud-ccm/`: Helm chart for hcloud-ccm.
-  - `ingress-nginx/`: Helm chart for ingress-nginx.
-  - `node-exporter/`: Helm chart for node-exporter.
+```bash
+mise install
+```
 
-- **docs/**: Documentation for the repository.
-  - `age-secrets.md`: Documentation for managing age secrets.
-  - `chart-deployments.md`: Documentation for deploying Helm charts.
-  - `first-deployment.md`: Guide for the first deployment.
-  - `working-with-argocd.md`: Guide for working with Argo CD.
+`mise.toml` also points `KUBECONFIG` at `~/.kube/configs/specht-labs` for this repo.
 
-- **hack/**: Scripts and utilities for development and maintenance.
+## Validation
 
-- **apps/**: Per-app Kustomize configs, each self-contained.
-  - `<app>/base/`: shared base for the app (Helm values plus the vendored chart).
-  - `<app>/cluster/<cluster>/`: per-cluster overlay layered on the base.
+Manifests and rendered app overlays are validated with [kubeconform](https://github.com/yannh/kubeconform)
+through mise tasks — the same commands run locally and in CI:
 
-- **components/**: Kustomize resources shared across apps — Grafana dashboards, datasources, and the scrape-to-cloud component.
+```bash
+mise run check            # everything
+mise run check-manifests  # plain manifests only
+mise run check-apps       # render each app overlay and validate
+```
 
-- **kustomize/**: Legacy `bases/` + `overlays/` tree, kept temporarily while the migration to `apps/` settles; slated for removal.
+CI (`.github/workflows/`) installs the pinned tools with `jdx/mise-action` and runs
+`mise run check`.
 
-- **manifests/**: Kubernetes manifests.
+Secrets are SOPS-encrypted with `age` (recipients in `.sops.yaml`) and decrypted into the
+cluster by the `ksops` Kustomize generator. Use `hack/decrypt-secrets.sh` /
+`hack/encrypt-secrets.sh` to work with them locally.
 
-## Getting Started
+## Getting started
 
-To get started with this repository, clone it and follow the instructions in the documentation files located in the `docs/` directory.
+Clone the repo, run `mise install`, and follow `docs/first-deployment.md`.
 
 ## Contributing
 
-Contributions are welcome! Please see the `CODEOWNERS` file for information on who to contact for specific areas of the repository.
+See `CODEOWNERS` for who owns which areas.

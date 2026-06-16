@@ -22,7 +22,7 @@ spec:
           - name: grafana
             path: apps/grafana/cluster/specht-labs
           #- name: grafana-oncall
-          #  path: kustomize/overlays/grafana-oncall
+          #  path: apps/grafana-oncall/cluster/specht-labs
   template:
     metadata:
       name: "{{name}}"

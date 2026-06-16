@@ -31,7 +31,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### yamllint: 📖\`${{ steps.kubeval.outcome }}\`
+            const output = `#### yamllint: 📖\`${{ steps.lint.outcome }}\`
             <details><summary>Show results</summary>
 
             \`\`\`
@@ -56,40 +56,37 @@ jobs:
         if: steps.lint.outcome != 'success'
         run: exit 1
 
-  kubeval_manifests:
-    name: "run kubeval on plain K8s manifests"
+  check:
+    name: "kubeconform"
     runs-on: ubuntu-latest
     needs: lint
     steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Kubeval
-        id: kubeval
+      - uses: jdx/mise-action@v2
+
+      - name: kubeconform
+        id: kubeconform
         continue-on-error: true
         run: |
-          set -e
-          touch kubeval.txt
-          for manifest in ./manifests/*/*.yaml
-          do
-            echo "$manifests"
-            kubeval --ignore-missing-schemas --strict --schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/ $manifest | tee -a kubeval.txt
-          done
-          echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
+          set +e
+          mise run check 2>&1 | tee kubeconform.txt
+          rc=${PIPESTATUS[0]}
+          echo "kubeconform=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeconform.txt)" >> $GITHUB_OUTPUT
+          exit $rc
 
-      - name: Augment PR with kubeval infos
+      - name: Augment PR with kubeconform infos
         uses: actions/github-script@v8.0.0
-        if: steps.kubeval.outcome != 'success'
+        if: steps.kubeconform.outcome != 'success'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Kubeval manifests: 📖\`${{ steps.kubeval.outcome }}\`
+            const output = `#### kubeconform: 📖\`${{ steps.kubeconform.outcome }}\`
             <details><summary>Show results</summary>
 
             \`\`\`
-            ${{ steps.kubeval.outputs.kubeval }}
+            ${{ steps.kubeconform.outputs.kubeconform }}
             \`\`\`
 
             </details>
@@ -107,120 +104,5 @@ jobs:
             })
 
       - name: Fail pipeline if previously failed
-        if: steps.kubeval.outcome != 'success'
-        run: exit 1
-
-  kubeval_charts:
-    name: "run kubeval on charts"
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Charts
-        id: kubeval
-        continue-on-error: true
-        run: |
-          set -e
-          touch kubeval.txt
-          for chart in ./charts/*/
-          do
-            echo "$chart"
-              for app in $stage*/
-              do
-                  echo "$chart"
-                  pushd $chart
-                  pwd
-                  helm dependency update
-                  helm template . --values ./values.yaml | kubeval --ignore-missing-schemas --strict | tee -a kubeval.txt
-                  popd
-              done
-          done
-          echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
-
-      - name: Augment PR with kubeval infos
-        uses: actions/github-script@v8.0.0
-        if: steps.kubeval.outcome != 'success'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Kubeval charts: 📖\`${{ steps.kubeval.outcome }}\`
-            <details><summary>Show results</summary>
-
-            \`\`\`
-            ${{ steps.kubeval.outputs.kubeval }}
-            \`\`\`
-
-            </details>
-
-            __Author:__ @${{ github.actor }},
-            __Action:__ \`${{ github.event_name }}\``;
-
-            new_output = output.replace(/{newline}/g, "\n");
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: new_output
-            })
-
-      - name: Fail pipeline if previously failed
-        if: steps.kubeval.outcome != 'success'
-        run: exit 1
-
-  kubeval_kustomize:
-    name: "run kubeval on app overlays"
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: specht-labs/gh-action-install-kubeval@main
-
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Kustomize
-        id: kubeval
-        run: |
-          set -e
-          touch kubeval.txt
-          for kust in ./apps/*/cluster/*
-          do
-            echo "$kust"
-            kustomize build --enable-alpha-plugins --enable-helm $kust | kubeval --ignore-missing-schemas --strict | tee -a kubeval.txt
-          done
-          echo "kubeval=$(sed ':a;N;$!ba;s/\n/{newline}/g' < kubeval.txt)" >> $GITHUB_OUTPUT
-
-      - name: Augment PR with kubeval infos
-        uses: actions/github-script@v8.0.0
-        if: steps.kubeval.outcome != 'success'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Kubeval kustomize: 📖\`${{ steps.kubeval.outcome }}\`
-            <details><summary>Show results</summary>
-
-            \`\`\`
-            ${{ steps.kubeval.outputs.kubeval }}
-            \`\`\`
-
-            </details>
-
-            __Author:__ @${{ github.actor }},
-            __Action:__ \`${{ github.event_name }}\``;
-
-            new_output = output.replace(/{newline}/g, "\n");
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: new_output
-            })
-
-      - name: Fail pipeline if previously failed
-        if: steps.kubeval.outcome != 'success'
+        if: steps.kubeconform.outcome != 'success'
         run: exit 1

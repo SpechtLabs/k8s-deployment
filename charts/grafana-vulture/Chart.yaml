@@ -1,7 +1,0 @@
-apiVersion: v2
-name: addon-grafana-tempo
-version: 0.4.1
-dependencies:
-  - name: tempo-vulture
-    version: 0.10.1
-    repository: https://grafana.github.io/helm-charts

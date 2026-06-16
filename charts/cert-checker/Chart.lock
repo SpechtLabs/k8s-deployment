@@ -1,6 +1,0 @@
-dependencies:
-- name: cert-checker
-  repository: https://mogensen.github.io/cert-checker
-  version: 0.0.6
-digest: sha256:98b6c8768bb7a14f9ad7cdb1a99baceba4a56facdbf563eb71c38863aa236c48
-generated: "2023-04-14T22:01:32.360207+02:00"

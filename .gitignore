@@ -88,10 +88,6 @@ tags
 # End of https://www.toptal.com/developers/gitignore/api/go,vim,vscode,git
 dist/
 
-charts/*/charts/
-kustomize/**/charts/
-kustomize/*/*/charts/
-kustomize/*/*/*/charts/
 apps/**/charts/
 apps/*/*/charts/
 apps/*/*/*/charts/

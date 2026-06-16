@@ -11,15 +11,15 @@ spec:
             path: apps/mimir/cluster/specht-labs-v2
             namespace: lgtm
           # LGTM stack scaffold. Uncomment each as it is migrated; add the
-          # matching overlay under kustomize/overlays/specht-labs-v2/<name>.
+          # matching overlay under apps/<name>/cluster/specht-labs-v2.
           # - name: loki
-          #   path: kustomize/overlays/specht-labs-v2/loki
+          #   path: apps/grafana-loki/cluster/specht-labs-v2
           #   namespace: lgtm
           # - name: tempo
-          #   path: kustomize/overlays/specht-labs-v2/tempo
+          #   path: apps/grafana-tempo/cluster/specht-labs-v2
           #   namespace: lgtm
           # - name: grafana
-          #   path: kustomize/overlays/specht-labs-v2/grafana
+          #   path: apps/grafana/cluster/specht-labs-v2
           #   namespace: lgtm
   template:
     metadata:

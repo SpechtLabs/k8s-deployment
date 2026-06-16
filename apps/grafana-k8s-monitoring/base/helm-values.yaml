@@ -118,7 +118,7 @@ annotationAutodiscovery:
 # the self-hosted Mimir. Operators/exporters (cert-manager, external-dns, capi,
 # caph, grafana-operator, tailscale, envoy-gateway, metrics-server, mimir, ...)
 # land here automatically. To send a workload to Cloud instead, add the
-# scrape-to-cloud component (kustomize/components/scrape-to-cloud).
+# scrape-to-cloud component (components/scrape-to-cloud).
 prometheusOperatorObjects:
   enabled: true
   collector: alloy-metrics

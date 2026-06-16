@@ -1,3 +1,0 @@
-# Envoy Gateway controller values.
-# Defaults are sensible; the LoadBalancer/Hetzner config lives on the EnvoyProxy
-# resource (envoyproxy.yaml), not here.

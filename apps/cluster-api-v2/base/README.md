@@ -18,7 +18,7 @@ points at.
 | `kustomization.yaml` | Ties the base together. **Version values are overridden in the overlay** (below). |
 
 The base builds standalone with working default versions. The overlay
-`kustomize/overlays/specht-labs-v2/cluster-api/` is what actually gets applied; it holds the
+`apps/cluster-api-v2/cluster/specht-labs-v2/` is what actually gets applied; it holds the
 single-source version config and the `replacements` that propagate it.
 
 ## API versions
@@ -50,8 +50,8 @@ the indices in the overlay `replacements`.
 ### Bump Kubernetes / containerd / runc
 
 1. Edit the three literals in
-   `kustomize/overlays/specht-labs-v2/cluster-api/kustomization.yaml` (`configMapGenerator.cluster-config`).
-2. `kubectl kustomize kustomize/overlays/specht-labs-v2/cluster-api` and eyeball the diff
+   `apps/cluster-api-v2/cluster/specht-labs-v2/kustomization.yaml` (`configMapGenerator.cluster-config`).
+2. `kubectl kustomize apps/cluster-api-v2/cluster/specht-labs-v2` and eyeball the diff
    (versions + export lines should all reflect the new values).
 3. Commit and let it apply. A `KubeadmControlPlane.spec.version` change rolls the control plane one
    node at a time; a `MachineDeployment` version change rolls the workers (`maxUnavailable: 0`).
@@ -86,7 +86,7 @@ there is **no `cluster-api-v2` ArgoCD `Application`** under `argo-apps/`, so it 
 (`kubectl apply` / `clusterctl` against the mgmt cluster context). Prefer a server-side dry-run first:
 
 ```sh
-kubectl kustomize kustomize/overlays/specht-labs-v2/cluster-api \
+kubectl kustomize apps/cluster-api-v2/cluster/specht-labs-v2 \
   | kubectl --context <mgmt> apply --dry-run=server -f -
 ```
 
@@ -95,7 +95,7 @@ kubectl kustomize kustomize/overlays/specht-labs-v2/cluster-api \
 The CAPH controller authenticates to Hetzner via the `hetzner` secret in
 namespace `default`, referenced by `HetznerCluster.spec.hetznerSecretRef`. It is
 SOPS-encrypted (age) and GitOps-managed: it lives at
-`kustomize/overlays/specht-labs-v2/cluster-api/hetzner.secret.yaml` and is
+`apps/cluster-api-v2/cluster/specht-labs-v2/hetzner.secret.yaml` and is
 decrypted by ArgoCD's ksops plugin via that overlay's `secret-generator.yaml`.
 The `cluster-specht-labs` app applies it (`prune: false`, so it is never pruned).
 

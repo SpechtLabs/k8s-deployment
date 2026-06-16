@@ -10,11 +10,5 @@ rules:
 
 ignore: |
   .yamllint.yml
-  charts/*/charts/
-  charts/*/templates/
-  kustomize/bases/*/charts/
-  kustomize/overlays/**/charts/
-  kustomize/*/*/*.secret.yaml
-  kustomize/overlays/**/*.secret.yaml
   apps/**/charts/
   apps/*/cluster/*/*.secret.yaml

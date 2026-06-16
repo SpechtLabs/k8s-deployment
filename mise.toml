@@ -1,2 +1,40 @@
 [tools]
-clusterctl = "latest"
+age = "1.3.1"
+argocd = "3.4.3"
+clusterctl = "1.13.2"
+helm = "4.2.1"
+kubeconform = "0.8.0"
+kubectl = "1.36.2"
+ksops = "4.5.1"
+kustomize = "5.8.1"
+sops = "3.13.1"
+
+[env]
+KUBECONFIG = "{{env.HOME}}/.kube/configs/specht-labs"
+
+[tasks.check-manifests]
+description = "Validate plain Kubernetes manifests with kubeconform"
+run = '''
+set -e
+for manifest in ./manifests/*/*.yaml; do
+  if [ "$manifest" = "./manifests/deploy-secrets/helm.secret.yaml" ]; then
+    continue
+  fi
+  echo "$manifest"
+  kubeconform -ignore-missing-schemas -strict -summary "$manifest"
+done
+'''
+
+[tasks.check-apps]
+description = "Render each app cluster overlay and validate with kubeconform"
+run = '''
+set -e
+for kust in ./apps/*/cluster/*; do
+  echo "$kust"
+  kustomize build --enable-alpha-plugins --enable-helm "$kust" | kubeconform -ignore-missing-schemas -strict -summary -
+done
+'''
+
+[tasks.check]
+description = "Run all kubeconform validation checks"
+depends = ["check-manifests", "check-apps"]

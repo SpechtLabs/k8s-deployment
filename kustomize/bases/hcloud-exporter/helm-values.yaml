@@ -1,9 +1,0 @@
-serviceMonitor:
-  enabled: true
-  interval: 60s  # chart default is 30s; pin to 1/min to cap Grafana DPM
-
-  additionalLabels:
-    instance: primary
-
-config:
-  existingSecret: hcloud-exporter

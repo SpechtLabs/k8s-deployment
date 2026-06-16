@@ -1,7 +1,0 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-# Thin passthrough — no namespace transformer so per-resource namespaces
-# (capi-system, caph-system, …) and the operator's capi-operator-system survive.
-resources:
-  - ../../../bases/cluster-api-operator/
