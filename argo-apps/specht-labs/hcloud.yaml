@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: hcloud-csi
-            path: kustomize/overlays/hcloud-csi
+            path: apps/hcloud-csi/cluster/specht-labs
           - name: hcloud-ccm
             path: charts/hcloud-ccm
   template:
