@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: cilium
-            path: charts/cilium
+            path: apps/cilium/cluster/specht-labs-v2
             namespace: kube-system
             wave: "-1"
           - name: tailscale

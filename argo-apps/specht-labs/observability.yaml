@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: grafana-agent-operator
-            path: charts/grafana-agent-operator
+            path: apps/grafana-agent-operator/cluster/specht-labs
           - name: grafana-promtail
             path: apps/grafana-promtail/cluster/specht-labs
           - name: grafana-loki
@@ -16,7 +16,7 @@ spec:
           - name: grafana-tempo
             path: apps/grafana-tempo/cluster/specht-labs
           - name: grafana-vulture
-            path: charts/grafana-vulture
+            path: apps/grafana-vulture/cluster/specht-labs
           - name: grafana-mimir
             path: apps/grafana-mimir/cluster/specht-labs
           - name: grafana

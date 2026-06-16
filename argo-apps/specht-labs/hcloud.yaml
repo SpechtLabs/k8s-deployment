@@ -10,7 +10,7 @@ spec:
           - name: hcloud-csi
             path: apps/hcloud-csi/cluster/specht-labs
           - name: hcloud-ccm
-            path: charts/hcloud-ccm
+            path: apps/hcloud-ccm/cluster/specht-labs
   template:
     metadata:
       name: "{{name}}"

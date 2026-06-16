@@ -8,7 +8,7 @@ spec:
     - list:
         elements:
           - name: node-exporter
-            path: charts/node-exporter
+            path: apps/node-exporter/cluster/specht-labs
           - name: hcloud-exporter
             path: apps/hcloud-exporter/cluster/specht-labs
   template:

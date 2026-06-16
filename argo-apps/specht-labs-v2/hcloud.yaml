@@ -11,7 +11,7 @@ spec:
             path: apps/hcloud-csi/cluster/specht-labs-v2
             namespace: kube-system
           - name: hcloud-ccm
-            path: charts/hcloud-ccm
+            path: apps/hcloud-ccm/cluster/specht-labs-v2
             namespace: kube-system
           - name: hcloud-exporter
             path: apps/hcloud-exporter/cluster/specht-labs-v2
