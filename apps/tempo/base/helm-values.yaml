@@ -1,0 +1,155 @@
+# Right-sized single-replica Tempo (distributed) for homelab scale on cx23.
+# Carbon copy of apps/loki: RF1, one replica per component, and an explicit
+# MEMORY LIMIT on every pod (CPU requests only, no CPU limits). The cap is the
+# guardrail that makes a burst OOM-kill its own pod instead of the cx23 node (the
+# kubelet kill on 2026-06-10). Trace blocks live in Hetzner Object Storage.
+
+fullnameOverride: tempo
+
+# Multi-tenant: tenant is set by the X-Scope-OrgID header, injected by the
+# per-tenant HTTPRoutes in the cluster overlay (analog of loki auth_enabled).
+multitenancyEnabled: true
+
+global:
+  # Injected into every component (chart scope covers distributor/ingester/
+  # querier/query-frontend/compactor/metrics-generator/gateway/...). expand-env
+  # resolves the ${AWS_*} placeholders in the storage config at runtime.
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: tempo-objstore        # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: specht-labs-tempo-traces
+      endpoint: hel1.your-objectstorage.com
+      region: hel1
+      access_key: ${AWS_ACCESS_KEY_ID}
+      secret_key: ${AWS_SECRET_ACCESS_KEY}
+      forcepathstyle: true
+      insecure: false
+
+# OTLP only (gRPC 4317 / HTTP 4318). The tenant HTTPRoutes feed OTLP/HTTP.
+traces:
+  otlp:
+    http:
+      enabled: true
+    grpc:
+      enabled: true
+
+# Enable metrics-generator processors for all tenants; without this no
+# service-graph / span RED metrics are produced.
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs
+        - span-metrics
+
+ingester:
+  replicas: 1
+  config:
+    replication_factor: 1
+  zoneAwareReplication:
+    enabled: false               # RF1, single replica: no zone-a/b/c split
+  persistence:
+    enabled: true                # keep the WAL across restarts
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+  # Heaviest component (in-memory trace blocks + WAL). Capped so a flush burst
+  # OOM-kills THIS pod, never the node.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 768Mi
+
+distributor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+compactor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+querier:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+queryFrontend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# RED metrics + service graphs from spans, remote-written to the in-cluster
+# Mimir (lgtm) under the spechtlabs tenant. Feeds service graphs / the
+# knowledge graph. In-cluster write, no auth; X-Scope-OrgID sets the tenant.
+metricsGenerator:
+  enabled: true
+  config:
+    storage:
+      remote_write:
+        - url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+          headers:
+            X-Scope-OrgID: spechtlabs
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+# nginx gateway (unified front door / future query entry). The tenant
+# HTTPRoutes target the OTLP/HTTP listener for ingestion.
+gateway:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+# memcached query cache defaults are too big for cx23 and not needed at homelab
+# trace volume. Off for v1 (mirrors loki's caches-off decision).
+memcached:
+  enabled: false
+
+minio:
+  enabled: false                 # blocks live in Hetzner Object Storage
+
+# Loki needed a standalone ServiceMonitor (its chart's was CRD-capability-gated).
+# Tempo's metaMonitoring ServiceMonitor has no such gate, so it renders under
+# kustomize+helm directly. grafanaAgent stays off (no deprecated CRs). The
+# grafana-k8s-monitoring alloy-metrics collector scrapes these into the
+# self-hosted Mimir (prometheusOperatorObjects).
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+  grafanaAgent:
+    enabled: false
