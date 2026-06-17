@@ -82,6 +82,7 @@ patches:
           p, role:org-admin, *, *, *, allow
           p, role:viewer, *, get, *, allow
           g, cedi@github, role:org-admin
+          g, cedi@github.idp.sphinx-map.ts.net, role:org-admin
           g, cedi, role:org-admin
 
       - op: replace
