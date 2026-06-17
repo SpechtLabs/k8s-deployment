@@ -21,3 +21,8 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      # The alloy-crd chart installs the Alloy CRD in the same Application as the
+      # Alloy CRs from k8s-monitoring; without this, ArgoCD dry-runs the CRs
+      # before the CRD exists and fails ("could not find collectors.grafana.com/
+      # Alloy"). Skip the dry-run for not-yet-present CRDs so the CRD applies first.
+      - SkipDryRunOnMissingResource=true

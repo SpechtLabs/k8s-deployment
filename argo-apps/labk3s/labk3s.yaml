@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: 1-meda-labk3s
+  name: 1-meta-labk3s
   namespace: argocd
 spec:
   destination:
@@ -14,7 +14,7 @@ spec:
     targetRevision: main
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
