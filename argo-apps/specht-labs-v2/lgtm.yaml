@@ -16,6 +16,9 @@ spec:
           - name: tempo
             path: apps/tempo/cluster/specht-labs-v2
             namespace: lgtm
+          - name: pyroscope
+            path: apps/pyroscope/cluster/specht-labs-v2
+            namespace: lgtm
           # LGTM stack scaffold. Uncomment each as it is migrated; add the
           # matching overlay under apps/<name>/cluster/specht-labs-v2.
           # - name: grafana
