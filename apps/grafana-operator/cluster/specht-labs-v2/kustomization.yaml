@@ -26,6 +26,9 @@ resources:
   # First-party app health targets (instantaneous checks). SLO burn alerts are
   # owned by the Grafana Cloud SLO plugin (gcx), not here. See grafana/slos/.
   - grafanaalertrules-static-pages.yaml
+  # Self-hosted LGTM datasources (one per backend × tenant), reached over PDC.
+  # gcx cannot create datasources, so they are operator-pushed here like dashboards.
+  - grafanadatasources.yaml
 
 generators:
   - secret-generator.yaml

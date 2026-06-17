@@ -1,0 +1,464 @@
+# Self-hosted LGTM datasources, pushed to Grafana Cloud (spechtlabs.grafana.net)
+# by grafana-operator via the external Grafana CR in grafana.yaml — the same
+# mechanism as the dashboards. gcx cannot create datasources (its datasources
+# group is query-only), so these live here, not under grafana/.
+#
+# Each datasource reaches the v2 self-hosted stack (namespace lgtm) over Private
+# Datasource Connect: jsonData.enableSecureSocksProxy=true makes Grafana Cloud
+# tunnel through the grafana-pdc-agent. Grafana Cloud auto-injects the remaining
+# PDC fields (pdcInjected, secureSocksProxyUsername) on save.
+#
+# The stack is multi-tenant: X-Scope-OrgID selects the tenant (httpHeaderName1 +
+# secureJsonData.httpHeaderValue1). One datasource per (backend, tenant), uid
+# <backend>-<tenant>. Cross-signal links (logs↔traces↔metrics↔profiles) stay
+# within the same tenant. Generated — keep tenant list in sync with the per-tenant
+# HTTPRoutes in apps/{loki,tempo,mimir,pyroscope}/cluster/specht-labs-v2.
+
+
+# ───────────────────────── tenant: homelab ─────────────────────────
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: mimir-homelab
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Mimir (homelab)
+    uid: mimir-homelab
+    type: prometheus
+    url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      httpMethod: POST
+      prometheusType: Mimir
+      timeInterval: "60s"
+      cacheLevel: Medium
+    secureJsonData:
+      httpHeaderValue1: homelab
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-homelab
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Loki (homelab)
+    uid: loki-homelab
+    type: loki
+    url: http://loki-gateway.lgtm.svc.cluster.local
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      maxLines: 1000
+      derivedFields:
+        - name: trace_id
+          matcherRegex: "trace_id=(\\w+)"
+          datasourceUid: tempo-homelab
+          url: '${__value.raw}'
+    secureJsonData:
+      httpHeaderValue1: homelab
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo-homelab
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Tempo (homelab)
+    uid: tempo-homelab
+    type: tempo
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: mimir-homelab
+      tracesToLogsV2:
+        datasourceUid: loki-homelab
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+      tracesToProfiles:
+        datasourceUid: pyroscope-homelab
+        profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+    secureJsonData:
+      httpHeaderValue1: homelab
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: pyroscope-homelab
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Pyroscope (homelab)
+    uid: pyroscope-homelab
+    type: grafana-pyroscope-datasource
+    url: http://pyroscope.lgtm.svc.cluster.local:4040
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: homelab
+
+# ───────────────────────── tenant: spechtlabs ─────────────────────────
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: mimir-spechtlabs
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Mimir (spechtlabs)
+    uid: mimir-spechtlabs
+    type: prometheus
+    url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      httpMethod: POST
+      prometheusType: Mimir
+      timeInterval: "60s"
+      cacheLevel: Medium
+    secureJsonData:
+      httpHeaderValue1: spechtlabs
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-spechtlabs
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Loki (spechtlabs)
+    uid: loki-spechtlabs
+    type: loki
+    url: http://loki-gateway.lgtm.svc.cluster.local
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      maxLines: 1000
+      derivedFields:
+        - name: trace_id
+          matcherRegex: "trace_id=(\\w+)"
+          datasourceUid: tempo-spechtlabs
+          url: '${__value.raw}'
+    secureJsonData:
+      httpHeaderValue1: spechtlabs
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo-spechtlabs
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Tempo (spechtlabs)
+    uid: tempo-spechtlabs
+    type: tempo
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: mimir-spechtlabs
+      tracesToLogsV2:
+        datasourceUid: loki-spechtlabs
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+      tracesToProfiles:
+        datasourceUid: pyroscope-spechtlabs
+        profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+    secureJsonData:
+      httpHeaderValue1: spechtlabs
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: pyroscope-spechtlabs
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Pyroscope (spechtlabs)
+    uid: pyroscope-spechtlabs
+    type: grafana-pyroscope-datasource
+    url: http://pyroscope.lgtm.svc.cluster.local:4040
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: spechtlabs
+
+# ───────────────────────── tenant: hass ─────────────────────────
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: mimir-hass
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Mimir (hass)
+    uid: mimir-hass
+    type: prometheus
+    url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      httpMethod: POST
+      prometheusType: Mimir
+      timeInterval: "60s"
+      cacheLevel: Medium
+    secureJsonData:
+      httpHeaderValue1: hass
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-hass
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Loki (hass)
+    uid: loki-hass
+    type: loki
+    url: http://loki-gateway.lgtm.svc.cluster.local
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      maxLines: 1000
+      derivedFields:
+        - name: trace_id
+          matcherRegex: "trace_id=(\\w+)"
+          datasourceUid: tempo-hass
+          url: '${__value.raw}'
+    secureJsonData:
+      httpHeaderValue1: hass
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo-hass
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Tempo (hass)
+    uid: tempo-hass
+    type: tempo
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: mimir-hass
+      tracesToLogsV2:
+        datasourceUid: loki-hass
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+      tracesToProfiles:
+        datasourceUid: pyroscope-hass
+        profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+    secureJsonData:
+      httpHeaderValue1: hass
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: pyroscope-hass
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Pyroscope (hass)
+    uid: pyroscope-hass
+    type: grafana-pyroscope-datasource
+    url: http://pyroscope.lgtm.svc.cluster.local:4040
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: hass
+
+# ───────────────────────── tenant: hass-schiltach ─────────────────────────
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: mimir-hass-schiltach
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Mimir (hass-schiltach)
+    uid: mimir-hass-schiltach
+    type: prometheus
+    url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      httpMethod: POST
+      prometheusType: Mimir
+      timeInterval: "60s"
+      cacheLevel: Medium
+    secureJsonData:
+      httpHeaderValue1: hass-schiltach
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-hass-schiltach
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Loki (hass-schiltach)
+    uid: loki-hass-schiltach
+    type: loki
+    url: http://loki-gateway.lgtm.svc.cluster.local
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      maxLines: 1000
+      derivedFields:
+        - name: trace_id
+          matcherRegex: "trace_id=(\\w+)"
+          datasourceUid: tempo-hass-schiltach
+          url: '${__value.raw}'
+    secureJsonData:
+      httpHeaderValue1: hass-schiltach
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: tempo-hass-schiltach
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Tempo (hass-schiltach)
+    uid: tempo-hass-schiltach
+    type: tempo
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: mimir-hass-schiltach
+      tracesToLogsV2:
+        datasourceUid: loki-hass-schiltach
+        spanStartTimeShift: "-1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+      tracesToProfiles:
+        datasourceUid: pyroscope-hass-schiltach
+        profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"
+    secureJsonData:
+      httpHeaderValue1: hass-schiltach
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: pyroscope-hass-schiltach
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  datasource:
+    name: Pyroscope (hass-schiltach)
+    uid: pyroscope-hass-schiltach
+    type: grafana-pyroscope-datasource
+    url: http://pyroscope.lgtm.svc.cluster.local:4040
+    access: proxy
+    isDefault: false
+    editable: false
+    jsonData:
+      enableSecureSocksProxy: true
+      httpHeaderName1: X-Scope-OrgID
+    secureJsonData:
+      httpHeaderValue1: hass-schiltach
