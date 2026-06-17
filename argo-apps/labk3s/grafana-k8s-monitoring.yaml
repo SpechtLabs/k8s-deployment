@@ -26,3 +26,10 @@ spec:
       # before the CRD exists and fails ("could not find collectors.grafana.com/
       # Alloy"). Skip the dry-run for not-yet-present CRDs so the CRD applies first.
       - SkipDryRunOnMissingResource=true
+  # The Tailscale operator rewrites the egress Service's spec.externalName from
+  # the placeholder to the generated proxy (ts-lab-lgtm-egress-*.tailscale.svc).
+  # Ignore it so ArgoCD doesn't flag a permanent diff / fight the operator.
+  ignoreDifferences:
+    - kind: Service
+      jsonPointers:
+        - /spec/externalName
