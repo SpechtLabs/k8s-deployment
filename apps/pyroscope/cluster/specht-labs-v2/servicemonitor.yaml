@@ -1,0 +1,22 @@
+# Standalone ServiceMonitor for Pyroscope's own metrics. The chart's built-in one
+# is left disabled in helm-values; this explicit object selects the pyroscope
+# Service on its http2 port at /metrics. The grafana-k8s-monitoring alloy-metrics
+# collector discovers it and ships Pyroscope's metrics to the self-hosted Mimir.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pyroscope
+  namespace: lgtm
+spec:
+  namespaceSelector:
+    matchNames:
+      - lgtm
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: pyroscope
+      app.kubernetes.io/name: pyroscope
+      app.kubernetes.io/component: all
+  endpoints:
+    - port: http2
+      path: /metrics
+      scheme: http

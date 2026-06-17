@@ -1,0 +1,74 @@
+# Right-sized monolithic Pyroscope for homelab scale on cx23. Structural sibling
+# of apps/loki/base/helm-values.yaml: object storage in Hetzner (not bundled
+# MinIO), multitenancy on, and an explicit MEMORY LIMIT on the pod (CPU request
+# only, no CPU limit). The memory cap is the guardrail that makes a profile-ingest
+# or block-build burst OOM-kill the pyroscope pod instead of ballooning and
+# killing the cx23 node (the failure that took down the kubelet on 2026-06-10).
+#
+# Monolithic (single-binary), NOT microservices: the chart's microservices mode
+# bakes in RF3 + a 3-peer raft metastore with multi-Gi limits per component and
+# does not degrade to single replicas on a cx23. The single binary runs the whole
+# read/write/compact path in one pod against object storage.
+
+architecture:
+  microservices:
+    enabled: false               # single-binary; see header for why
+
+pyroscope:
+  replicaCount: 1
+
+  extraArgs:
+    config.expand-env: "true"    # resolve ${AWS_*} in the config from the mounted secret
+    log.level: info              # chart default is debug
+    pyroscopedb.max-block-duration: 30m  # flush the in-memory head to blocks/S3 more often; memory lever
+
+  # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY from the SOPS+ksops secret.
+  extraEnvFrom:
+    - secretRef:
+        name: pyroscope-objstore
+
+  # Single pod holds the in-memory profile head and builds blocks. Capped at 1Gi
+  # so a burst OOM-kills THIS pod, never the node.
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      memory: 1024Mi
+
+  # Local pyroscopedb head/WAL — keep recent, not-yet-flushed profiles across pod
+  # restarts (the Loki ingester-WAL analog).
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+  # The chart's default `config` only configures storage when bundled MinIO is on.
+  # structuredConfig sets the real backend: multi-tenant + Hetzner Object Storage.
+  structuredConfig:
+    multitenancy_enabled: true   # tenant set by X-Scope-OrgID
+    storage:
+      backend: s3
+      s3:
+        endpoint: hel1.your-objectstorage.com
+        region: hel1
+        bucket_name: specht-labs-pyroscope
+        access_key_id: ${AWS_ACCESS_KEY_ID}
+        secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+        insecure: false
+
+# --- Bundled subcharts off for v1 ---
+# Alloy/grafana-agent ship profiles; profile ingestion is out of scope for now.
+alloy:
+  enabled: false
+agent:
+  enabled: false
+# Profiles live in Hetzner Object Storage.
+minio:
+  enabled: false
+
+# Chart's ServiceMonitor off; a standalone one lives in the cluster overlay so
+# alloy-metrics ships Pyroscope's metrics to the self-hosted Mimir.
+serviceMonitor:
+  enabled: false

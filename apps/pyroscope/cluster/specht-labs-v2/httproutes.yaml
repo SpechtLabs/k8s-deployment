@@ -1,0 +1,140 @@
+# One HTTPRoute per tenant on the tailnet-only Gateway. Each injects the tenant's
+# X-Scope-OrgID so profile clients need no custom-header config. Monolithic
+# Pyroscope has no nginx gateway, so the backend is the pyroscope Service on its
+# http2 port (4040). Route + backend are both in lgtm, so no ReferenceGrant.
+#
+# parentRefs group/kind, backendRefs group/kind/weight, and the default `/`
+# PathPrefix match are written out explicitly: the Gateway API webhook defaults
+# them on the live object, so omitting them leaves ArgoCD permanently OutOfSync.
+#
+# Only the spechtlabs tenant (in-cluster instrumented apps) pushes profiles for
+# now; the homelab/hass routes are scaffolded ahead of use, mirroring the Loki spec.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pyroscope-homelab
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - homelab-pyroscope.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: homelab
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: pyroscope
+          port: 4040
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pyroscope-hass
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - hass-pyroscope.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: hass
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: pyroscope
+          port: 4040
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pyroscope-hass-schiltach
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - hass-schiltach-pyroscope.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: hass-schiltach
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: pyroscope
+          port: 4040
+          weight: 1
+---
+# specht-labs-v2's own in-cluster app profiles (when a profiler is later pointed
+# here). This route adds external write/query access to the spechtlabs tenant.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pyroscope-spechtlabs
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - spechtlabs-pyroscope.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: spechtlabs
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: pyroscope
+          port: 4040
+          weight: 1
