@@ -89,7 +89,7 @@ spec:
     name: Tempo (homelab)
     uid: tempo-homelab
     type: tempo
-    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3200
     access: proxy
     isDefault: false
     editable: false
@@ -209,7 +209,7 @@ spec:
     name: Tempo (spechtlabs)
     uid: tempo-spechtlabs
     type: tempo
-    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3200
     access: proxy
     isDefault: false
     editable: false
@@ -329,7 +329,7 @@ spec:
     name: Tempo (hass)
     uid: tempo-hass
     type: tempo
-    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3200
     access: proxy
     isDefault: false
     editable: false
@@ -449,7 +449,7 @@ spec:
     name: Tempo (hass-schiltach)
     uid: tempo-hass-schiltach
     type: tempo
-    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3100
+    url: http://tempo-query-frontend.lgtm.svc.cluster.local:3200
     access: proxy
     isDefault: false
     editable: false
