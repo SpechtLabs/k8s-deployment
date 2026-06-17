@@ -58,8 +58,8 @@ patches:
               name: Tailscale
               config:
                 issuer: https://idp.sphinx-map.ts.net
-                clientID: foo
-                clientSecret: bar
+                clientID: $argocd-oidc:tailscale.clientID
+                clientSecret: $argocd-oidc:tailscale.clientSecret
                 redirectURI: https://lab-argocd.sphinx-map.ts.net/api/dex/callback
                 scopes:
                   - openid
