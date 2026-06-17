@@ -1,0 +1,126 @@
+# labk3s telemetry -> self-hosted LGTM on specht-labs-v2 (no Grafana Cloud).
+# All three destinations point at the one v2 tailnet device
+# (k8s-load-balancer.sphinx-map.ts.net, reached via the lab-lgtm-egress proxy);
+# the v2 envoy gateway path-routes each and injects X-Scope-OrgID: homelab, so no
+# tenant/auth config is needed agent-side. Plain HTTP is fine — the tailnet is
+# WireGuard-encrypted.
+cluster:
+  name: labk3s
+
+global:
+  # Match v2: pin metrics collection to 1/min.
+  scrapeInterval: 60s
+
+destinations:
+  selfhosted-mimir:
+    type: prometheus
+    url: http://k8s-load-balancer.sphinx-map.ts.net/api/v1/push
+    metricProcessingRules: |
+      write_relabel_config {
+        regex = "container_id|image_id"
+        action = "labeldrop"
+      }
+  selfhosted-loki:
+    type: loki
+    url: http://k8s-load-balancer.sphinx-map.ts.net/loki/api/v1/push
+  selfhosted-tempo:
+    type: otlp
+    url: http://k8s-load-balancer.sphinx-map.ts.net
+    protocol: http
+    metrics:
+      enabled: false
+    logs:
+      enabled: false
+    traces:
+      enabled: true
+
+clusterMetrics:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [selfhosted-mimir]
+
+hostMetrics:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [selfhosted-mimir]
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: false
+  energyMetrics:
+    enabled: false
+
+annotationAutodiscovery:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [selfhosted-mimir]
+
+prometheusOperatorObjects:
+  enabled: true
+  collector: alloy-metrics
+  destinations: [selfhosted-mimir]
+
+clusterEvents:
+  enabled: true
+  collector: alloy-singleton
+  destinations: [selfhosted-loki]
+
+nodeLogs:
+  enabled: true
+  collector: alloy-logs
+  destinations: [selfhosted-loki]
+
+podLogsViaLoki:
+  enabled: true
+  collector: alloy-logs
+  destinations: [selfhosted-loki]
+
+applicationObservability:
+  enabled: true
+  collector: alloy-receiver
+  # App metrics -> Mimir, logs -> Loki, traces -> Tempo.
+  destinations: [selfhosted-mimir, selfhosted-loki, selfhosted-tempo]
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+        port: 4317
+      http:
+        enabled: true
+        port: 4318
+    zipkin:
+      enabled: false
+
+collectors:
+  alloy-metrics:
+    enabled: true
+    presets:
+      - clustered
+      - statefulset
+  alloy-singleton:
+    enabled: true
+    presets:
+      - singleton
+  alloy-logs:
+    enabled: true
+    presets:
+      - filesystem-log-reader
+      - daemonset
+  alloy-receiver:
+    enabled: true
+    presets:
+      - deployment
+
+# Deploy the telemetry exporters here (labk3s' standalone kube-state-metrics app
+# is retired in favour of these), mirroring the v2 model. No OpenCost/Kepler.
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: false
+  opencost:
+    deploy: false
+  kepler:
+    deploy: false

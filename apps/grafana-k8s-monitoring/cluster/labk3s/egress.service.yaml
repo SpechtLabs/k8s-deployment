@@ -1,0 +1,16 @@
+# Tailscale egress to the v2 LGTM front door. The Tailscale operator turns this
+# into an egress proxy and programs the in-cluster k8s-nameserver so
+# k8s-load-balancer.sphinx-map.ts.net (the v2 tailnet envoy gateway) resolves to
+# it. The alloy destinations below post to that FQDN; the v2 gateway path-routes
+# to mimir/loki/tempo and injects X-Scope-OrgID: homelab.
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: k8s-load-balancer.sphinx-map.ts.net
+    tailscale.com/tags: tag:o11y-agent
+  name: lab-lgtm-egress
+  namespace: monitoring
+spec:
+  type: ExternalName
+  externalName: placeholder # any value - will be overwritten by the operator
