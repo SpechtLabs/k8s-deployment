@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  # k3s imports any *.server key here via `import /etc/coredns/custom/*.server`
+  # in the main Corefile. Forward the tailnet domain to the Tailscale operator
+  # nameserver (DNSConfig `ts-dns`) so in-cluster lookups of *.ts.net resolve to
+  # the egress proxy pods instead of the raw, unroutable tailnet (100.x) IPs.
+  #
+  # CoreDNS' forward plugin needs an IP (it does not resolve hostnames at config
+  # time), so the nameserver Service ClusterIP is pinned here. It is allocated
+  # once and stable for the life of the `nameserver` Service in ns `tailscale`.
+  tailscale.server: |
+    ts.net:53 {
+        errors
+        cache 30
+        forward . 10.43.37.229
+    }
