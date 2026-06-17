@@ -1,0 +1,22 @@
+# Standalone ServiceMonitor for Loki's own metrics. The chart's built-in one is
+# gated on a ServiceMonitor CRD capability check that kustomize+helm (and ArgoCD)
+# does not satisfy, so it never renders; this explicit object always does. The
+# grafana-k8s-monitoring alloy-metrics collector (prometheusOperatorObjects)
+# discovers it and ships Loki's metrics to the self-hosted Mimir.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: loki
+  namespace: lgtm
+spec:
+  namespaceSelector:
+    matchNames:
+      - lgtm
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/name: loki
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      scheme: http

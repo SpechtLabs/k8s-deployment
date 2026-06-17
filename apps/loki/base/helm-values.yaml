@@ -1,0 +1,191 @@
+# Right-sized single-replica Loki in Distributed mode for homelab scale on cx23.
+# Structural mirror of apps/mimir/base/helm-values.yaml: RF1, 1 replica per
+# component, and an explicit MEMORY LIMIT on every pod (CPU requests only, no CPU
+# limits). The memory cap is the guardrail that makes a query or WAL-replay burst
+# OOM-kill its own pod instead of ballooning and killing the cx23 node (the
+# failure that took down the kubelet on 2026-06-10). Chunks live in Hetzner
+# Object Storage, not bundled MinIO.
+
+deploymentMode: Distributed
+
+global:
+  # Injected into every Loki component (the chart's global scope covers
+  # distributor/ingester/querier/query-frontend/query-scheduler/compactor/
+  # index-gateway/...). expand-env lets the config template's ${AWS_*}
+  # placeholders resolve from the mounted secret at runtime.
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: loki-objstore        # AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+
+loki:
+  auth_enabled: true               # multi-tenant; tenant set by X-Scope-OrgID
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: s3
+    bucketNames:
+      chunks: specht-labs-loki-chunks
+      ruler: specht-labs-loki-chunks
+      admin: specht-labs-loki-chunks
+    s3:
+      endpoint: hel1.your-objectstorage.com
+      region: hel1
+      accessKeyId: ${AWS_ACCESS_KEY_ID}
+      secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+      s3ForcePathStyle: true
+      insecure: false
+
+  schemaConfig:
+    configs:
+      - from: "2026-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+# --- SingleBinary / SimpleScalable targets off (chart fails the build if both
+#     these and the distributed targets have replicas in plain Distributed mode) ---
+singleBinary:
+  replicas: 0
+write:
+  replicas: 0
+read:
+  replicas: 0
+backend:
+  replicas: 0
+
+# --- Distributed components: 1 replica each, every one memory-capped ---
+distributor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 192Mi
+
+ingester:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false               # RF1, single replica: no zone-a/b/c split
+  persistence:
+    enabled: true                # keep the WAL across pod restarts
+    claims:
+      - name: data
+        size: 10Gi
+  # Heaviest component (in-memory chunks + WAL + Kafka-less ingest buffer).
+  # Capped at 1Gi so a flush/replay flood OOM-kills THIS pod, never the node.
+  resources:
+    requests:
+      cpu: 150m
+      memory: 512Mi
+    limits:
+      memory: 1024Mi
+
+querier:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+queryFrontend:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+queryScheduler:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+indexGateway:
+  replicas: 1
+  # emptyDir (chart default): the tsdb index is re-downloaded from S3 on restart,
+  # so no PV needed at homelab scale.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+compactor:
+  replicas: 1
+  # emptyDir (chart default): compactor working set is rebuilt from S3.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+# nginx gateway. The per-tenant HTTPRoutes in the cluster overlay target the
+# loki-gateway Service on port 80.
+gateway:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+# --- Off for v1 (the Loki analog of Mimir's disabled ruler/alertmanager) ---
+ruler:
+  enabled: false
+bloomGateway:
+  enabled: false
+bloomPlanner:
+  enabled: false
+bloomBuilder:
+  enabled: false
+patternIngester:
+  enabled: false
+
+# memcached caches default to multi-GB allocations that won't fit a cx23. Off
+# for v1; revisit if query latency warrants it.
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+
+lokiCanary:
+  enabled: false
+test:
+  enabled: false                 # the chart requires the canary for the test
+
+minio:
+  enabled: false                 # chunks live in Hetzner Object Storage
+
+# No bundled dashboards/rules and no deprecated GrafanaAgent self-monitoring.
+# The chart's own ServiceMonitor is gated on a CRD capability check that
+# `kustomize build --enable-helm` (and ArgoCD's kustomize+helm) does not satisfy,
+# so it would never render. A standalone ServiceMonitor lives in the cluster
+# overlay instead, which is what feeds Loki's metrics to the self-hosted Mimir.
+monitoring:
+  dashboards:
+    enabled: false
+  rules:
+    enabled: false
+  selfMonitoring:
+    enabled: false
+  serviceMonitor:
+    enabled: false

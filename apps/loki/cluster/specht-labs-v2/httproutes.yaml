@@ -1,0 +1,136 @@
+# One HTTPRoute per tenant on the tailnet-only Gateway. Each injects the tenant's
+# X-Scope-OrgID so log clients (Pis, Home Assistant) need no custom-header config.
+# Route + backend (loki-gateway) are both in lgtm, so no ReferenceGrant needed.
+#
+# parentRefs group/kind, backendRefs group/kind/weight, and the default `/`
+# PathPrefix match are written out explicitly: the Gateway API webhook defaults
+# them on the live object, so omitting them leaves ArgoCD permanently OutOfSync.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: loki-homelab
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - homelab-loki.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: homelab
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: loki-gateway
+          port: 80
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: loki-hass
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - hass-loki.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: hass
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: loki-gateway
+          port: 80
+          weight: 1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: loki-hass-schiltach
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - hass-schiltach-loki.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: hass-schiltach
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: loki-gateway
+          port: 80
+          weight: 1
+---
+# specht-labs-v2's own in-cluster logs (when alloy-logs is later repointed here).
+# This route only adds external write/query access to the spechtlabs tenant.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: loki-spechtlabs
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - spechtlabs-loki.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: spechtlabs
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: loki-gateway
+          port: 80
+          weight: 1
