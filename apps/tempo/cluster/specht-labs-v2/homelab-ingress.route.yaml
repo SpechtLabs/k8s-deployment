@@ -1,0 +1,37 @@
+# Cross-cluster ingestion for the homelab tenant via the tailnet gateway's own
+# device hostname (k8s-load-balancer.sphinx-map.ts.net). labk3s egresses to this
+# one device and routes by PATH instead of per-tenant Host. The /v1/traces prefix
+# is the OTLP/HTTP traces endpoint; backend is the distributor's OTLP/HTTP port
+# (4318). X-Scope-OrgID is injected so the agent needs no tenant config. Coexists
+# with the host-based homelab-tempo route.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tempo-homelab-tailnet
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - k8s-load-balancer.sphinx-map.ts.net
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /v1/traces
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: homelab
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: tempo-distributor
+          port: 4318
+          weight: 1

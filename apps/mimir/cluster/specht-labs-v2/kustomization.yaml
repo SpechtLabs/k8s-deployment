@@ -5,6 +5,7 @@ namespace: lgtm
 resources:
   - ../../base
   - ./httproutes.yaml
+  - ./homelab-ingress.route.yaml
 
 generators:
   - ./secret-generator.yaml

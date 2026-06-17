@@ -1,0 +1,37 @@
+# Cross-cluster ingestion for the homelab tenant via the tailnet gateway's own
+# device hostname (k8s-load-balancer.sphinx-map.ts.net). Other clusters (labk3s)
+# can't route tailnet IPs directly, so they egress to this one device and rely on
+# PATH routing here instead of per-tenant Host routing. The /api/v1/push prefix
+# is Mimir's remote-write endpoint; X-Scope-OrgID is injected so the agent needs
+# no tenant config. Coexists with the host-based homelab-mimir route above.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mimir-homelab-tailnet
+  namespace: lgtm
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: http
+  hostnames:
+    - k8s-load-balancer.sphinx-map.ts.net
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/v1/push
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Scope-OrgID
+                value: homelab
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: mimir-gateway
+          port: 80
+          weight: 1
