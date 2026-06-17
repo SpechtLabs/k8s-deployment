@@ -4,9 +4,11 @@
 # group is query-only), so these live here, not under grafana/.
 #
 # Each datasource reaches the v2 self-hosted stack (namespace lgtm) over Private
-# Datasource Connect: jsonData.enableSecureSocksProxy=true makes Grafana Cloud
-# tunnel through the grafana-pdc-agent. Grafana Cloud auto-injects the remaining
-# PDC fields (pdcInjected, secureSocksProxyUsername) on save.
+# Datasource Connect. enableSecureSocksProxy turns PDC on; secureSocksProxyUsername
+# is the PDC connection id that binds the datasource to the grafana-pdc-agent
+# tunnel. Grafana Cloud injects this automatically on a UI save but NOT on the
+# operator's API create, so it is set explicitly here — without it queries do not
+# route through PDC and fail with "An error occurred within the plugin".
 #
 # The stack is multi-tenant: X-Scope-OrgID selects the tenant (httpHeaderName1 +
 # secureJsonData.httpHeaderValue1). One datasource per (backend, tenant), uid
@@ -35,6 +37,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       httpMethod: POST
       prometheusType: Mimir
@@ -61,6 +65,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       maxLines: 1000
       derivedFields:
@@ -89,6 +95,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       nodeGraph:
         enabled: true
@@ -123,6 +131,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
     secureJsonData:
       httpHeaderValue1: homelab
@@ -147,6 +157,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       httpMethod: POST
       prometheusType: Mimir
@@ -173,6 +185,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       maxLines: 1000
       derivedFields:
@@ -201,6 +215,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       nodeGraph:
         enabled: true
@@ -235,6 +251,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
     secureJsonData:
       httpHeaderValue1: spechtlabs
@@ -259,6 +277,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       httpMethod: POST
       prometheusType: Mimir
@@ -285,6 +305,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       maxLines: 1000
       derivedFields:
@@ -313,6 +335,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       nodeGraph:
         enabled: true
@@ -347,6 +371,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
     secureJsonData:
       httpHeaderValue1: hass
@@ -371,6 +397,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       httpMethod: POST
       prometheusType: Mimir
@@ -397,6 +425,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       maxLines: 1000
       derivedFields:
@@ -425,6 +455,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
       nodeGraph:
         enabled: true
@@ -459,6 +491,8 @@ spec:
     editable: false
     jsonData:
       enableSecureSocksProxy: true
+      secureSocksProxyUsername: ee5781eb-3e00-461e-873c-b11f65dbaacd
+      pdcInjected: true
       httpHeaderName1: X-Scope-OrgID
     secureJsonData:
       httpHeaderValue1: hass-schiltach
