@@ -18,6 +18,10 @@ helmCharts:
     version: 1.0.0
     releaseName: grafana-alloy-crd
     namespace: monitoring
+    # The chart ships the Alloy CRD in crds/, which kustomize's helm inflation
+    # omits by default — so the CRD was never applied and the alloy-operator
+    # crashlooped ("collectors.grafana.com/v1alpha1: no matches"). Render it.
+    includeCRDs: true
 
 resources:
   - ./egress.service.yaml

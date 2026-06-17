@@ -118,6 +118,11 @@ telemetryServices:
     deploy: true
   node-exporter:
     deploy: true
+    # The Pi hosts already run a node_exporter on :9100. Default hostNetwork:true
+    # would bind the host's :9100 and CrashLoop ("address already in use"). Run in
+    # the pod network instead — host metrics still come from the /proc + /sys
+    # mounts, and the chart scrapes the pods via the service.
+    hostNetwork: false
   windows-exporter:
     deploy: false
   opencost:
