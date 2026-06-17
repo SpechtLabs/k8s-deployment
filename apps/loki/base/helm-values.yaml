@@ -78,6 +78,8 @@ ingester:
     enabled: true                # keep the WAL across pod restarts
     claims:
       - name: data
+        accessModes:
+          - ReadWriteOnce
         size: 10Gi
   # Heaviest component (in-memory chunks + WAL + Kafka-less ingest buffer).
   # Capped at 1Gi so a flush/replay flood OOM-kills THIS pod, never the node.
