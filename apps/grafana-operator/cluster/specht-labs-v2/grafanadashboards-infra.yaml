@@ -27,11 +27,9 @@ spec:
     matchLabels:
       dashboards: grafana-cloud
   folderRef: infrastructure
-  # node_exporter uses polystat panels; the operator installs the plugin on the
-  # Grafana Cloud stack (SA has plugins:install).
-  plugins:
-    - name: grafana-polystat-panel
-      version: "2.1.16"
+  # NOTE: node_exporter uses polystat panels (grafana-polystat-panel). The plugin
+  # cannot be installed via the operator — it rejects spec.plugins for external
+  # (Cloud) Grafana — so it must be installed on the stack out-of-band.
   configMapRef:
     name: node-exporter-json
     key: node_exporter.json
@@ -45,9 +43,8 @@ spec:
     matchLabels:
       dashboards: grafana-cloud
   folderRef: infrastructure
-  plugins:
-    - name: grafana-polystat-panel
-      version: "2.1.16"
+  # Uses grafana-polystat-panel; install it on the Cloud stack out-of-band (the
+  # operator rejects spec.plugins for external Grafana). See node-exporter note.
   configMapRef:
     name: rpi-dashboard-json
     key: rpi_dashboard.json
