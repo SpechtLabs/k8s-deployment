@@ -11,3 +11,34 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - hcloud-server-dashboard.json
+  # Homelab infra dashboards (default datasource: mimir-homelab tenant).
+  - name: node-exporter-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - node_exporter.json
+  - name: rpi-dashboard-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - rpi_dashboard.json
+  - name: synology-dashboard-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - synology-dashboard.json
+  - name: adguardhome-exporter-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - adguardhome_exporter.json
+  - name: cert-checker-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - cert-checker.json
+  - name: tailscale-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - tailscale.json

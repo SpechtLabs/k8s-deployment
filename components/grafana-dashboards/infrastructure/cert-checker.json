@@ -999,8 +999,8 @@
       {
         "current": {
           "selected": false,
-          "text": "Mimir (Anonymous)",
-          "value": "Mimir (Anonymous)"
+          "text": "Mimir (homelab)",
+          "value": "mimir-homelab"
         },
         "hide": 0,
         "includeAll": false,

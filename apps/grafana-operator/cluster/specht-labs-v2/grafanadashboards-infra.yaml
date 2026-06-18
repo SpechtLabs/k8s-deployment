@@ -14,3 +14,84 @@ spec:
   configMapRef:
     name: hcloud-server-dashboard-json
     key: hcloud-server-dashboard.json
+---
+# Homelab infra dashboards. Their ${datasource} template variable defaults to the
+# homelab tenant (Mimir (homelab) / uid mimir-homelab) so they show data straight
+# after import; see apps/grafana-operator/.../grafanadatasources.yaml.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: node-exporter
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: node-exporter-json
+    key: node_exporter.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: rpi
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: rpi-dashboard-json
+    key: rpi_dashboard.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: synology
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: synology-dashboard-json
+    key: synology-dashboard.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: adguard-home
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: adguardhome-exporter-json
+    key: adguardhome_exporter.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: cert-checker
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: cert-checker-json
+    key: cert-checker.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: tailscale
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  configMapRef:
+    name: tailscale-json
+    key: tailscale.json

@@ -2252,8 +2252,8 @@
       {
         "current": {
           "selected": true,
-          "text": "Mimir (cedi.dev)",
-          "value": "mimir-cedi"
+          "text": "Mimir (homelab)",
+          "value": "mimir-homelab"
         },
         "hide": 0,
         "includeAll": false,

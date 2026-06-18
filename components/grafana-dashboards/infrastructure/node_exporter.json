@@ -3159,8 +3159,8 @@
     "list": [
       {
         "current": {
-          "text": "Mimir (cedi.dev)",
-          "value": "mimir-cedi"
+          "text": "Mimir (homelab)",
+          "value": "mimir-homelab"
         },
         "includeAll": false,
         "name": "datasource",
