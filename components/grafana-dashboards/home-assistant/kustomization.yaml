@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ConfigMap holding the Home Assistant diagnostics dashboard JSON, consumed by
+# the grafana-operator GrafanaDashboard configMapRef on the Grafana Cloud cluster.
+# The JSON is generated — regenerate with `python3 hack/gen-ha-dashboard.py`.
+configMapGenerator:
+  - name: home-assistant-diagnostics-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - home-assistant-diagnostics.json

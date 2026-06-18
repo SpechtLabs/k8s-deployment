@@ -16,6 +16,7 @@ resources:
   - ../../../../components/grafana-dashboards/envoy-gateway
   - ../../../../components/grafana-dashboards/infrastructure
   - ../../../../components/grafana-dashboards/static-pages
+  - ../../../../components/grafana-dashboards/home-assistant
   - grafana.yaml
   # Folder hierarchy (Infrastructure / Kubernetes Platform › Envoy Gateway / Applications).
   - grafana-folders.yaml
@@ -23,6 +24,7 @@ resources:
   - grafanadashboards-envoy.yaml
   - grafanadashboards-infra.yaml
   - grafanadashboards-static-pages.yaml
+  - grafanadashboards-home-assistant.yaml
   # First-party app health targets (instantaneous checks). SLO burn alerts are
   # owned by the Grafana Cloud SLO plugin (gcx), not here. See grafana/slos/.
   - grafanaalertrules-static-pages.yaml

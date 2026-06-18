@@ -1,0 +1,16 @@
+# Home Assistant diagnostics dashboard, delivered to Grafana Cloud. Custom-built;
+# the JSON source generator is hack/gen-ha-dashboard.py. The "Site" template
+# variable switches the hass / hass-schiltach tenants (datasource UIDs are
+# interpolated as mimir-${site} / loki-${site}). Lives in the Applications folder.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: home-assistant-diagnostics
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: applications
+  configMapRef:
+    name: home-assistant-diagnostics-json
+    key: home-assistant-diagnostics.json
