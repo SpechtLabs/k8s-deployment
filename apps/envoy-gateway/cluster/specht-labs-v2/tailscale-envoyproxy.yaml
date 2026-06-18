@@ -12,7 +12,7 @@ spec:
         loadBalancerClass: tailscale
         annotations:
           tailscale.com/hostname: k8s
-          tailscale.com/tags: tag:core-infra
+          tailscale.com/tags: tag:core-infra,tag:o11y-endpoint
           # external-dns (source=service) publishes this wildcard for the tailnet Gateway.
           external-dns.alpha.kubernetes.io/hostname: "*.k8s.specht-labs.de"
           # Pin the targets to the k8s-load-balancer tailnet device's stable IPs. Required because
@@ -26,6 +26,6 @@ spec:
             metadata:
               annotations:
                 tailscale.com/hostname: k8s-load-balancer
-                tailscale.com/tags: tag:core-infra
+                tailscale.com/tags: tag:core-infra,tag:o11y-endpoint
             spec:
               loadBalancerClass: tailscale
