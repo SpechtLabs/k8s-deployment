@@ -4,7 +4,7 @@ kind: Kustomization
 helmCharts:
   - name: hcloud-cloud-controller-manager
     repo: https://charts.hetzner.cloud
-    version: 1.32.0
+    version: 1.33.0
     releaseName: hcloud-ccm
     namespace: kube-system
     includeCRDs: true
