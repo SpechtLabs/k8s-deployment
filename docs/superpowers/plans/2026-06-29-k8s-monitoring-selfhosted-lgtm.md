@@ -6,7 +6,7 @@
 
 **Architecture:** `apps/grafana-k8s-monitoring/base/helm-values.yaml` is the v2-only chart config (labk3s inflates its own chart, so editing base touches only v2). Replace the four Grafana Cloud push destinations + Fleet Management with four in-cluster LGTM destinations (`*.lgtm.svc.cluster.local`, tenant `spechtlabs`), re-route every feature to them, repoint OpenCost's query source to in-cluster Mimir, and drop the Cloud-only Knowledge-Graph scrape on argocd. The viewing layer (PDC, Cloud Grafana, grafana-operator datasources) is left untouched.
 
-**Tech Stack:** Kustomize 5.8.1 + Helm 4.2.1 (helm inflation via `kustomize build --enable-helm`), kubeconform 0.8.0, ksops 4.5.1 + SOPS/age, all pinned in `mise.toml`. Chart: `k8s-monitoring` 4.1.5. GitOps via ArgoCD; deploy = commit to `main`.
+**Tech Stack:** Kustomize 5.8.1 + Helm 4.2.1 (helm inflation via `kustomize build --enable-helm`), kubeconform 0.8.0, ksops 4.5.1 + SOPS/age, all pinned in `mise.toml`. Chart: `k8s-monitoring` 4.1.6. GitOps via ArgoCD; deploy = commit to `main`.
 
 ## Global Constraints
 
@@ -228,7 +228,7 @@ namespace: monitoring
 helmCharts:
   - name: k8s-monitoring
     repo: https://grafana.github.io/helm-charts
-    version: 4.1.5
+    version: 4.1.6
     releaseName: grafana-k8s-monitoring
     namespace: monitoring
     valuesFile: helm-values.yaml
@@ -239,6 +239,8 @@ helmCharts:
     releaseName: grafana-alloy-crd
     namespace: monitoring
 ```
+
+> Note: the `k8s-monitoring` chart version must match whatever is currently pinned in the repo (renovate keeps it current — `4.1.6` at plan time, also used by the labk3s overlay). Do not downgrade it; only the `valuesFile` content and the removal of the `patches:` block are this task's changes to the kustomization.
 
 - [ ] **Step 3: Render base and verify it succeeds (the json6902 test no longer blocks it)**
 
