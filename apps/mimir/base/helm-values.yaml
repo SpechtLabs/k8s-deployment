@@ -17,7 +17,11 @@ alertmanager:
 ruler:
   enabled: false              # not needed for v1
 rollout_operator:
-  enabled: false              # only needed for zone-aware rollouts (which we disable)
+  # Intentionally off even with zone-aware enabled: the rollout-operator must be a
+  # single instance per namespace, and lgtm is shared by loki+tempo (which also
+  # ship one). At 1 replica/zone (RF3), StatefulSet ordinal updates restart one
+  # zone at a time on their own — coordinated multi-zone rollout isn't needed.
+  enabled: false
 
 global:
   extraEnvFrom:
@@ -66,14 +70,28 @@ overrides_exporter:
       memory: 128Mi
 
 ingester:
-  replicas: 1
+  # Zone-aware RF3: 3 replicas total, one StatefulSet per zone (= per region), each
+  # with its PVC provisioned in that region. topologyKey keeps zones off the same
+  # node. Survives a full region loss (2/3 zones keep write quorum).
+  replicas: 3
   zoneAwareReplication:
-    enabled: false
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones: &mimirZones
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/region: hel1
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/region: nbg1
+      - name: zone-c
+        nodeSelector:
+          topology.kubernetes.io/region: fsn1
   persistentVolume:
     enabled: true
     size: 10Gi
-  # The heaviest component (holds the in-memory TSDB + Kafka consume buffer).
-  # Capped at 1.25Gi so a replay flood OOM-kills THIS pod, never the node.
+  # The heaviest component (holds the in-memory TSDB + WAL). Capped at 1.25Gi so a
+  # replay flood OOM-kills THIS pod, never the node.
   resources:
     requests:
       cpu: 200m
@@ -82,9 +100,12 @@ ingester:
       memory: 1280Mi
 
 store_gateway:
-  replicas: 1
+  # Zone-aware RF3, mirroring the ingester: one StatefulSet per region.
+  replicas: 3
   zoneAwareReplication:
-    enabled: false
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones: *mimirZones
   persistentVolume:
     enabled: true
     size: 5Gi
@@ -116,16 +137,12 @@ gateway:
     limits:
       memory: 192Mi
 
-# kafka stays enabled (chart default) for ingest-storage: single-node KRaft
-# (apache/kafka-native, no Zookeeper). 5Gi PV. Chart default requested a full CPU
-# + 1Gi with no limit; trim to fit cx23 and cap memory at 1Gi.
+# Classic architecture (chart's classic-architecture.yaml): distributors push
+# directly to ingesters, no Kafka ingest-storage. Kafka was a single-region SPOF in
+# the write path; zone-aware RF3 ingesters provide durability instead (WAL on PVC +
+# block flush to S3). See structuredConfig.ingest_storage.enabled: false below.
 kafka:
-  resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      memory: 1Gi
+  enabled: false
 
 mimir:
   structuredConfig:
@@ -140,10 +157,18 @@ mimir:
           secret_access_key: ${AWS_SECRET_ACCESS_KEY}
     ingester:
       ring:
-        replication_factor: 1
+        replication_factor: 3
+      # classic mode: ingesters receive direct distributor pushes, not Kafka
+      push_grpc_method_enabled: null
     store_gateway:
       sharding_ring:
-        replication_factor: 1
+        replication_factor: 3
+    distributor:
+      remote_timeout: null
+    # Classic architecture: no Kafka ingest-storage (see kafka.enabled: false above).
     ingest_storage:
+      enabled: false
       kafka:
-        auto_create_topic_default_partitions: 8
+        address: null
+        topic: null
+        auto_create_topic_default_partitions: null
