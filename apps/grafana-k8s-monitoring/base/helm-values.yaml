@@ -147,6 +147,13 @@ telemetryServices:
         # org id on its PromQL queries or Mimir answers 401. Setting this also
         # overrides the wrapper's default CONFIG_PATH=/tmp, removing the duplicate
         # CONFIG_PATH that the (now-deleted) base kustomization patch guarded against.
+        # Upgrade guard: that dedup is now implicit (no CI-time assertion). On a
+        # k8s-monitoring chart bump, re-check the rendered OpenCost container has
+        # exactly one CONFIG_PATH (=/tmp/custom-config):
+        #   kustomize build --enable-helm apps/grafana-k8s-monitoring/base \
+        #     | yq 'select(.kind=="Deployment" and (.metadata.name|test("opencost$")))
+        #           .spec.template.spec.containers[0].env[] | select(.name=="CONFIG_PATH")'
+        # If a second (=/tmp) reappears, SSA rejects the apply — restore the dedup patch.
         extraEnv:
           PROMETHEUS_HEADER_X_SCOPE_ORGID: spechtlabs
       prometheus:
