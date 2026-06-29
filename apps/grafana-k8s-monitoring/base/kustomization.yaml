@@ -15,3 +15,14 @@ helmCharts:
     version: 1.0.0
     releaseName: grafana-alloy-crd
     namespace: monitoring
+
+patches:
+  # The feature-auto-instrumentation chart hard-codes cpu:3 in beyla-k8s-cache limits.
+  # Helm's deep-merge cannot remove a key set by chart defaults (null rejected by values schema),
+  # so we strip it here after rendering.
+  - target:
+      kind: Deployment
+      name: beyla-k8s-cache
+    patch: |
+      - op: remove
+        path: /spec/template/spec/containers/0/resources/limits/cpu

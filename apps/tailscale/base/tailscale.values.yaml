@@ -9,3 +9,18 @@ operatorConfig:
   # Multiple tags are defined as array items and passed to the operator as a comma-separated string
   defaultTags:
     - "tag:k8s-operator"
+
+  # Operator is a light controller loop; give it a safety net without throttling.
+  # No CPU limit — avoids throttling on cx23; memory limit caps an unexpected leak.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+proxyConfig:
+  # Apply homelab resource bounds to every service/ingress proxy the operator
+  # generates (e.g. ts-envoy-* LoadBalancer proxy, egress proxies).
+  # Does NOT apply to Connector resources.
+  defaultProxyClass: "homelab"

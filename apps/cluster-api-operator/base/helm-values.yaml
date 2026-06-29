@@ -5,11 +5,14 @@ logLevel: 2
 replicaCount: 1
 leaderElection:
   enabled: true
+# Resources: memory limit guards against OOM on cx23 (3.9 GiB). No CPU limit
+# (avoids throttling). CPU/memory requests sized light for a homelab operator
+# that mostly watches Provider CRs and delegates to provider controllers.
 resources:
   manager:
-    limits:
-      cpu: 100m
-      memory: 300Mi
     requests:
-      cpu: 100m
-      memory: 100Mi
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: null   # explicitly remove chart default of 100m — no CPU limits
+      memory: 256Mi

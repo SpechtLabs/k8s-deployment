@@ -7,6 +7,14 @@ spec:
   provider:
     type: Kubernetes
     kubernetes:
+      envoyDeployment:
+        container:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
       envoyService:
         type: LoadBalancer
         loadBalancerClass: tailscale

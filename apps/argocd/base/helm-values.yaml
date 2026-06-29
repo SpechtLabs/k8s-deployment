@@ -23,6 +23,22 @@ global:
 dex:
   enabled: true
 
+  # initImage runs as a copyutil initContainer to stage the Dex config
+  initImage:
+    resources:
+      requests:
+        cpu: 5m
+        memory: 16Mi
+      limits:
+        memory: 32Mi
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+
   containerSecurityContext:
     runAsNonRoot: false
     readOnlyRootFilesystem: true
@@ -49,6 +65,13 @@ redis:
   serviceAccount:
     create: true
 
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
   exporter:
     enabled: false
 
@@ -66,6 +89,22 @@ redis:
 
 repoServer:
   replicas: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+  # copyutil is an initContainer that stages the argocd-cmp-server plugin binary
+  copyutil:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
 
   volumes:
     - name: helm-secrets
@@ -97,6 +136,13 @@ repoServer:
 
 server:
   replicas: 2
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
 
   certificate:
     enabled: false
@@ -135,6 +181,13 @@ server:
 applicationSet:
   replicas: 1
 
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
   containerSecurityContext:
   runAsNonRoot: false
   readOnlyRootFilesystem: true
@@ -164,6 +217,14 @@ controller:
 
   dynamicClusterDistribution: true
 
+  # application-controller is the heaviest argocd component (reconciles all managed apps + talks to k8s API)
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 768Mi
+
   containerSecurityContext:
     runAsNonRoot: false
     readOnlyRootFilesystem: true
@@ -185,6 +246,15 @@ controller:
 
       selector:
         scope: k8s-cedi-dev
+
+redisSecretInit:
+  # Job that runs once on install to generate the redis password secret
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      memory: 32Mi
 
 notifications:
   enabled: false

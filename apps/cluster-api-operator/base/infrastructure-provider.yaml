@@ -18,6 +18,14 @@ spec:
   # land on a CP node, away from worker churn.
   deployment:
     replicas: 2
+    containers:
+      - name: manager
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
     affinity:
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:

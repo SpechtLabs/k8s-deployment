@@ -6,11 +6,41 @@ global:
   leaderElection:
     namespace: cert-manager
 
+# Resources: every component has an explicit MEMORY LIMIT to guard against
+# OOM on the cx23 node (2 vCPU/3.9GiB). No CPU limits (avoids throttling);
+# CPU requests only for scheduling/fair-share.
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    memory: 192Mi
+
 webhook:
   replicaCount: 2
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
 
 cainjector:
   replicaCount: 2
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+startupapicheck:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
 
 prometheus:
   enabled: true

@@ -34,11 +34,14 @@ networking:
       secretKeyRef:
         name: hetzner
         key: network
-# Resource requests for the deployed hccm Pod.
+# Resource requests/limits for the deployed hccm Pod.
+# No cpu limit (avoid cpu throttling on burst init); memory limit guards against leaks.
 resources:
   requests:
-    cpu: 100m
-    memory: 50Mi
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
 robot:
   # Set to true to enable support for Robot (Dedicated) servers.
   enabled: false

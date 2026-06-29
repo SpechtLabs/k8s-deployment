@@ -7,3 +7,12 @@ serviceMonitor:
 
 config:
   existingSecret: hcloud-exporter
+
+# Resources: memory limit guards the cx23 node (2 vCPU/3.9GiB) from OOM;
+# no CPU limit to avoid throttling. Sized for a very light Hetzner API exporter.
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    memory: 128Mi

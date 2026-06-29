@@ -38,3 +38,12 @@ txtPrefix: edns-
 # Match the cluster's observability conventions (Prometheus operator CRDs are present).
 serviceMonitor:
   enabled: true
+
+# Right-sized for homelab cx23 (2 vCPU / 3.9 GiB). No CPU limit (avoids throttling);
+# memory limit guards against runaway allocations OOM-killing the node.
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 128Mi

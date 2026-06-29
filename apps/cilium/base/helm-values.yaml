@@ -1,5 +1,55 @@
 rollOutCiliumPods: true
 priorityClassName: "system-node-critical"
+
+# Resources: every container has an explicit MEMORY LIMIT to prevent OOM-killing the
+# kubelet on cx23 nodes (3.9 GiB RAM each). No CPU limits anywhere — throttling
+# cilium-agent is dangerous (starvation incident 2026). CPU requests only for
+# scheduling/fair-share. cilium-agent was observed at ~400 m CPU on this cluster;
+# 150 m request keeps it schedulable without starving.
+#
+# initResources applies to: config, mount-bpf-fs, apply-sysctl-overwrites,
+# wait-for-node-init, clean-cilium-state, wait-for-kube-proxy init containers.
+# cgroup.autoMount.resources overrides initResources specifically for mount-cgroup.
+# cni.resources covers the install-cni-binaries init container (chart default has
+# cpu: 1 limit which we must override to remove).
+
+# -- cilium-agent DaemonSet main container
+resources:
+  requests:
+    cpu: 150m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+# -- shared resources for agent init containers (config, apply-sysctl-overwrites,
+#    mount-bpf-fs, wait-for-node-init, clean-cilium-state, wait-for-kube-proxy)
+initResources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+cgroup:
+  autoMount:
+    # -- mount-cgroup init container (overrides initResources for this one)
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+cni:
+  # -- install-cni-binaries init container; chart default has cpu: 1 limit — null removes it
+  resources:
+    requests:
+      cpu: 50m
+      memory: 10Mi
+    limits:
+      cpu: null
+      memory: 256Mi
+
 hubble:
   metrics:
     enabled:
@@ -12,12 +62,53 @@ hubble:
   relay:
     enabled: true
     rollOutPods: true
+    # -- hubble-relay Deployment
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
   ui:
     enabled: true
     rollOutPods: true
+    backend:
+      # -- hubble-ui backend container
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 128Mi
+    frontend:
+      # -- hubble-ui frontend container (nginx)
+      resources:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
 ipam:
   mode: "kubernetes"
 kubeProxyReplacement: "true"
+
 operator:
   rollOutPods: true
   priorityClassName: "system-node-critical"
+  # -- cilium-operator Deployment
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# -- cilium-envoy DaemonSet (no init containers)
+envoy:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 256Mi

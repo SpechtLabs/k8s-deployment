@@ -14,3 +14,12 @@ serviceMonitor:
 
   additionalLabels:
     instance: primary
+
+# cx23 homelab (2 vCPU / 3.9 GiB). Runs as a DaemonSet; keep footprint light.
+# No cpu limit — avoids throttling on a shared-core node.
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi

@@ -1,6 +1,12 @@
 staticpages:
   nameOverride: "static-pages"
   replicaCount: 2
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
   env:
     - name: OTEL_LOG_LEVEL
       value: "INFO"

@@ -34,3 +34,11 @@ tolerations:
     operator: "Equal"
     value: "amd64"
     effect: "NoSchedule"
+# Light polling daemon — cpu request only (no limit avoids throttling),
+# memory limit caps runaway growth on the shared cx23 node (2 vCPU/3.9GiB).
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 128Mi

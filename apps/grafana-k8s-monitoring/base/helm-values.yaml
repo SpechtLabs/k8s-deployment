@@ -102,6 +102,19 @@ autoInstrumentation:
   destinations: [selfhosted-mimir]
   beyla:
     deliverTracesToApplicationObservability: true
+    resources:                    # beyla DaemonSet container; peaks ~800Mi on this node set
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1Gi               # OOM guardrail; no cpu limit (avoids eBPF throttling)
+    k8sCache:                     # beyla-k8s-cache Deployment; chart default includes cpu:3 limit
+      resources:                  # cpu limit is removed via kustomize patch (can't null-out via Helm values schema)
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
 profiling:
   enabled: true
   collector: alloy-profiles
@@ -114,27 +127,123 @@ collectors:
     presets:
       - clustered
       - statefulset
+    alloy:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+        limits:
+          memory: 64Mi
   alloy-singleton:
     presets:
       - singleton
+    alloy:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+        limits:
+          memory: 64Mi
   alloy-logs:
     presets:
       - filesystem-log-reader
       - daemonset
+    alloy:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+        limits:
+          memory: 64Mi
   alloy-receiver:
     presets:
       - deployment
+    alloy:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+        limits:
+          memory: 64Mi
   alloy-profiles:
     presets:
       - privileged
       - daemonset
+    alloy:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 384Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+        limits:
+          memory: 64Mi
 # collectorCommon.alloy.remoteConfig (Grafana Cloud Fleet Management) removed —
 # no self-hosted equivalent; collectors run their rendered config.
+alloy-operator:
+  resources:                      # alloy-operator Deployment
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+  waitForAlloyRemoval:
+    resources:                    # add-finalizer + remove-alloy-and-finalizer Jobs (kubectl one-shots)
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
 telemetryServices:
   kube-state-metrics:
     deploy: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
   node-exporter:
     deploy: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
   windows-exporter:
     deploy: false
   opencost:
@@ -175,6 +284,12 @@ telemetryServices:
     deploy: false
   k8s-manifest-tail:
     deploy: true
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
     config:
       objects:
         - apiVersion: v1

@@ -3,3 +3,13 @@
 # live in the chart's crds/ dir and are skipped by `helm template`.
 crds:
   immutable: false
+
+# Resources: explicit memory limit guards against operator bursts OOM-ing the
+# cx23 node (2 vCPU/3.9 GiB). No CPU limit — avoids throttling on reconcile
+# spikes. CPU request gives the scheduler a fair-share hint.
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

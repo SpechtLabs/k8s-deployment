@@ -1,3 +1,25 @@
 # Envoy Gateway controller values.
 # Defaults are sensible; the LoadBalancer/Hetzner config lives on the EnvoyProxy
 # resource (envoyproxy.yaml), not here.
+#
+# Resources: every workload has an explicit MEMORY LIMIT (guard against OOM on
+# cx23 / 3.9 GiB nodes). No CPU limits (avoids throttling). CPU and memory
+# requests only for scheduling / fair-share.
+
+deployment:
+  envoyGateway:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 1024Mi
+
+certgen:
+  job:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 64Mi
