@@ -57,29 +57,6 @@ patches:
                 Default: username
                 claimMapping:
                   Default: username
-  # argocd full metrics go to the self-hosted
-  # Mimir via its ServiceMonitors (prometheusOperatorObjects -> selfhosted-mimir).
-  # Additionally scrape argocd-server's metrics port to Grafana Cloud via
-  # annotation-autodiscovery so the Knowledge Graph keeps its grpc_server RED.
-  # The grafana-k8s-monitoring Cloud destination keeps only grpc_server_* from
-  # job "argocd-server" and drops the rest of this (duplicate) scrape.
-  # Annotations are inlined here (not the scrape-to-cloud component) because a
-  # Component's labelSelector can't see a label added by an overlay patch.
-  - target:
-      kind: Deployment
-      name: argocd-server
-    patch: |
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: argocd-server
-      spec:
-        template:
-          metadata:
-            annotations:
-              k8s.grafana.com/scrape: "true"
-              k8s.grafana.com/metrics.portName: "metrics"
-              k8s.grafana.com/job: "argocd-server"
   # v2 telemetry: the shared base points ArgoCD's OTLP trace export at the v1 self-hosted
   # Tempo (tempo-distributor.observability:4317), which does not exist on v2. Every ArgoCD
   # component's trace export therefore fails ~100%, surfacing in the Knowledge Graph as a
