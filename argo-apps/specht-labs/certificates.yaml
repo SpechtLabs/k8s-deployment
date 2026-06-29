@@ -8,9 +8,9 @@ spec:
     - list:
         elements:
           - name: cert-manager
-            path: apps/cert-manager/cluster/specht-labs-v2
+            path: apps/cert-manager/cluster/specht-labs
           - name: cluster-issuer
-            path: apps/cluster-issuer/cluster/specht-labs-v2
+            path: apps/cluster-issuer/cluster/specht-labs
   template:
     metadata:
       name: "{{name}}"

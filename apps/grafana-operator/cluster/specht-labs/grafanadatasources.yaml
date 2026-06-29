@@ -14,7 +14,7 @@
 # secureJsonData.httpHeaderValue1). One datasource per (backend, tenant), uid
 # <backend>-<tenant>. Cross-signal links (logs↔traces↔metrics↔profiles) stay
 # within the same tenant. Generated — keep tenant list in sync with the per-tenant
-# HTTPRoutes in apps/{loki,tempo,mimir,pyroscope}/cluster/specht-labs-v2.
+# HTTPRoutes in apps/{loki,tempo,mimir,pyroscope}/cluster/specht-labs.
 
 
 # ───────────────────────── tenant: homelab ─────────────────────────

@@ -127,7 +127,7 @@ spec:
             value: /etc/kubernetes/kubelet/config.yaml
       preKubeadmCommands:
       # Version exports are index-pinned for the overlay `replacements`
-      # (overlays/specht-labs-v2/cluster-api/kustomization.yaml):
+      # (overlays/specht-labs/cluster-api/kustomization.yaml):
       #   [2] CONTAINERD  [3] RUNC  [4] KUBERNETES_VERSION
       # Keep these three lines in this order; do not insert commands before them.
       - set -x

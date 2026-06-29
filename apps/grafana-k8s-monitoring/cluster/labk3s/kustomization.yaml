@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: monitoring
 
 # labk3s inflates the chart itself (rather than reusing ../../base) because its
-# config is wholly different from specht-labs-v2's: no Grafana Cloud, no OpenCost,
+# config is wholly different from specht-labs's: no Grafana Cloud, no OpenCost,
 # no PDC — everything ships to the self-hosted LGTM stack on v2 over the tailnet.
 helmCharts:
   - name: k8s-monitoring

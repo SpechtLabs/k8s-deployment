@@ -117,7 +117,7 @@ spec:
           value: /etc/kubernetes/resolv.conf
     preKubeadmCommands:
     # Version exports are index-pinned for the overlay `replacements`
-    # (overlays/specht-labs-v2/cluster-api/kustomization.yaml):
+    # (overlays/specht-labs/cluster-api/kustomization.yaml):
     #   [1] CONTAINERD  [2] RUNC  [3] KUBERNETES_VERSION
     # Keep these three lines in this order; do not insert commands before them.
     - set -x

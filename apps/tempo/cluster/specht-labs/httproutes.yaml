@@ -1,6 +1,11 @@
 # One HTTPRoute per tenant on the tailnet-only Gateway. Each injects the tenant's
-# X-Scope-OrgID so log clients (Pis, Home Assistant) need no custom-header config.
-# Route + backend (loki-gateway) are both in lgtm, so no ReferenceGrant needed.
+# X-Scope-OrgID so OTLP/HTTP clients need no custom-header config.
+#
+# Backend is the tempo-distributor Service on its OTLP/HTTP port (4318), not the
+# tempo-gateway: the OTLP/HTTP receiver lives on the distributor, and routing to
+# it directly avoids depending on the gateway nginx proxying /v1/traces. OTLP/gRPC
+# (4317) would need a GRPCRoute on a gRPC listener and is out of scope here.
+# Route + backend are both in lgtm, so no ReferenceGrant is needed.
 #
 # parentRefs group/kind, backendRefs group/kind/weight, and the default `/`
 # PathPrefix match are written out explicitly: the Gateway API webhook defaults
@@ -8,7 +13,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: loki-homelab
+  name: tempo-homelab
   namespace: lgtm
 spec:
   parentRefs:
@@ -18,7 +23,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - homelab-loki.k8s.specht-labs.de
+    - homelab-tempo.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -33,14 +38,14 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: loki-gateway
-          port: 80
+          name: tempo-distributor
+          port: 4318
           weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: loki-hass
+  name: tempo-hass
   namespace: lgtm
 spec:
   parentRefs:
@@ -50,7 +55,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-loki.k8s.specht-labs.de
+    - hass-tempo.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -65,14 +70,14 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: loki-gateway
-          port: 80
+          name: tempo-distributor
+          port: 4318
           weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: loki-hass-schiltach
+  name: tempo-hass-schiltach
   namespace: lgtm
 spec:
   parentRefs:
@@ -82,7 +87,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-schiltach-loki.k8s.specht-labs.de
+    - hass-schiltach-tempo.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -97,16 +102,17 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: loki-gateway
-          port: 80
+          name: tempo-distributor
+          port: 4318
           weight: 1
 ---
-# specht-labs-v2's own in-cluster logs (when alloy-logs is later repointed here).
-# This route only adds external write/query access to the spechtlabs tenant.
+# specht-labs's own in-cluster traces (OTLP from the otel-collector / alloy
+# receiver when later repointed here). This route only adds external write access
+# to the spechtlabs tenant.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: loki-spechtlabs
+  name: tempo-spechtlabs
   namespace: lgtm
 spec:
   parentRefs:
@@ -116,7 +122,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - spechtlabs-loki.k8s.specht-labs.de
+    - spechtlabs-tempo.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -131,6 +137,6 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: loki-gateway
-          port: 80
+          name: tempo-distributor
+          port: 4318
           weight: 1

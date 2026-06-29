@@ -19,7 +19,7 @@ subtree.
 - **components/** — Kustomize resources shared across apps (Grafana dashboards and
   datasources, the `scrape-to-cloud` component).
 - **argo-apps/** — the Argo CD `Application`/`ApplicationSet` definitions, grouped per
-  cluster (`specht-labs-v2/`, `specht-labs/`, `labk3s/`). This is the GitOps entrypoint.
+  cluster (`specht-labs/`, `specht-labs/`, `labk3s/`). This is the GitOps entrypoint.
 - **manifests/** — plain Kubernetes manifests applied outside the app layout (redirects,
   shortlinks, bootstrap secrets).
 - **grafana/** — Grafana Cloud resources managed with `gcx` (SLOs, knowledge-graph

@@ -1,6 +1,6 @@
-# cluster-api-operator — specht-labs-v2
+# cluster-api-operator — specht-labs
 
-GitOps-managed Cluster API provider stack for the **specht-labs-v2 management
+GitOps-managed Cluster API provider stack for the **specht-labs management
 cluster**. Replaces `clusterctl init`. The cluster's workload objects
 (`Cluster`, `HetznerCluster`, `MachineDeployment`, …) live in
 `apps/cluster-api-v2/base/` and are owned by a separate ArgoCD app

@@ -1,26 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: lgtm
+  name: hcloud
   namespace: argocd
 spec:
   generators:
     - list:
         elements:
-          - name: mimir
-            path: apps/mimir/cluster/specht-labs-v2
-            namespace: lgtm
-          - name: loki
-            path: apps/loki/cluster/specht-labs-v2
-            namespace: lgtm
-          - name: tempo
-            path: apps/tempo/cluster/specht-labs-v2
-            namespace: lgtm
-          - name: pyroscope
-            path: apps/pyroscope/cluster/specht-labs-v2
-            namespace: lgtm
-          # No in-cluster Grafana on v2: dashboards/datasources are pushed to
-          # Grafana Cloud via grafana-operator (see argo-apps monitoring set).
+          - name: hcloud-csi
+            path: apps/hcloud-csi/cluster/specht-labs
+            namespace: kube-system
+          - name: hcloud-ccm
+            path: apps/hcloud-ccm/cluster/specht-labs
+            namespace: kube-system
+          - name: hcloud-exporter
+            path: apps/hcloud-exporter/cluster/specht-labs
+            namespace: monitoring
   template:
     metadata:
       name: "{{name}}"
@@ -42,5 +37,3 @@ spec:
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
-          - ServerSideApply=true
-          - SkipDryRunOnMissingResource=true

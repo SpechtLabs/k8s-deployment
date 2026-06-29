@@ -8,16 +8,16 @@ spec:
     - list:
         elements:
           - name: metrics-server
-            path: apps/metrics-server/cluster/specht-labs-v2
+            path: apps/metrics-server/cluster/specht-labs
             namespace: kube-system
           - name: grafana-k8s-monitoring
-            path: apps/grafana-k8s-monitoring/cluster/specht-labs-v2
+            path: apps/grafana-k8s-monitoring/cluster/specht-labs
             namespace: monitoring
           - name: grafana-operator
-            path: apps/grafana-operator/cluster/specht-labs-v2
+            path: apps/grafana-operator/cluster/specht-labs
             namespace: grafana-operator
           - name: cert-checker
-            path: apps/cert-checker/cluster/specht-labs-v2
+            path: apps/cert-checker/cluster/specht-labs
             namespace: cert-checker
   template:
     metadata:

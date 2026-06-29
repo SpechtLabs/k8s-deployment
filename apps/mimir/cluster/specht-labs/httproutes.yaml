@@ -1,18 +1,14 @@
 # One HTTPRoute per tenant on the tailnet-only Gateway. Each injects the tenant's
-# X-Scope-OrgID so profile clients need no custom-header config. Monolithic
-# Pyroscope has no nginx gateway, so the backend is the pyroscope Service on its
-# http2 port (4040). Route + backend are both in lgtm, so no ReferenceGrant.
+# X-Scope-OrgID so clients (Pis, Home Assistant) need no custom-header config.
+# Route + backend (mimir-gateway) are both in lgtm, so no ReferenceGrant needed.
 #
 # parentRefs group/kind, backendRefs group/kind/weight, and the default `/`
 # PathPrefix match are written out explicitly: the Gateway API webhook defaults
 # them on the live object, so omitting them leaves ArgoCD permanently OutOfSync.
-#
-# Only the spechtlabs tenant (in-cluster instrumented apps) pushes profiles for
-# now; the homelab/hass routes are scaffolded ahead of use, mirroring the Loki spec.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: pyroscope-homelab
+  name: mimir-homelab
   namespace: lgtm
 spec:
   parentRefs:
@@ -22,7 +18,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - homelab-pyroscope.k8s.specht-labs.de
+    - homelab-mimir.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -37,14 +33,14 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: pyroscope
-          port: 4040
+          name: mimir-gateway
+          port: 80
           weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: pyroscope-hass
+  name: mimir-hass
   namespace: lgtm
 spec:
   parentRefs:
@@ -54,7 +50,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-pyroscope.k8s.specht-labs.de
+    - hass-mimir.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -69,14 +65,14 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: pyroscope
-          port: 4040
+          name: mimir-gateway
+          port: 80
           weight: 1
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: pyroscope-hass-schiltach
+  name: mimir-hass-schiltach
   namespace: lgtm
 spec:
   parentRefs:
@@ -86,7 +82,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - hass-schiltach-pyroscope.k8s.specht-labs.de
+    - hass-schiltach-mimir.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -101,16 +97,17 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: pyroscope
-          port: 4040
+          name: mimir-gateway
+          port: 80
           weight: 1
 ---
-# specht-labs-v2's own in-cluster app profiles (when a profiler is later pointed
-# here). This route adds external write/query access to the spechtlabs tenant.
+# specht-labs's own infra metrics (envoy/argocd/hcloud), written in-cluster by
+# the grafana-k8s-monitoring Alloy collector. This route only adds external
+# write/query access to the tenant; ingestion does not depend on it.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: pyroscope-spechtlabs
+  name: mimir-spechtlabs
   namespace: lgtm
 spec:
   parentRefs:
@@ -120,7 +117,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - spechtlabs-pyroscope.k8s.specht-labs.de
+    - spechtlabs-mimir.k8s.specht-labs.de
   rules:
     - matches:
         - path:
@@ -135,6 +132,6 @@ spec:
       backendRefs:
         - group: ""
           kind: Service
-          name: pyroscope
-          port: 4040
+          name: mimir-gateway
+          port: 80
           weight: 1

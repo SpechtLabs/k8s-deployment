@@ -45,7 +45,7 @@ disabledAlertConfigs:
   # overlay repoints via GitOps. None are user-facing; argocd's real health is its sync/app
   # status + metrics, not these spans. Suppress span_errors breaches + anomalies for both.
   # NOTE: the OTLP-export breach is also a real misconfig being fixed in
-  # apps/argocd/cluster/specht-labs-v2 — merging that PR removes the underlying error;
+  # apps/argocd/cluster/specht-labs — merging that PR removes the underlying error;
   # this suppression only stops it (and the rest of the mesh noise) from coloring the graph.
   - name: argocd-repo-server-span-errors
     matchLabels:

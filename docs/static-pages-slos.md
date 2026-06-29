@@ -121,9 +121,9 @@ So delivery is hybrid, split by what each tool can own:
 
 | Artifact | Mechanism | Location |
 |----------|-----------|----------|
-| Dashboard | grafana-operator `GrafanaDashboard` + `configMapRef` (ArgoCD) | `overlays/specht-labs-v2/grafana-operator/grafanadashboards-static-pages.yaml` (JSON in `bases/grafana-dashboards/static-pages/`) |
-| **Health targets** | grafana-operator `GrafanaAlertRuleGroup` (ArgoCD) | `overlays/specht-labs-v2/grafana-operator/grafanaalertrules-static-pages.yaml` |
-| Folder ("Applications") | grafana-operator `GrafanaFolder` (ArgoCD) | `overlays/specht-labs-v2/grafana-operator/grafana-applications-folder.yaml` |
+| Dashboard | grafana-operator `GrafanaDashboard` + `configMapRef` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafanadashboards-static-pages.yaml` (JSON in `bases/grafana-dashboards/static-pages/`) |
+| **Health targets** | grafana-operator `GrafanaAlertRuleGroup` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafanaalertrules-static-pages.yaml` |
+| Folder ("Applications") | grafana-operator `GrafanaFolder` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafana-applications-folder.yaml` |
 | **SLOs** (error budgets) | Grafana Cloud SLO plugin via `gcx slo definitions push` | `grafana/slos/` |
 
 Everything except the SLO objects is operator-native and ArgoCD-applied in the

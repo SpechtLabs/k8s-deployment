@@ -13,7 +13,7 @@ This is the **SLO half** of a hybrid model:
 - **Health targets** — instantaneous binary checks (synthetic down, no pods,
   under-replicated, immediate 5xx), delivered the operator-native way as a
   `GrafanaAlertRuleGroup` in
-  `apps/grafana-operator/cluster/specht-labs-v2/grafanaalertrules-static-pages.yaml`
+  `apps/grafana-operator/cluster/specht-labs/grafanaalertrules-static-pages.yaml`
   (ArgoCD-applied). They are **not** duplicated here.
 
 See [`../../docs/static-pages-slos.md`](../../docs/static-pages-slos.md) for which

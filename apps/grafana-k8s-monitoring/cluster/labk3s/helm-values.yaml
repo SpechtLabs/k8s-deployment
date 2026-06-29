@@ -1,4 +1,4 @@
-# labk3s telemetry -> self-hosted LGTM on specht-labs-v2 (no Grafana Cloud).
+# labk3s telemetry -> self-hosted LGTM on specht-labs (no Grafana Cloud).
 # All three destinations point at the one v2 tailnet device
 # (k8s-load-balancer.sphinx-map.ts.net, reached via the lab-lgtm-egress proxy);
 # the v2 envoy gateway path-routes each and injects X-Scope-OrgID: homelab, so no

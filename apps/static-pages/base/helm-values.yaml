@@ -39,11 +39,9 @@ staticpages:
         hosts:
           - pages.specht-labs.de
 
-  # Gateway API routing. Rendered alongside the nginx Ingress above; each cluster
-  # overlay prunes the variant it does not use (v1/specht-labs deletes the HTTPRoutes
-  # and keeps the Ingress; v2/specht-labs-v2 deletes the Ingress and keeps these
-  # routes, attaching to the shared Envoy Gateway). Kept here so configs.pages stays
-  # single-source for both clusters.
+  # Gateway API routing. Rendered alongside the nginx Ingress above; the specht-labs
+  # overlay deletes the Ingress and keeps these routes, attaching to the shared Envoy
+  # Gateway. Both variants are rendered here so configs.pages stays single-source.
   gateway:
     enabled: true
     create: false

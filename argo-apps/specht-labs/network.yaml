@@ -8,21 +8,21 @@ spec:
     - list:
         elements:
           - name: cilium
-            path: apps/cilium/cluster/specht-labs-v2
+            path: apps/cilium/cluster/specht-labs
             namespace: kube-system
             wave: "-1"
           - name: tailscale
-            path: apps/tailscale/cluster/specht-labs-v2
+            path: apps/tailscale/cluster/specht-labs
             namespace: tailscale
             wave: "-1"
           - name: envoy-gateway
-            path: apps/envoy-gateway/cluster/specht-labs-v2
+            path: apps/envoy-gateway/cluster/specht-labs
             namespace: envoy-gateway-system
             # Wave 0: installs Gateway API + Envoy Gateway CRDs before cert-manager (wave 1)
             # needs them to enable Gateway API support.
             wave: "0"
           - name: external-dns
-            path: apps/external-dns/cluster/specht-labs-v2
+            path: apps/external-dns/cluster/specht-labs
             namespace: external-dns
             # Publishes the LB IPs to Cloudflare. Reconciles continuously, so it self-heals once the
             # envoy-gateway (wave 0) LB Services obtain their IPs.
