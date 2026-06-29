@@ -43,17 +43,17 @@ items:
   kind: MachineDeployment
   metadata:
     annotations:
-      # Two cx23 nodes in hel1: the extra one buys headroom for the self-hosted
-      # Mimir and keeps its S3 traffic in-region (the object-storage bucket is in
-      # hel1). min=max=2 so the autoscaler holds hel at 2, not the shared 1.
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
+      # Three cx23 nodes in hel1: the whole Mimir signal is pinned here (its S3
+      # bucket is in hel1) and a 2-node hel zone kept starving cilium-agent under
+      # the Mimir load. min=max=3 so the autoscaler holds hel at 3, not the shared 1.
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "3"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "3"
     labels: *labels
     name: worker-x86-hel
     namespace: default
   spec:
     clusterName: *clusterName
-    replicas: 2
+    replicas: 3
     rollout:
       strategy: *strategy
     selector:
