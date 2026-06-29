@@ -16,7 +16,8 @@
 - `scrapeInterval: 60s` stays (cardinality/storage lever).
 - Commit directly to `main` (house style, no feature branches/PRs).
 - House CI gate: `mise run check` (renders every `apps/*/cluster/*` overlay through kustomize+helm and validates with kubeconform). Must stay green.
-- Do NOT touch: `pdc-agent.yaml`, `pdc.secret.yaml`, `grafana.secret.yaml`, the `secret-generator.yaml`, or anything under `grafana-operator`/`components/grafana-*`. `grafana.secret.yaml` becomes an unreferenced (orphan) Secret — that is expected and acceptable.
+- Do NOT touch: `pdc-agent.yaml`, `pdc.secret.yaml`, or anything under `grafana-operator`/`components/grafana-*`.
+- `secret-generator.yaml` IS edited (correction found at render time): removing the Cloud destinations + `remoteConfig` strands the nine `behavior: replace` SOPS secrets in `grafana.secret.yaml` (no chart-rendered base to replace → overlay fails to render). Drop the `- ./grafana.secret.yaml` line from `cluster/specht-labs-v2/secret-generator.yaml` (keep `pdc.secret.yaml`). Leave the `grafana.secret.yaml` file on disk, dormant. (Applied during execution as a follow-up fix commit after the full-overlay render surfaced it.)
 
 ---
 

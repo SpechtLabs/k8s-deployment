@@ -96,10 +96,19 @@ the repo (reusable), just unwired from argocd.
 ### Left untouched
 
 PDC agent (`pdc-agent.yaml`, `pdc.secret.yaml`), Cloud Grafana frontend,
-`grafana-operator` datasources/dashboards. `grafana.secret.yaml` (Cloud ingest
-tokens) becomes unreferenced but stays on disk — a SOPS secret is not deleted
-casually, and keeping it makes rollback trivial. Pruning it is an optional
-follow-up.
+`grafana-operator` datasources/dashboards.
+
+> **Correction (found at render time):** `grafana.secret.yaml` could NOT just be
+> left as a harmless orphan. It defines nine SOPS Secrets, every one annotated
+> `kustomize.config.k8s.io/behavior: replace` — the four Cloud destination-auth
+> secrets and five Alloy `*-remote-cfg` fleet-management secrets. `replace`
+> requires a chart-rendered base of the same name; removing the Cloud
+> destinations and `remoteConfig` deletes those bases, so the overlay fails to
+> render (`... does not exist; cannot merge or replace`). Fix: drop the
+> `- ./grafana.secret.yaml` line from `cluster/specht-labs-v2/secret-generator.yaml`
+> (keep `pdc.secret.yaml`). The file itself stays on disk, now fully dormant —
+> still not deleted casually, still trivial to restore on rollback. Pruning the
+> file is an optional follow-up.
 
 ## Risks / things to prove at render time
 
