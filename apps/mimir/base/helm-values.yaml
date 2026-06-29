@@ -154,6 +154,16 @@ gateway:
 kafka:
   enabled: false
 
+# Chart-rendered Helm test Job (runs once via GitOps). Bound it like everything
+# else: cpu+mem request, mem limit, no cpu limit.
+smoke_test:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
 mimir:
   structuredConfig:
     multitenancy_enabled: true
