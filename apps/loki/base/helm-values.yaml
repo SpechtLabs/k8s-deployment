@@ -60,9 +60,20 @@ read:
 backend:
   replicas: 0
 
-# --- Distributed components: 1 replica each, every one memory-capped ---
+# Stateless read/write-path components run 2 replicas spread across regions (soft,
+# topologyKey=region) so a full region loss leaves one serving.
 distributor:
-  replicas: 1
+  replicas: 2
+  maxUnavailable: 1
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: distributor
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
   resources:
     requests:
       cpu: 50m
@@ -103,7 +114,17 @@ ingester:
       memory: 1024Mi
 
 querier:
-  replicas: 1
+  replicas: 2
+  maxUnavailable: 1
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: querier
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
   resources:
     requests:
       cpu: 100m
@@ -112,7 +133,17 @@ querier:
       memory: 512Mi
 
 queryFrontend:
-  replicas: 1
+  replicas: 2
+  maxUnavailable: 1
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: query-frontend
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
   resources:
     requests:
       cpu: 50m
@@ -154,7 +185,16 @@ compactor:
 # loki-gateway Service on port 80.
 gateway:
   enabled: true
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/component: gateway
+          app.kubernetes.io/instance: loki
+          app.kubernetes.io/name: loki
   resources:
     requests:
       cpu: 50m

@@ -28,8 +28,15 @@ global:
     - secretRef:
         name: mimir-objstore  # provides AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
 
+# Stateless read/write-path components run 2 replicas spread across regions, so a
+# full region loss leaves one serving. topologyKey=region (not the chart default
+# hostname); soft (ScheduleAnyway) so it never blocks scheduling during node churn.
 distributor:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: &spreadRegion
+    maxSkew: 1
+    topologyKey: topology.kubernetes.io/region
+    whenUnsatisfiable: ScheduleAnyway
   resources:
     requests:
       cpu: 100m
@@ -37,7 +44,8 @@ distributor:
     limits:
       memory: 384Mi
 querier:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: *spreadRegion
   resources:
     requests:
       cpu: 100m
@@ -45,7 +53,8 @@ querier:
     limits:
       memory: 512Mi
 query_frontend:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: *spreadRegion
   resources:
     requests:
       cpu: 100m
@@ -129,7 +138,8 @@ compactor:
       memory: 640Mi
 
 gateway:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: *spreadRegion
   resources:
     requests:
       cpu: 50m

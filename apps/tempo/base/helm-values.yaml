@@ -82,8 +82,18 @@ ingester:
     limits:
       memory: 768Mi
 
+# Stateless read/write-path components run 2 replicas spread across regions (soft,
+# topologyKey=region) so a full region loss leaves one serving. The chart consumes
+# topologySpreadConstraints as a tpl string (overriding its zone-key default).
 distributor:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "distributor") | nindent 6 }}
   resources:
     requests:
       cpu: 50m
@@ -101,7 +111,14 @@ compactor:
       memory: 512Mi
 
 querier:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "querier") | nindent 6 }}
   resources:
     requests:
       cpu: 50m
@@ -110,7 +127,14 @@ querier:
       memory: 384Mi
 
 queryFrontend:
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "query-frontend") | nindent 6 }}
   resources:
     requests:
       cpu: 50m
@@ -140,7 +164,14 @@ metricsGenerator:
 # HTTPRoutes target the OTLP/HTTP listener for ingestion.
 gateway:
   enabled: true
-  replicas: 1
+  replicas: 2
+  topologySpreadConstraints: |
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/region
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          {{- include "tempo.selectorLabels" (dict "ctx" . "component" "gateway") | nindent 6 }}
   resources:
     requests:
       cpu: 50m
