@@ -23,7 +23,7 @@ loki:
   auth_enabled: true               # multi-tenant; tenant set by X-Scope-OrgID
 
   commonConfig:
-    replication_factor: 1
+    replication_factor: 3        # zone-aware RF3, one replica per region
 
   storage:
     type: s3
@@ -71,9 +71,21 @@ distributor:
       memory: 192Mi
 
 ingester:
-  replicas: 1
+  # Zone-aware RF3: 3 replicas total, one StatefulSet per zone (= per region), each
+  # PVC provisioned in-region. Survives a full region loss (2/3 zones keep quorum).
+  replicas: 3
+  maxUnavailable: 1              # chart requires this set when replicas > 1
   zoneAwareReplication:
-    enabled: false               # RF1, single replica: no zone-a/b/c split
+    enabled: true
+    zoneA:
+      nodeSelector:
+        topology.kubernetes.io/region: hel1
+    zoneB:
+      nodeSelector:
+        topology.kubernetes.io/region: nbg1
+    zoneC:
+      nodeSelector:
+        topology.kubernetes.io/region: fsn1
   persistence:
     enabled: true                # keep the WAL across pod restarts
     claims:

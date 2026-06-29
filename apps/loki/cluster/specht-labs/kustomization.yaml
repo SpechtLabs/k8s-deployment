@@ -11,18 +11,6 @@ resources:
 generators:
   - ./secret-generator.yaml
 
-# Region placement: pin the whole Loki signal to nbg1, off the overloaded hel zone.
-# Stateless Deployments move cleanly. The StatefulSets (ingester, compactor,
-# index-gateway) will go Pending until their hel1 volumes are migrated: with the
-# hcloud-volumes StorageClass on WaitForFirstConsumer, deleting the old PVC lets a
-# new volume provision in nbg1 and rebuild from the hel1 S3 bucket. See the
-# migration runbook before/after pushing this.
-patches:
-  - target:
-      kind: (Deployment|StatefulSet)
-      labelSelector: app.kubernetes.io/instance=loki
-    patch: |-
-      - op: add
-        path: /spec/template/spec/nodeSelector
-        value:
-          topology.kubernetes.io/region: nbg1
+# Region placement is now handled by zone-aware replication in base/helm-values.yaml
+# (ingester runs one zone per region). No blanket nodeSelector: stateless Loki
+# components schedule anywhere across the three regions.
