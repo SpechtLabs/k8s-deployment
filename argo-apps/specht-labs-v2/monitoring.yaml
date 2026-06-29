@@ -16,6 +16,9 @@ spec:
           - name: grafana-operator
             path: apps/grafana-operator/cluster/specht-labs-v2
             namespace: grafana-operator
+          - name: cert-checker
+            path: apps/cert-checker/cluster/specht-labs-v2
+            namespace: cert-checker
   template:
     metadata:
       name: "{{name}}"

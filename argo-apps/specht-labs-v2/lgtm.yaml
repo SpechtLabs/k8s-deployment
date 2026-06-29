@@ -19,11 +19,8 @@ spec:
           - name: pyroscope
             path: apps/pyroscope/cluster/specht-labs-v2
             namespace: lgtm
-          # LGTM stack scaffold. Uncomment each as it is migrated; add the
-          # matching overlay under apps/<name>/cluster/specht-labs-v2.
-          # - name: grafana
-          #   path: apps/grafana/cluster/specht-labs-v2
-          #   namespace: lgtm
+          # No in-cluster Grafana on v2: dashboards/datasources are pushed to
+          # Grafana Cloud via grafana-operator (see argo-apps monitoring set).
   template:
     metadata:
       name: "{{name}}"

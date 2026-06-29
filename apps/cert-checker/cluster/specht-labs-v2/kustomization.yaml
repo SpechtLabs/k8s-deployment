@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cert-checker
+
+resources:
+  - ../../base
+
+# v2 notes: the base is portable as-is.
+#  - serviceMonitor.enabled stays true: v2 has no kube-prometheus-stack, but
+#    grafana-k8s-monitoring (Alloy, prometheusOperatorObjects) discovers the
+#    ServiceMonitor and ships the cert metrics to self-hosted Mimir.
+#  - ingress is disabled in base, so there is no nginx Ingress to convert to an
+#    Envoy Gateway HTTPRoute.
+#  - the Grafana dashboard ships via components/grafana-dashboards on v1; on v2
+#    Grafana Cloud is fed by grafana-operator, so the chart dashboard stays off.
