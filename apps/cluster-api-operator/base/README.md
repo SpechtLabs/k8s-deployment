@@ -3,7 +3,7 @@
 GitOps-managed Cluster API provider stack for the **specht-labs management
 cluster**. Replaces `clusterctl init`. The cluster's workload objects
 (`Cluster`, `HetznerCluster`, `MachineDeployment`, …) live in
-`apps/cluster-api-v2/base/` and are owned by a separate ArgoCD app
+`apps/cluster-api/base/` and are owned by a separate ArgoCD app
 (`cluster-specht-labs`).
 
 ## Layout
@@ -40,7 +40,7 @@ InfrastructureProvider needs no `configSecret`.
 Edit `spec.version` in the relevant Provider CR, commit, let ArgoCD sync. The
 operator rolls that controller. Bump CAPI core/bootstrap/control-plane together
 (they share a release train); CAPH (`hetzner`) moves independently. Mind the API
-contract notes in `../cluster-api-v2/README.md` before a CAPH minor bump.
+contract notes in `../cluster-api/README.md` before a CAPH minor bump.
 
 ## One-time cutover from clusterctl
 

@@ -16,7 +16,7 @@ generators:
 # Bump these three literals to upgrade the cluster. The `replacements` below
 # propagate them into the KubeadmControlPlane, every MachineDeployment, and the
 # `export …=` lines of both preKubeadmCommands blocks. See
-# bases/cluster-api-v2/README.md for the full upgrade runbook.
+# bases/cluster-api/README.md for the full upgrade runbook.
 #
 # NOTE: server type and image are IMMUTABLE on HCloudMachineTemplate and are
 # therefore NOT driven from here — change those via the rename+repoint pattern

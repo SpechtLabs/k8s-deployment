@@ -1,4 +1,4 @@
-# cluster-api-v2 — specht-labs cluster
+# cluster-api — specht-labs cluster
 
 Cluster API (CAPH — [Cluster API Provider Hetzner](https://github.com/syself/cluster-api-provider-hetzner))
 manifests for the **specht-labs** cluster. These objects live in the **management cluster**
@@ -18,7 +18,7 @@ points at.
 | `kustomization.yaml` | Ties the base together. **Version values are overridden in the overlay** (below). |
 
 The base builds standalone with working default versions. The overlay
-`apps/cluster-api-v2/cluster/specht-labs/` is what actually gets applied; it holds the
+`apps/cluster-api/cluster/specht-labs/` is what actually gets applied; it holds the
 single-source version config and the `replacements` that propagate it.
 
 ## API versions
@@ -50,8 +50,8 @@ the indices in the overlay `replacements`.
 ### Bump Kubernetes / containerd / runc
 
 1. Edit the three literals in
-   `apps/cluster-api-v2/cluster/specht-labs/kustomization.yaml` (`configMapGenerator.cluster-config`).
-2. `kubectl kustomize apps/cluster-api-v2/cluster/specht-labs` and eyeball the diff
+   `apps/cluster-api/cluster/specht-labs/kustomization.yaml` (`configMapGenerator.cluster-config`).
+2. `kubectl kustomize apps/cluster-api/cluster/specht-labs` and eyeball the diff
    (versions + export lines should all reflect the new values).
 3. Commit and let it apply. A `KubeadmControlPlane.spec.version` change rolls the control plane one
    node at a time; a `MachineDeployment` version change rolls the workers (`maxUnavailable: 0`).
@@ -82,11 +82,11 @@ Instead:
 ## Applying
 
 Confirm how this overlay reaches the **management** cluster before relying on it — at time of writing
-there is **no `cluster-api-v2` ArgoCD `Application`** under `argo-apps/`, so it is applied manually
+there is **no `cluster-api` ArgoCD `Application`** under `argo-apps/`, so it is applied manually
 (`kubectl apply` / `clusterctl` against the mgmt cluster context). Prefer a server-side dry-run first:
 
 ```sh
-kubectl kustomize apps/cluster-api-v2/cluster/specht-labs \
+kubectl kustomize apps/cluster-api/cluster/specht-labs \
   | kubectl --context <mgmt> apply --dry-run=server -f -
 ```
 
@@ -95,7 +95,7 @@ kubectl kustomize apps/cluster-api-v2/cluster/specht-labs \
 The CAPH controller authenticates to Hetzner via the `hetzner` secret in
 namespace `default`, referenced by `HetznerCluster.spec.hetznerSecretRef`. It is
 SOPS-encrypted (age) and GitOps-managed: it lives at
-`apps/cluster-api-v2/cluster/specht-labs/hetzner.secret.yaml` and is
+`apps/cluster-api/cluster/specht-labs/hetzner.secret.yaml` and is
 decrypted by ArgoCD's ksops plugin via that overlay's `secret-generator.yaml`.
 The `cluster-specht-labs` app applies it (`prune: false`, so it is never pruned).
 

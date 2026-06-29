@@ -13,7 +13,7 @@ spec:
     namespace: default
     server: https://kubernetes.default.svc
   source:
-    path: apps/cluster-api-v2/cluster/specht-labs
+    path: apps/cluster-api/cluster/specht-labs
     repoURL: https://github.com/SpechtLabs/k8s-deployment.git
     targetRevision: main
   syncPolicy:
@@ -23,7 +23,18 @@ spec:
       # prune: MUST stay false. Pruning a Cluster / HetznerCluster / KubeadmControlPlane
       # would destroy the cluster. Resources removed/renamed in git (e.g. the old
       # cpx22 HCloudMachineTemplates after the cx23 swap) are left orphaned and must be
-      # deleted by hand once no Machine references them. See bases/cluster-api-v2/README.md.
+      # deleted by hand once no Machine references them. See bases/cluster-api/README.md.
       prune: false
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    # CAPH populates controlPlaneEndpoint.host from the control-plane load balancer
+    # once it is provisioned; git declares it empty (host: ""). Without this, the
+    # selfHeal above keeps trying to blank the live endpoint and CAPH keeps refilling
+    # it — perpetual OutOfSync churn on the cluster's control-plane endpoint.
+    - group: infrastructure.cluster.x-k8s.io
+      kind: HetznerCluster
+      name: specht-labs
+      namespace: default
+      jsonPointers:
+        - /spec/controlPlaneEndpoint/host
