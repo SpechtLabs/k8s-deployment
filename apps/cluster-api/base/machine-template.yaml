@@ -5,10 +5,13 @@ items:
   # (type / imageName / sshKeys / placementGroupName) create a NEW template
   # with a new, spec-encoded name following <role>-<servertype>-<image-slug>
   # and repoint the referencing infrastructureRef. See README.md.
+  # Workers moved cx23 -> cx33 (4 vCPU / 8 GB) so each region can hold a full
+  # zone-aware ingester set (mimir+loki+tempo) plus stateless components. Renamed
+  # per the immutable-template pattern; the MachineDeployments repoint below.
   - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
     kind: HCloudMachineTemplate
     metadata:
-      name: worker-cx23-ubuntu-24-04
+      name: worker-cx33-ubuntu-24-04
       namespace: default
       labels: &labels
         cluster.x-k8s.io/cluster-name: &clusterName "specht-labs"
@@ -17,7 +20,7 @@ items:
         spec:
           imageName: &ubunut_24_04 ubuntu-24.04
           placementGroupName: &worker_placement_group worker-nodes
-          type: cx23
+          type: cx33
           sshKeys: &ssh_keys
             - name: cedi@zia
 

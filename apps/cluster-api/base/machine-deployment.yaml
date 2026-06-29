@@ -5,15 +5,15 @@ items:
   kind: MachineDeployment
   metadata:
     annotations: &annotations
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "1"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
     labels: &labels
       nodepool: worker-x86
     name: worker-x86-fsn
     namespace: default
   spec:
     clusterName: &clusterName specht-labs
-    replicas: &replicas 1
+    replicas: &replicas 2
     rollout:
       strategy: &strategy
         type: RollingUpdate
@@ -36,24 +36,24 @@ items:
         infrastructureRef: &infrastructureRef
           apiGroup: infrastructure.cluster.x-k8s.io
           kind: HCloudMachineTemplate
-          name: worker-cx23-ubuntu-24-04
+          name: worker-cx33-ubuntu-24-04
         version: &version v1.35.4
 
 - apiVersion: cluster.x-k8s.io/v1beta2
   kind: MachineDeployment
   metadata:
     annotations:
-      # Three cx23 nodes in hel1: the whole Mimir signal is pinned here (its S3
-      # bucket is in hel1) and a 2-node hel zone kept starving cilium-agent under
-      # the Mimir load. min=max=3 so the autoscaler holds hel at 3, not the shared 1.
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "3"
-      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "3"
+      # hel1 is now an equal failure domain: with zone-aware RF3, each signal runs
+      # one ingester set per region, so hel no longer monopolises the heavy Mimir
+      # load. Two cx33 nodes here, same as nbg1/fsn1.
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "2"
+      cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "2"
     labels: *labels
     name: worker-x86-hel
     namespace: default
   spec:
     clusterName: *clusterName
-    replicas: 3
+    replicas: 2
     rollout:
       strategy: *strategy
     selector:
