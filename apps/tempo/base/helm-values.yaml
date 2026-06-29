@@ -50,11 +50,24 @@ overrides:
         - span-metrics
 
 ingester:
-  replicas: 1
+  # Zone-aware RF3: 3 replicas total, one StatefulSet per zone (= per region), each
+  # PVC provisioned in-region. Survives a full region loss (2/3 zones keep quorum).
+  replicas: 3
   config:
-    replication_factor: 1
+    replication_factor: 3
   zoneAwareReplication:
-    enabled: false               # RF1, single replica: no zone-a/b/c split
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    zones:
+      - name: zone-a
+        nodeSelector:
+          topology.kubernetes.io/region: hel1
+      - name: zone-b
+        nodeSelector:
+          topology.kubernetes.io/region: nbg1
+      - name: zone-c
+        nodeSelector:
+          topology.kubernetes.io/region: fsn1
   persistence:
     enabled: true                # keep the WAL across restarts
     size: 10Gi
