@@ -1,103 +1,50 @@
 cluster:
   name: specht-labs
 global:
-  # Pin metrics collection to 1/min to cap Grafana Cloud DPM (cost lever).
-  # This is also the chart default; set explicitly so a chart bump can't
-  # silently lower it. Per-feature/ServiceMonitor intervals inherit this
-  # unless they set their own.
+  # Pin metrics collection to 1/min. Keeps self-hosted Mimir series churn and
+  # block storage down; also the chart default, set explicitly so a chart bump
+  # can't silently lower it.
   scrapeInterval: 60s
 destinations:
-  grafana-cloud-metrics:
+  # Self-hosted LGTM on this cluster (lgtm namespace), tenant `spechtlabs`.
+  # In-cluster writes, no auth; tenantId sets X-Scope-OrgID (Mimir/Loki/Tempo/
+  # Pyroscope all run multitenancy). Plain HTTP — traffic stays on the cluster network.
+  selfhosted-mimir:
     type: prometheus
-    url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom/push
-    auth:
-      type: basic
-      username: "3276426"
-      password: REPLACE_ME
+    url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+    tenantId: spechtlabs
     metricProcessingRules: |
       write_relabel_config {
         regex = "container_id|image_id"
         action = "labeldrop"
       }
-      // Routing is done per-feature (see each feature's `destinations`): all
-      // ServiceMonitor/PodMonitor scrapes go to the self-hosted Mimir, not here.
-      // The one exception: argocd-server is also scraped to Cloud via
-      // annotation-autodiscovery (job "argocd-server", set by the
-      // scrape-to-cloud component) solely to feed the Knowledge Graph its
-      // grpc_server RED. Keep only grpc_server_* from that scrape; drop the rest
-      // (argocd's full metrics live in the self-hosted Mimir). RE2 has no
-      // negative lookahead -> temp keep-marker label.
-      write_relabel_config {
-        source_labels = ["job", "__name__"]
-        separator = ";"
-        regex = "argocd-server;grpc_server.*"
-        target_label = "__tmp_keep_argocd"
-        replacement = "keep"
-      }
-      write_relabel_config {
-        source_labels = ["job", "__tmp_keep_argocd"]
-        separator = ";"
-        regex = "argocd-server;"
-        action = "drop"
-      }
-      write_relabel_config {
-        regex = "__tmp_keep_argocd"
-        action = "labeldrop"
-      }
-  grafana-cloud-logs:
+  selfhosted-loki:
     type: loki
-    url: https://logs-prod-012.grafana.net./loki/api/v1/push
-    auth:
-      type: basic
-      username: "1633888"
-      password: REPLACE_ME
-  gc-otlp-endpoint:
+    url: http://loki-gateway.lgtm.svc.cluster.local/loki/api/v1/push
+    tenantId: spechtlabs
+  selfhosted-tempo:
     type: otlp
-    url: https://otlp-gateway-prod-eu-west-2.grafana.net./otlp
+    url: http://tempo-distributor.lgtm.svc.cluster.local:4318
     protocol: http
-    auth:
-      type: basic
-      username: "1676101"
-      password: REPLACE_ME
+    tenantId: spechtlabs
     metrics:
-      enabled: true
+      enabled: false
     logs:
-      enabled: true
+      enabled: false
     traces:
       enabled: true
-    processors:
-      transform:
-        metrics:
-          resource:
-            - delete_key(attributes, "container_id")
-            - delete_key(attributes, "image_id")
-          datapoint:
-            - delete_key(attributes, "container_id")
-            - delete_key(attributes, "image_id")
-  grafana-cloud-profiles:
+  selfhosted-pyroscope:
     type: pyroscope
-    url: https://profiles-prod-002.grafana.net.:443
-    auth:
-      type: basic
-      username: "1676101"
-      password: REPLACE_ME
-  # Self-hosted Mimir on this cluster (lgtm namespace), tenant `spechtlabs`.
-  # All ServiceMonitor/PodMonitor/Probe scrapes route here (prometheusOperatorObjects
-  # destination below). No filtering: routing is per-feature, not by relabel.
-  # In-cluster write, no auth; tenantId sets X-Scope-OrgID.
-  selfhosted-mimir:
-    type: prometheus
-    url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+    url: http://pyroscope.lgtm.svc.cluster.local:4040
     tenantId: spechtlabs
 clusterMetrics:
   enabled: true
   collector: alloy-metrics
-  # kube-state-metrics / cAdvisor / kubelet -> Cloud (Kubernetes Monitoring app + KG)
-  destinations: [grafana-cloud-metrics]
+  destinations: [selfhosted-mimir]
 hostMetrics:
   enabled: true
   collector: alloy-metrics
-  destinations: [grafana-cloud-metrics]   # node-exporter -> Cloud (K8s app)
+  destinations: [selfhosted-mimir]
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -107,18 +54,11 @@ hostMetrics:
 costMetrics:
   enabled: true
   collector: alloy-metrics
-  destinations: [grafana-cloud-metrics]   # opencost -> Cloud (K8s cost view)
+  destinations: [selfhosted-mimir]
 annotationAutodiscovery:
   enabled: true
   collector: alloy-metrics
-  # Opt-in path to Cloud: workloads annotated via the scrape-to-cloud component
-  # (k8s.grafana.com/scrape) are scraped here and sent to Cloud.
-  destinations: [grafana-cloud-metrics]
-# Default sink for everything that ships a ServiceMonitor/PodMonitor/Probe:
-# the self-hosted Mimir. Operators/exporters (cert-manager, external-dns, capi,
-# caph, grafana-operator, tailscale, envoy-gateway, metrics-server, mimir, ...)
-# land here automatically. To send a workload to Cloud instead, add the
-# scrape-to-cloud component (components/scrape-to-cloud).
+  destinations: [selfhosted-mimir]
 prometheusOperatorObjects:
   enabled: true
   collector: alloy-metrics
@@ -126,18 +66,24 @@ prometheusOperatorObjects:
 clusterEvents:
   enabled: true
   collector: alloy-singleton
+  destinations: [selfhosted-loki]
 nodeLogs:
   enabled: true
   collector: alloy-logs
+  destinations: [selfhosted-loki]
 podLogsViaLoki:
   enabled: true
   collector: alloy-logs
+  destinations: [selfhosted-loki]
 kubernetesManifests:
   enabled: true
   collector: alloy-singleton
+  destinations: [selfhosted-loki]
 applicationObservability:
   enabled: true
   collector: alloy-receiver
+  # App metrics -> Mimir, logs -> Loki, traces -> Tempo.
+  destinations: [selfhosted-mimir, selfhosted-loki, selfhosted-tempo]
   receivers:
     otlp:
       grpc:
@@ -150,16 +96,17 @@ applicationObservability:
       enabled: true
       port: 9411
 autoInstrumentation:
-  enabled: true # change me
+  enabled: true
   collector: alloy-metrics
-  destinations: [grafana-cloud-metrics]   # Beyla RED -> Cloud (App O11y + KG)
+  # Beyla RED -> Mimir; Beyla traces flow via applicationObservability -> Tempo.
+  destinations: [selfhosted-mimir]
   beyla:
     deliverTracesToApplicationObservability: true
 profiling:
   enabled: true
   collector: alloy-profiles
-  # The chart requires at least one profiling type when profiling is enabled.
-  # eBPF matches the alloy-profiles collector's privileged + daemonset presets.
+  # Auto-routes to the sole pyroscope-type destination (selfhosted-pyroscope);
+  # the feature takes no explicit `destinations` list.
   ebpf:
     enabled: true
 collectors:
@@ -181,15 +128,8 @@ collectors:
     presets:
       - privileged
       - daemonset
-collectorCommon:
-  alloy:
-    remoteConfig:
-      enabled: true
-      url: https://fleet-management-prod-011.grafana.net
-      auth:
-        type: basic
-        username: "1676101"
-        password: REPLACE_ME
+# collectorCommon.alloy.remoteConfig (Grafana Cloud Fleet Management) removed —
+# no self-hosted equivalent; collectors run their rendered config.
 telemetryServices:
   kube-state-metrics:
     deploy: true
@@ -199,14 +139,20 @@ telemetryServices:
     deploy: false
   opencost:
     deploy: true
-    metricsSource: grafana-cloud-metrics
+    metricsSource: selfhosted-mimir
     opencost:
       exporter:
         defaultClusterId: specht-labs
+        # Mimir runs multitenancy_enabled: true — OpenCost must send the tenant
+        # org id on its PromQL queries or Mimir answers 401. Setting this also
+        # overrides the wrapper's default CONFIG_PATH=/tmp, removing the duplicate
+        # CONFIG_PATH that the (now-deleted) base kustomization patch guarded against.
+        extraEnv:
+          PROMETHEUS_HEADER_X_SCOPE_ORGID: spechtlabs
       prometheus:
-        existingSecretName: grafana-cloud-metrics-grafana-k8s-monitoring
+        # Mimir's PromQL API lives under /prometheus (not the /api/v1/push write path).
         external:
-          url: https://prometheus-prod-65-prod-eu-west-2.grafana.net./api/prom
+          url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
       customPricing:
         enabled: true
         costModel:
