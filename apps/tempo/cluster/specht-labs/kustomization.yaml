@@ -9,3 +9,18 @@ resources:
 
 generators:
   - ./secret-generator.yaml
+
+# Region placement: pin the whole Tempo signal to fsn1 (shares fsn1 with pyroscope),
+# off the overloaded hel zone. Stateless Deployments move cleanly. The tempo-ingester
+# StatefulSet will go Pending until its hel1 volume is migrated: with hcloud-volumes
+# on WaitForFirstConsumer, deleting the old PVC lets a new volume provision in fsn1
+# and rebuild from the hel1 S3 bucket. See the migration runbook before/after pushing.
+patches:
+  - target:
+      kind: (Deployment|StatefulSet)
+      labelSelector: app.kubernetes.io/instance=tempo
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          topology.kubernetes.io/region: fsn1

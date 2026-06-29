@@ -9,3 +9,18 @@ resources:
 
 generators:
   - ./secret-generator.yaml
+
+# Region placement: pin the whole Mimir signal to hel1. Its object-storage bucket
+# is in hel1 and its StatefulSet volumes already live there (no migration). Mimir
+# is the heaviest signal, so it keeps the 3-node hel region to itself; loki and
+# tempo+pyroscope move to the single-node nbg1/fsn1 regions. The nodeSelector
+# matches every Mimir Deployment/StatefulSet (incl. mimir-kafka) by instance label.
+patches:
+  - target:
+      kind: (Deployment|StatefulSet)
+      labelSelector: app.kubernetes.io/instance=mimir
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          topology.kubernetes.io/region: hel1

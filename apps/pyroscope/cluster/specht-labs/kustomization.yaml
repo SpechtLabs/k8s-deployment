@@ -9,3 +9,18 @@ resources:
 
 generators:
   - ./secret-generator.yaml
+
+# Region placement: pin Pyroscope to fsn1 (shares fsn1 with tempo), off the
+# overloaded hel zone. Pyroscope is a single StatefulSet, so it will go Pending
+# until its hel1 volume is migrated: with hcloud-volumes on WaitForFirstConsumer,
+# deleting the old PVC lets a new volume provision in fsn1 and rebuild from the
+# hel1 S3 bucket. See the migration runbook before/after pushing this.
+patches:
+  - target:
+      kind: (Deployment|StatefulSet)
+      labelSelector: app.kubernetes.io/instance=pyroscope
+    patch: |-
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value:
+          topology.kubernetes.io/region: fsn1
