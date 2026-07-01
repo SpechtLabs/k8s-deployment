@@ -15,7 +15,7 @@ helmCharts:
 
   - name: alloy-crd
     repo: https://grafana.github.io/helm-charts
-    version: 1.0.0
+    version: 1.0.1
     releaseName: grafana-alloy-crd
     namespace: monitoring
     # The chart ships the Alloy CRD in crds/, which kustomize's helm inflation
