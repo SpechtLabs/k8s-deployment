@@ -8,7 +8,7 @@ namespace: monitoring
 helmCharts:
   - name: k8s-monitoring
     repo: https://grafana.github.io/helm-charts
-    version: 4.1.6
+    version: 4.1.7
     releaseName: grafana-k8s-monitoring
     namespace: monitoring
     valuesFile: helm-values.yaml
