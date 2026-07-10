@@ -147,3 +147,7 @@ configs:
     - domain: prose.specht-labs.de
       git:
         repository: SpechtLabs/prose
+
+    - domain: kush.specht-labs.de
+      git:
+        repository: SpechtLabs/kush
