@@ -8,7 +8,7 @@ kind: Kustomization
 helmCharts:
   - name: cluster-api-operator
     repo: https://kubernetes-sigs.github.io/cluster-api-operator
-    version: 0.27.0
+    version: 0.28.0
     releaseName: cluster-api-operator
     namespace: capi-operator-system
     valuesFile: helm-values.yaml
