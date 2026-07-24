@@ -7,7 +7,7 @@ kubeconform = "0.8.0"
 kubectl = "1.36.2"
 ksops = "4.5.1"
 kustomize = "5.8.1"
-sops = "3.13.2"
+sops = "3.13.3"
 
 [env]
 KUBECONFIG = "{{env.HOME}}/.kube/configs/specht-labs"
