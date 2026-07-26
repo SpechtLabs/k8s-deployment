@@ -5,7 +5,7 @@ namespace: lgtm
 helmCharts:
   - name: pyroscope
     repo: https://grafana.github.io/helm-charts
-    version: 2.1.2
+    version: 2.2.0
     releaseName: pyroscope
     namespace: lgtm
     valuesFile: helm-values.yaml
