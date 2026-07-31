@@ -151,3 +151,7 @@ configs:
     - domain: kush.specht-labs.de
       git:
         repository: SpechtLabs/kush
+
+    - domain: tgt.specht-labs.de
+      git:
+        repository: SpechtLabs/telegram-tui
