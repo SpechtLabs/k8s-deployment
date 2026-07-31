@@ -61,6 +61,18 @@ staticpages:
     api:
       hostnames:
         - pages.specht-labs.de
+      # Envoy's default 15s request timeout is too short for multipart uploads.
+      # Keep this aligned with the nginx Ingress timeout used by the other overlay.
+      rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /api
+          timeouts:
+            request: 600s
+          backendRefs:
+            - name: static-pages-api
+              port: 8081
     proxy:
       hostnames:
         - specht-labs.de
