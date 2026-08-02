@@ -167,3 +167,8 @@ configs:
     - domain: tgt.specht-labs.de
       git:
         repository: SpechtLabs/telegram-tui
+
+    - domain: fam-kienzler.specht-labs.de
+      git:
+        repository: fam-kienzler/website
+        
