@@ -168,7 +168,7 @@ configs:
       git:
         repository: SpechtLabs/telegram-tui
 
-    - domain: fam-kienzler.specht-labs.de
+    - domain: kienzlers-world.de
       git:
         repository: fam-kienzler/website
         
