@@ -83,3 +83,16 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: kienzlers-world-apex
+      protocol: HTTPS
+      port: 443
+      hostname: kienzlers-world.de
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: static-pages-tls
+      allowedRoutes:
+        namespaces:
+          from: All
