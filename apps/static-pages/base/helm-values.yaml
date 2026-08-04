@@ -80,6 +80,7 @@ staticpages:
         - "*.specht-labs.de"
         - gold-specht.de
         - "*.gold-specht.de"
+        - kienzlers-world.de
 
 ## Static Pages Config
 configs:
