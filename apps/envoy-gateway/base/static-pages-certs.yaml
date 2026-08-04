@@ -15,6 +15,7 @@ spec:
     - "*.specht-labs.de"
     - gold-specht.de
     - "*.gold-specht.de"
+    - kienzlers-world.de
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
