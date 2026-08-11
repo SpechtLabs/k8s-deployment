@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bogen-web-tls
+  namespace: envoy-gateway-system
+spec:
+  secretName: bogen-web-tls
+  dnsNames:
+    - bogen.kienzlers-world.de
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io

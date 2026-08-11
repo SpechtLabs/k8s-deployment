@@ -4,6 +4,7 @@ namespace: envoy-gateway-system
 
 resources:
   - ../../base/
+  - bogen-web-certificate.yaml
   - tailscale-envoyproxy.yaml
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml
@@ -16,3 +17,25 @@ patches:
     target:
       kind: EnvoyProxy
       name: hetzner-lb
+  - target:
+      group: gateway.networking.k8s.io
+      version: v1
+      kind: Gateway
+      name: shared
+    patch: |-
+      - op: add
+        path: /spec/listeners/-
+        value:
+          name: bogen-web
+          protocol: HTTPS
+          port: 443
+          hostname: bogen.kienzlers-world.de
+          tls:
+            mode: Terminate
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: bogen-web-tls
+          allowedRoutes:
+            namespaces:
+              from: All
