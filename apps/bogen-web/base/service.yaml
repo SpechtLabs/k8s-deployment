@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bogen-web
+  labels:
+    app.kubernetes.io/name: bogen-web
+spec:
+  selector:
+    app.kubernetes.io/name: bogen-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
