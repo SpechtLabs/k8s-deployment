@@ -7,6 +7,7 @@ spec:
   secretName: tunnel-hornberg-tls
   dnsNames:
     - tunnel.kienzlers-world.de
+    - tunnel-hornberg.de
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

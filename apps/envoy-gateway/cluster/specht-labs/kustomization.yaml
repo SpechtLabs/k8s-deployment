@@ -56,3 +56,19 @@ patches:
           allowedRoutes:
             namespaces:
               from: All
+      - op: add
+        path: /spec/listeners/-
+        value:
+          name: tunnel-hornberg-de
+          protocol: HTTPS
+          port: 443
+          hostname: tunnel-hornberg.de
+          tls:
+            mode: Terminate
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: tunnel-hornberg-tls
+          allowedRoutes:
+            namespaces:
+              from: All
