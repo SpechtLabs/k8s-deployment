@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tunnel-hornberg
+  labels:
+    app.kubernetes.io/name: tunnel-hornberg
+spec:
+  selector:
+    app.kubernetes.io/name: tunnel-hornberg
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

@@ -5,6 +5,7 @@ namespace: envoy-gateway-system
 resources:
   - ../../base/
   - bogen-web-certificate.yaml
+  - tunnel-hornberg-certificate.yaml
   - tailscale-envoyproxy.yaml
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml
@@ -36,6 +37,22 @@ patches:
               - group: ""
                 kind: Secret
                 name: bogen-web-tls
+          allowedRoutes:
+            namespaces:
+              from: All
+      - op: add
+        path: /spec/listeners/-
+        value:
+          name: tunnel-hornberg
+          protocol: HTTPS
+          port: 443
+          hostname: tunnel.kienzlers-world.de
+          tls:
+            mode: Terminate
+            certificateRefs:
+              - group: ""
+                kind: Secret
+                name: tunnel-hornberg-tls
           allowedRoutes:
             namespaces:
               from: All
