@@ -172,4 +172,7 @@ configs:
     - domain: kienzlers-world.de
       git:
         repository: fam-kienzler/website
-        
+
+    - domain: sigil.specht-labs.de
+      git:
+        repository: SpechtLabs/sigil
