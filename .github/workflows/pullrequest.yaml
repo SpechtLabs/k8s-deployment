@@ -64,7 +64,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - uses: jdx/mise-action@v4
+      - uses: jdx/mise-action@v5
 
       - name: kubeconform
         id: kubeconform
