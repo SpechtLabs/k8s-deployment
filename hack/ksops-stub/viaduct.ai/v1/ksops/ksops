@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# A stand-in for ksops, for validating the rendered manifests without the age
+# keys that decrypt the secrets (in CI, and on any machine without them).
+#
+# kustomize runs a ksops generator as an exec plugin: in the generator's
+# directory, with the path of the generator's config as the only argument.
+# The real ksops decrypts each file the config lists; this emits each one as
+# it is, with the sops metadata removed, so the Secret keeps its name, type
+# and keys and still validates, its values are just the ENC[...] strings.
+# check-apps points KUSTOMIZE_PLUGIN_HOME here only when no age key is
+# configured.
+set -euo pipefail
+
+yq -r '.files[]' "$1" | while IFS= read -r file; do
+  echo "---"
+  yq 'del(.sops)' "${file}"
+done

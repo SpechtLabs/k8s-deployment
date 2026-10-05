@@ -9,6 +9,6 @@ rules:
     indent-sequences: consistent
 
 ignore: |
-  .yamllint.yml
+  .yamllint.yaml
   apps/**/charts/
   apps/*/cluster/*/*.secret.yaml

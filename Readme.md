@@ -1,6 +1,6 @@
 # k8s-deployment
 
-[![Lint](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/lint.yaml/badge.svg)](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/lint.yaml)
+[![CI](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/ci.yaml/badge.svg)](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/ci.yaml)
 [![CodeQL](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/SpechtLabs/k8s-deployment/actions/workflows/github-code-scanning/codeql)
 
 GitOps configuration for my playground Kubernetes clusters, reconciled by Argo CD.
@@ -30,28 +30,33 @@ subtree.
 
 ## Tooling
 
-All CLI tooling is pinned in `mise.toml` (kustomize, helm, kubeconform, sops, age, ksops,
-kubectl, clusterctl, argocd). Install it with:
+All CLI tooling is pinned in `.mise.toml` (kustomize, helm, kubeconform, sops, age, ksops,
+kubectl, clusterctl, argocd, and the linters). Install it with:
 
 ```bash
 mise install
 ```
 
-`mise.toml` also points `KUBECONFIG` at `~/.kube/configs/specht-labs` for this repo.
+`.mise.toml` also points `KUBECONFIG` at `~/.kube/configs/specht-labs` for this repo.
 
 ## Validation
 
 Manifests and rendered app overlays are validated with [kubeconform](https://github.com/yannh/kubeconform)
-through mise tasks — the same commands run locally and in CI:
+through mise tasks, the same commands locally and in CI:
 
 ```bash
-mise run check            # everything
+mise run check            # everything CI runs: lint and validate
+mise run lint             # yamllint --strict and actionlint
+mise run validate         # check-manifests and check-apps
 mise run check-manifests  # plain manifests only
 mise run check-apps       # render each app overlay and validate
 ```
 
-CI (`.github/workflows/`) installs the pinned tools with `jdx/mise-action` and runs
-`mise run check`.
+Without an age key, `check-apps` renders the SOPS secrets still encrypted
+(`hack/ksops-stub`), so every overlay is validated in CI too.
+
+CI (`.github/workflows/ci.yaml`) installs the pinned tools with `jdx/mise-action` and runs
+the same tasks.
 
 Secrets are SOPS-encrypted with `age` (recipients in `.sops.yaml`) and decrypted into the
 cluster by the `ksops` Kustomize generator. Use `hack/decrypt-secrets.sh` /

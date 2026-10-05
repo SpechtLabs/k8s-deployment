@@ -13,6 +13,5 @@ patches:
   - path: delete-rule.yaml
   - target:
       kind: ConfigMap
-      namespace: tka-system
       name: tka-config
     path: tka-config.patch.yaml
