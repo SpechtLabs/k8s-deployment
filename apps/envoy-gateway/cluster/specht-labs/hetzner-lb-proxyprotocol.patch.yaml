@@ -1,0 +1,16 @@
+# The Hetzner LB is a TCP proxy: without the PROXY protocol, Envoy (and every
+# app behind it) sees the LB's address as every client's. With it, the LB
+# puts the client's address in a header ahead of each connection, and the
+# ClientTrafficPolicy in proxy-protocol.yaml makes Envoy read it. The two
+# only work together: change both or neither.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: hetzner-lb
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    kubernetes:
+      envoyService:
+        annotations:
+          load-balancer.hetzner.cloud/uses-proxyprotocol: "true"

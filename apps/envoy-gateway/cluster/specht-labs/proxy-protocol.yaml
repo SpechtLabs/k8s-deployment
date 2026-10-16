@@ -1,0 +1,19 @@
+# Envoy reads the PROXY protocol header the Hetzner LB sends (see
+# hetzner-lb-proxyprotocol.patch.yaml), so apps see real client addresses:
+# in X-Forwarded-For on HTTP listeners, and passed on as a PROXY header of
+# Envoy's own to TCP backends that ask for it (gibson, on :22).
+#
+# Strict: a connection without a header is closed. Only the LB should reach
+# Envoy, and a direct connection to a node must not get to claim an address.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: hetzner-lb-proxy-protocol
+  namespace: envoy-gateway-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: shared
+  proxyProtocol:
+    optional: false

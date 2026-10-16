@@ -1,0 +1,28 @@
+# gibson: `ssh specht-labs.de` plays the SpechtLabs intro
+# (https://github.com/SpechtLabs/gibson). The :22 listener it routes through
+# lives on the shared Gateway, in the envoy-gateway overlay.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gibson
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: gibson
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: apps/gibson/cluster/specht-labs
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # TCPRoute and BackendTrafficPolicy are CRDs the envoy-gateway app
+      # installs; don't fail the dry run if this syncs first.
+      - SkipDryRunOnMissingResource=true

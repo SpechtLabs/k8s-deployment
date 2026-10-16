@@ -1,0 +1,26 @@
+# gibson's config file, mounted at /etc/gibson/gibson.yaml. Every key is
+# documented in gibson.example.yaml in SpechtLabs/gibson.
+theme: specht
+vessel: dodeca
+specimen: bird
+# Rendering is cheap (about 2% of a core per viewer at 120x40); bandwidth is
+# what a viewer costs, about 0.5 MB/s at 30fps.
+fps: 30
+
+ssh:
+  listen: ":2222"
+  # From the SOPS secret in the cluster overlay, so every pod and every
+  # restart presents the same host key.
+  host-key: /etc/gibson/keys/ssh_host_ed25519
+  # Per pod; there are two.
+  max-conns: 64
+  max-sessions: 16
+  rate: 0.5
+  burst: 5
+  # The intro plays for about ten seconds, then holds; thirty seconds shows
+  # all of it and caps what one viewer can pull at about 15 MB.
+  max-duration: 30s
+  # Envoy sends a PROXY v2 header (the BackendTrafficPolicy in the overlay),
+  # so the per-IP limit sees viewers rather than Envoy. Safe because the
+  # NetworkPolicy lets nothing but Envoy reach the pods.
+  proxy-protocol: true

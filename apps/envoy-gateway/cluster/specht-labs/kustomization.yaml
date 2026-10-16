@@ -10,11 +10,16 @@ resources:
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml
   - metrics-monitors.yaml
+  - proxy-protocol.yaml
 
 # Annotate the shared base's hetzner-lb EnvoyProxy with the external-dns hostnames here (not in the
 # base) so specht-labs.de ownership stays cluster-specific.
 patches:
   - path: hetzner-lb-externaldns.patch.yaml
+    target:
+      kind: EnvoyProxy
+      name: hetzner-lb
+  - path: hetzner-lb-proxyprotocol.patch.yaml
     target:
       kind: EnvoyProxy
       name: hetzner-lb
@@ -56,6 +61,23 @@ patches:
           allowedRoutes:
             namespaces:
               from: All
+      # gibson: `ssh specht-labs.de` plays the SpechtLabs intro. A plain TCP
+      # listener (SSH has no SNI to route on), so the port is gibson's alone and
+      # only its namespace may attach a route.
+      - op: add
+        path: /spec/listeners/-
+        value:
+          name: ssh
+          protocol: TCP
+          port: 22
+          allowedRoutes:
+            kinds:
+              - kind: TCPRoute
+            namespaces:
+              from: Selector
+              selector:
+                matchLabels:
+                  kubernetes.io/metadata.name: gibson
       - op: add
         path: /spec/listeners/-
         value:

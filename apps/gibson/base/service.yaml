@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gibson
+  labels:
+    app.kubernetes.io/name: gibson
+spec:
+  selector:
+    app.kubernetes.io/name: gibson
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: ssh
+      protocol: TCP

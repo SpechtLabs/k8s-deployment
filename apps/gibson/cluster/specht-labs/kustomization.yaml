@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: gibson
+
+resources:
+  - ../../base
+  - tcproute.yaml
+  - backend-proxy-protocol.yaml
+
+# The SSH host key, SOPS-encrypted; its public half is ssh_host_ed25519.pub
+# here (SHA256:01vXgncVSTcbde4LqgX/j4KWSFkkW3X9Apd9/60ssAE).
+generators:
+  - ./secret-generator.yaml
