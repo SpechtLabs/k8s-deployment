@@ -1,0 +1,15 @@
+# Envoy opens a connection of its own to gibson, so without this gibson would
+# see Envoy's address for every viewer and its per-IP limit would be one
+# limit for everybody. Envoy passes the viewer's address on in a PROXY v2
+# header, which gibson reads (ssh.proxy-protocol in its config).
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: gibson-proxy-protocol
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: TCPRoute
+      name: gibson
+  proxyProtocol:
+    version: V2

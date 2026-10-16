@@ -1,0 +1,29 @@
+# Only the Envoy proxies may reach gibson. gibson trusts the PROXY protocol
+# header for the viewer's address, so anything else that could connect
+# could claim any address and dodge the per-IP limit. The probes exec inside
+# the pod and don't cross the network.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gibson
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gibson
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: envoy-gateway
+              app.kubernetes.io/component: proxy
+      ports:
+        - port: ssh
+          protocol: TCP
+  # gibson only ever answers; it opens no connections of its own.
+  egress: []
