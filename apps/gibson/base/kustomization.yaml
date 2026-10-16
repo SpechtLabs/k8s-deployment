@@ -13,6 +13,8 @@ configMapGenerator:
     files:
       - gibson.yaml
 
+# 0.1.1 is the first release that reads the PROXY protocol (ssh.proxy-protocol)
+# and lets a mounted gibson.yaml set the host key path; don't go below it.
 images:
   - name: ghcr.io/spechtlabs/gibson
-    newTag: 0.1.0
+    newTag: 0.1.1
