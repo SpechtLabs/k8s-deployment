@@ -1,4 +1,4 @@
-# gibson's config file, mounted at /etc/gibson/gibson.yaml. Every key is
+# gibson's config file, mounted at /config/gibson.yaml. Every key is
 # documented in gibson.example.yaml in SpechtLabs/gibson.
 theme: specht
 vessel: dodeca
@@ -11,7 +11,7 @@ ssh:
   listen: ":2222"
   # From the SOPS secret in the cluster overlay, so every pod and every
   # restart presents the same host key.
-  host-key: /etc/gibson/keys/ssh_host_ed25519
+  host-key: /keys/ssh_host_ed25519
   # Per pod; there are two.
   max-conns: 64
   max-sessions: 16

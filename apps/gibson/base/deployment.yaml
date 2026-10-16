@@ -37,7 +37,7 @@ spec:
       containers:
         - name: gibson
           image: ghcr.io/spechtlabs/gibson
-          args: ["serve", "--config", "/etc/gibson/gibson.yaml"]
+          args: ["serve", "--config", "/config/gibson.yaml"]
           ports:
             - name: ssh
               containerPort: 2222
@@ -46,18 +46,18 @@ spec:
           # and checks for an SSH banner (sending a PROXY header first).
           startupProbe:
             exec:
-              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/etc/gibson/gibson.yaml"]
+              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/config/gibson.yaml"]
             periodSeconds: 2
             failureThreshold: 15
           readinessProbe:
             exec:
-              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/etc/gibson/gibson.yaml"]
+              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/config/gibson.yaml"]
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
             exec:
-              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/etc/gibson/gibson.yaml"]
+              command: ["/usr/local/bin/gibson", "healthcheck", "--config", "/config/gibson.yaml"]
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
@@ -76,12 +76,14 @@ spec:
               cpu: 1000m
               memory: 256Mi
           volumeMounts:
+            # Mounted outside /etc/gibson: the image's own /etc/gibson (in
+            # 0.1.1) isn't traversable by uid 65532, so nothing may depend on
+            # the image's directories. Each mount brings its own.
             - name: config
-              mountPath: /etc/gibson/gibson.yaml
-              subPath: gibson.yaml
+              mountPath: /config
               readOnly: true
             - name: host-key
-              mountPath: /etc/gibson/keys
+              mountPath: /keys
               readOnly: true
       volumes:
         - name: config
