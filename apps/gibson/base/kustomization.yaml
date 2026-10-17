@@ -17,4 +17,4 @@ configMapGenerator:
 # and lets a mounted gibson.yaml set the host key path; don't go below it.
 images:
   - name: ghcr.io/spechtlabs/gibson
-    newTag: 0.1.1
+    newTag: 0.1.2
