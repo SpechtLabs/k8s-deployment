@@ -18,7 +18,9 @@ ssh:
   rate: 0.5
   burst: 5
   # The intro plays for about ten seconds, then holds; thirty seconds shows
-  # all of it and caps what one viewer can pull at about 15 MB.
+  # all of it and caps what one viewer can pull at about 15 MB. The
+  # soundtrack gets as far: through the hook and the climb, just short of
+  # the breakdown.
   max-duration: 30s
   # Envoy sends a PROXY v2 header (the BackendTrafficPolicy in the overlay),
   # so the per-IP limit sees viewers rather than Envoy. Safe because the
