@@ -26,7 +26,7 @@ actionlint = "1.7.12"
 shellcheck = "0.11.0"
 
 # Pins GitHub Actions to commit SHAs (see the update-gha task)
-pinact = "5.0.1"
+pinact = "5.0.2"
 
 # Strips the sops metadata in hack/ksops-stub (see the check-apps task)
 yq = "4.54.1"
