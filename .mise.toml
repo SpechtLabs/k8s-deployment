@@ -29,7 +29,7 @@ shellcheck = "0.11.0"
 pinact = "5.0.2"
 
 # Strips the sops metadata in hack/ksops-stub (see the check-apps task)
-yq = "4.54.1"
+yq = "4.54.2"
 
 [env]
 KUBECONFIG = "{{env.HOME}}/.kube/configs/specht-labs"
