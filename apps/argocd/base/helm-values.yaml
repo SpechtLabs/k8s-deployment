@@ -23,14 +23,17 @@ global:
 dex:
   enabled: true
 
-  # initImage runs as a copyutil initContainer to stage the Dex config
+  # initImage runs as a copyutil initContainer that `cp -n`s the ~240MB argocd
+  # binary into a shared emptyDir. The page cache from that copy is charged to
+  # this container's memcg: a small limit OOM-kills cp mid-copy, the retry's
+  # `cp -n` keeps the truncated file, and dex segfaults (exit 139) forever.
   initImage:
     resources:
       requests:
         cpu: 5m
         memory: 16Mi
       limits:
-        memory: 32Mi
+        memory: 384Mi
 
   resources:
     requests:
@@ -97,14 +100,15 @@ repoServer:
     limits:
       memory: 512Mi
 
-  # copyutil is an initContainer that stages the argocd-cmp-server plugin binary
+  # copyutil is an initContainer that stages the argocd-cmp-server plugin binary.
+  # Same ~240MB `cp -n` as dex.initImage: keep the limit above the binary size.
   copyutil:
     resources:
       requests:
         cpu: 10m
         memory: 32Mi
       limits:
-        memory: 64Mi
+        memory: 384Mi
 
   volumes:
     - name: helm-secrets
