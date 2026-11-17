@@ -296,6 +296,9 @@ configs:
   params:
     create: true
     otlp.address: "tempo-distributor.observability.svc.cluster.local:4317"
+    # Chart 9.0 stopped rendering this (was "sync"); pin it so the
+    # ApplicationSets on specht-labs keep create/update/delete behaviour.
+    applicationsetcontroller.policy: sync
 
   rbac:
     create: true
