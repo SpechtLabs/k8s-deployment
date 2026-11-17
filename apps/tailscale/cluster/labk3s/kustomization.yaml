@@ -9,7 +9,6 @@ resources:
   - ../../base
   - ./dns-config.yaml
   - ./ts-egress-idp.yaml
-  - ./ts-egress-loki.yaml
 
 patches:
   - path: deployment.yaml
