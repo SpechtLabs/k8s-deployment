@@ -10,6 +10,20 @@ fullnameOverride: tempo
 # per-tenant HTTPRoutes in the cluster overlay (analog of loki auth_enabled).
 multitenancyEnabled: true
 
+# The chart's liveness probe hits /ready (60s delay, 3 failures). A cold start
+# isn't ready that fast: the compactor waits >=1m for ring stability and then
+# polls the whole blocklist; ingesters replay their WAL. Both got killed
+# mid-startup in a loop. Allow ~3 minutes before liveness gives up.
+tempo:
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 12
+
 global:
   # Injected into every component (chart scope covers distributor/ingester/
   # querier/query-frontend/compactor/metrics-generator/gateway/...). expand-env
