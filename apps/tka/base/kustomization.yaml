@@ -9,7 +9,3 @@ helmCharts:
     releaseName: tka
     namespace: tka-system
     valuesFile: helm-values.yaml
-    # Always render the ServiceMonitor/PrometheusRule so the labk3s overlay's
-    # `$patch: delete` has a target, even though that cluster lacks the CRDs.
-    apiVersions:
-      - monitoring.coreos.com/v1
