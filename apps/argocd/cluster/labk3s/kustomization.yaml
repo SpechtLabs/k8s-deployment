@@ -45,6 +45,12 @@ patches:
         path: "/metadata/annotations/tailscale.com~1tags"
         value: "tag:homelab"
 
+      # The Tailscale ingress terminates TLS itself; with this annotation
+      # cert-manager's ingress-shim kept requesting an LE cert for the bare
+      # name "lab-argocd", which can never be issued.
+      - op: remove
+        path: "/metadata/annotations/cert-manager.io~1cluster-issuer"
+
   - target:
       kind: ConfigMap
       name: argocd-cm
