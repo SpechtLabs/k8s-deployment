@@ -6,7 +6,7 @@ staticpages:
       cpu: 25m
       memory: 32Mi
     limits:
-      memory: 128Mi
+      memory: 256Mi # 128Mi: peaked 122Mi, ~2 OOM kills/day
   env:
     - name: OTEL_LOG_LEVEL
       value: "INFO"

@@ -74,13 +74,14 @@ ingester:
     accessModes:
       - ReadWriteOnce
   # Heaviest component (in-memory trace blocks + WAL). Capped so a flush burst
-  # OOM-kills THIS pod, never the node.
+  # OOM-kills THIS pod, never the node. 768Mi was below what WAL replay +
+  # block completion needs: all 3 ingesters OOM-looped for 141 days.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
-      memory: 768Mi
+      memory: 2Gi
 
 # Stateless read/write-path components run 2 replicas spread across regions (soft,
 # topologyKey=region) so a full region loss leaves one serving. The chart consumes

@@ -133,7 +133,7 @@ collectors:
           cpu: 100m
           memory: 128Mi
         limits:
-          memory: 512Mi
+          memory: 1Gi             # 512Mi: peaked 504Mi, OOM-looped (WAL replay at ~2.7 cores)
     configReloader:
       resources:
         requests:
@@ -185,7 +185,7 @@ collectors:
           cpu: 50m
           memory: 64Mi
         limits:
-          memory: 256Mi
+          memory: 768Mi           # 256Mi: OOM-killed ~95x/day on specht-labs
     configReloader:
       resources:
         requests:

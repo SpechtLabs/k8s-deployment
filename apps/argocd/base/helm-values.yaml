@@ -227,7 +227,7 @@ controller:
       cpu: 200m
       memory: 256Mi
     limits:
-      memory: 768Mi
+      memory: 1536Mi # 768Mi: peaked 708Mi, OOM-killed 1000+ times on specht-labs
 
   containerSecurityContext:
     runAsNonRoot: false

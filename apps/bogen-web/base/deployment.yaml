@@ -55,4 +55,4 @@ spec:
               memory: 64Mi
             limits:
               cpu: 500m
-              memory: 512Mi
+              memory: 1Gi # 512Mi: peaked 511Mi, OOM-killed

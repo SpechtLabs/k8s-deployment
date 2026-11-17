@@ -135,7 +135,7 @@ compactor:
       cpu: 100m
       memory: 256Mi
     limits:
-      memory: 640Mi
+      memory: 1Gi # 640Mi: peaked 545Mi
 
 gateway:
   replicas: 2
