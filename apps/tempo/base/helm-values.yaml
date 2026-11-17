@@ -118,12 +118,14 @@ distributor:
 
 compactor:
   replicas: 1
+  # Compaction buffers rows from every input block: merging 4 fresh spechtlabs
+  # blocks (~640k traces, ~180MB parquet) OOM-killed it at 512Mi.
   resources:
     requests:
       cpu: 50m
-      memory: 128Mi
+      memory: 256Mi
     limits:
-      memory: 512Mi
+      memory: 2Gi
 
 querier:
   replicas: 2
