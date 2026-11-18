@@ -20,3 +20,9 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    # Reject any pod that is not fully restricted (root, privileged, host
+    # namespaces, added capabilities), even if a later change asks for one.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: restricted
+        pod-security.kubernetes.io/enforce-version: latest

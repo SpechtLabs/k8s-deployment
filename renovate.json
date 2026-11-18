@@ -68,5 +68,10 @@
       "platformAutomerge": true,
       "dependencyDashboardApproval": false
     }
-  ]
+  ],
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^apps/(bogen-web|tunnel-hornberg)/.+\\.ya?ml$/"
+    ]
+  }
 }

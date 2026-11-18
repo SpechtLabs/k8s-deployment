@@ -5,3 +5,4 @@ namespace: bogen-web
 resources:
   - deployment.yaml
   - service.yaml
+  - network-policy.yaml

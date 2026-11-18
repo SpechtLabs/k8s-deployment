@@ -17,18 +17,40 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-container: tunnel-hornberg
     spec:
+      # A public, legacy PHP CMS: assume it gets compromised and leave it
+      # nothing to escalate with. No API credentials, no service discovery
+      # environment, no root, no capabilities, no writable image.
       automountServiceAccountToken: false
+      enableServiceLinks: false
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 33 # www-data in the image
+        runAsGroup: 33
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: tunnel-hornberg
-          image: ghcr.io/fam-kienzler/tunnel-hornberg:latest
-          imagePullPolicy: Always
+          # Pinned by digest so a new image is an explicit, reviewed rollout
+          # (Renovate bumps the digest) instead of whatever :latest was when
+          # the pod last happened to restart.
+          image: ghcr.io/fam-kienzler/tunnel-hornberg:latest@sha256:8fa0d5b8286602b50291f791719681d740566451d344a726416eff4f92e2bcfc
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            # PHP sessions and Apache's pid/lock files; the site itself is
+            # read-only in the image.
+            - name: tmp
+              mountPath: /tmp
           startupProbe:
             httpGet:
               path: /
@@ -53,6 +75,14 @@ spec:
             requests:
               cpu: 20m
               memory: 64Mi
+              ephemeral-storage: 16Mi
             limits:
               cpu: 500m
               memory: 512Mi
+              ephemeral-storage: 512Mi
+      volumes:
+        # Disk-backed: CMSimple opens a session on every request, so a crawler
+        # burst would fill a small memory-backed /tmp and get the pod evicted.
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi

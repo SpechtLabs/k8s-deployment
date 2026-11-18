@@ -1,0 +1,28 @@
+# Default-deny for a public, legacy PHP site. Ingress only from the proxies
+# that publish it (Tailscale on labk3s, Envoy Gateway on specht-labs); no
+# egress at all, so a compromised pod cannot reach the API server, cloud
+# metadata, other workloads, or download tooling. Kubelet probes come from the
+# node and are allowed by both kube-router (k3s) and Cilium.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bogen-web
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: bogen-web
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress: []
