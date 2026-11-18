@@ -54,6 +54,17 @@ annotationAutodiscovery:
   enabled: true
   collector: alloy-metrics
   destinations: [selfhosted-mimir]
+  # Discovery makes a target for every container of an annotated pod; one
+  # without a declared port (and no metrics.portNumber annotation) can only be
+  # scraped on podIP:80 and is always down (ceph-csi's csi-rbdplugin,
+  # driver-registrar). Drop those. Anchored on the pod name: these rules also
+  # run for annotated Services, which have none.
+  extraDiscoveryRules: |
+    rule {
+      source_labels = ["__meta_kubernetes_pod_name", "__meta_kubernetes_pod_container_port_number", "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber"]
+      regex         = "(.+);;"
+      action        = "drop"
+    }
 
 prometheusOperatorObjects:
   enabled: true
