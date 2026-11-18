@@ -86,6 +86,13 @@ ingester:
   # PVC provisioned in-region. Survives a full region loss (2/3 zones keep quorum).
   replicas: 3
   maxUnavailable: 1              # chart requires this set when replicas > 1
+  # The zone StatefulSets carry rollout-group=ingester (part of the immutable
+  # selector), the same group as the mimir/tempo ingesters. The mimir
+  # rollout-operator refuses to reconcile a group that contains a RollingUpdate
+  # StatefulSet, which blocked all three. OnDelete hands loki to the operator too:
+  # one zone StatefulSet at a time across loki/mimir/tempo.
+  updateStrategy:
+    type: OnDelete
   zoneAwareReplication:
     enabled: true
     zoneA:
