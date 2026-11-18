@@ -17,10 +17,16 @@ alertmanager:
 ruler:
   enabled: false              # not needed for v1
 rollout_operator:
-  # Intentionally off even with zone-aware enabled: the rollout-operator must be a
-  # single instance per namespace, and lgtm is shared by loki+tempo (which also
-  # ship one). At 1 replica/zone (RF3), StatefulSet ordinal updates restart one
-  # zone at a time on their own — coordinated multi-zone rollout isn't needed.
+  # Must stay off in the shared lgtm namespace. loki, mimir and tempo zone pods
+  # all carry rollout-group=ingester AND name=ingester-zone-{a,b,c} (both in the
+  # immutable StatefulSet selectors), so the operator treats e.g. the loki,
+  # mimir and tempo zone-a pods as one StatefulSet's pods and evicts each
+  # system's pods to the other's revision in an endless loop (seen 2026-11-18).
+  #
+  # Consequence: the mimir ingester/store-gateway (and tempo ingester)
+  # StatefulSets use updateStrategy OnDelete and NEVER roll on their own. After
+  # a change to them, delete the pods by hand one zone at a time, waiting for
+  # each to be Ready (kubectl -n lgtm delete pod mimir-ingester-zone-a-0, ...).
   enabled: false
 
 global:
