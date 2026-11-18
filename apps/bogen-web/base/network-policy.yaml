@@ -25,4 +25,8 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+        # TEMPORARY: the PHP 8.1 pod listens on 80 and keeps serving until
+        # the 6.6 GB PHP 8.4 image has pulled. Remove once it has rolled out.
+        - protocol: TCP
+          port: 80
   egress: []
