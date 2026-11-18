@@ -1019,7 +1019,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kubelet_volume_stats_capacity_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"}",
+          "expr": "max by (namespace, persistentvolumeclaim, node) (kubelet_volume_stats_capacity_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"})",
           "refId": "A",
           "legendFormat": "",
           "format": "table",
@@ -1031,7 +1031,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kubelet_volume_stats_used_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"}",
+          "expr": "max by (namespace, persistentvolumeclaim, node) (kubelet_volume_stats_used_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"})",
           "refId": "B",
           "legendFormat": "",
           "format": "table",
@@ -1043,7 +1043,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * kubelet_volume_stats_used_bytes{cluster=\"$k8s_cluster\"} / kubelet_volume_stats_capacity_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"}",
+          "expr": "max by (namespace, persistentvolumeclaim, node) (100 * kubelet_volume_stats_used_bytes{cluster=\"$k8s_cluster\"} / kubelet_volume_stats_capacity_bytes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"})",
           "refId": "C",
           "legendFormat": "",
           "format": "table",
@@ -1055,7 +1055,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * kubelet_volume_stats_inodes_used{cluster=\"$k8s_cluster\"} / kubelet_volume_stats_inodes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"}",
+          "expr": "max by (namespace, persistentvolumeclaim, node) (100 * kubelet_volume_stats_inodes_used{cluster=\"$k8s_cluster\"} / kubelet_volume_stats_inodes{cluster=\"$k8s_cluster\"} and on(namespace, persistentvolumeclaim) kube_persistentvolumeclaim_info{cluster=\"$k8s_cluster\", storageclass=\"$storageclass\"})",
           "refId": "D",
           "legendFormat": "",
           "format": "table",
@@ -1445,7 +1445,7 @@
       "id": 22,
       "type": "timeseries",
       "title": "Image latency",
-      "description": "Average write/read latency per image as Ceph sees it.",
+      "description": "Average write/read latency per image as Ceph sees it (Ceph reports nanoseconds).",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -1458,7 +1458,7 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "ns",
           "custom": {
             "drawStyle": "line",
             "lineWidth": 1,

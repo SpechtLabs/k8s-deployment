@@ -101,12 +101,15 @@ def bargauge(title, x, y, w, h, expr, legend, unit="percent", desc=""):
 
 def volume_table(title, x, y, w, h, desc=""):
     """One row per PVC of the storage class: capacity, used, used %, inodes %, node."""
-    ref = "and on(namespace, persistentvolumeclaim) " + PVCS
+    # Same label set for all four (namespace, persistentvolumeclaim, node), or
+    # the merge transformation can't put them on one row per PVC.
+    ref = " and on(namespace, persistentvolumeclaim) " + PVCS
+    by = "max by (namespace, persistentvolumeclaim, node) "
     exprs = {
-        "A": ("kubelet_volume_stats_capacity_bytes{" + K8S + "} " + ref),
-        "B": ("kubelet_volume_stats_used_bytes{" + K8S + "} " + ref),
-        "C": ("100 * kubelet_volume_stats_used_bytes{" + K8S + "} / kubelet_volume_stats_capacity_bytes{" + K8S + "} " + ref),
-        "D": ("100 * kubelet_volume_stats_inodes_used{" + K8S + "} / kubelet_volume_stats_inodes{" + K8S + "} " + ref),
+        "A": by + "(kubelet_volume_stats_capacity_bytes{" + K8S + "}" + ref + ")",
+        "B": by + "(kubelet_volume_stats_used_bytes{" + K8S + "}" + ref + ")",
+        "C": by + "(100 * kubelet_volume_stats_used_bytes{" + K8S + "} / kubelet_volume_stats_capacity_bytes{" + K8S + "}" + ref + ")",
+        "D": by + "(100 * kubelet_volume_stats_inodes_used{" + K8S + "} / kubelet_volume_stats_inodes{" + K8S + "}" + ref + ")",
     }
     targets = [target(e, instant=True, ref=r, fmt="table") for r, e in exprs.items()]
     keep = ["namespace", "persistentvolumeclaim", "node", "Value #A", "Value #B", "Value #C", "Value #D"]
@@ -231,7 +234,7 @@ panels += [
     ts("Image latency", 0, y, 24, 7,
        [target('sum by (image) (rate(ceph_rbd_write_latency_sum' + RBD + '[$__rate_interval])) / sum by (image) (rate(ceph_rbd_write_latency_count' + RBD + '[$__rate_interval]))', legend="{{image}} write"),
         target('sum by (image) (rate(ceph_rbd_read_latency_sum' + RBD + '[$__rate_interval])) / sum by (image) (rate(ceph_rbd_read_latency_count' + RBD + '[$__rate_interval]))', legend="{{image}} read", ref="B")],
-       unit="s", desc="Average write/read latency per image as Ceph sees it."),
+       unit="ns", desc="Average write/read latency per image as Ceph sees it (Ceph reports nanoseconds)."),
 ]
 
 
