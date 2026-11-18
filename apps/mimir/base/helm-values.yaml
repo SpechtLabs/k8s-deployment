@@ -17,11 +17,25 @@ alertmanager:
 ruler:
   enabled: false              # not needed for v1
 rollout_operator:
-  # Intentionally off even with zone-aware enabled: the rollout-operator must be a
-  # single instance per namespace, and lgtm is shared by loki+tempo (which also
-  # ship one). At 1 replica/zone (RF3), StatefulSet ordinal updates restart one
-  # zone at a time on their own — coordinated multi-zone rollout isn't needed.
-  enabled: false
+  # Required: the zone-aware ingester/store-gateway StatefulSets (mimir AND tempo)
+  # use updateStrategy OnDelete, so without this operator nothing ever restarts
+  # them onto a new revision (mimir sat on 3.1.2 from 2026-06-29 while the rest
+  # ran 3.2.3). It's the only instance in lgtm: loki's zone StatefulSets use
+  # RollingUpdate and tempo-distributed doesn't ship one. It rolls every
+  # OnDelete StatefulSet sharing a rollout-group label one at a time, waiting
+  # for the group to be Ready in between.
+  enabled: true
+  # The webhooks only guard zone-aware downscaling (not used here) and all fail
+  # closed for the whole lgtm namespace: with the operator down, every pod
+  # eviction (node drains, CAPI rollouts) and StatefulSet update would be rejected.
+  webhooks:
+    enabled: false
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
 
 global:
   extraEnvFrom:

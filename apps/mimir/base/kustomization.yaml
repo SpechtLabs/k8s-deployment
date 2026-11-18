@@ -9,3 +9,6 @@ helmCharts:
     releaseName: mimir
     namespace: lgtm
     valuesFile: helm-values.yaml
+    # rollout-operator's ZoneAwarePodDisruptionBudget/ReplicaTemplate CRDs ship
+    # in its crds/ dir, which kustomize skips by default.
+    includeCRDs: true
