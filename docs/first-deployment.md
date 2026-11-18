@@ -1,5 +1,11 @@
 # Initial Setup (bootstrap)
 
+> **labk3s is bootstrapped by [Buckle](https://github.com/cedi/homelab).** On fresh Pis the
+> rollout installs k3s, renders and applies `apps/argocd/cluster/labk3s` with ksops and the age
+> key (`modules/argocd-seed`, only when the cluster has no Argo CD), and owns the root
+> Application `1-meta-labk3s` (`workloads/argocd-root`). That's why `argo-apps/labk3s/` no longer
+> contains the meta app itself. The manual steps below are for other clusters.
+
 ## Base deployment
 
 0. Obviously you have cloned the repository by this point and `cd`-ed into it.
