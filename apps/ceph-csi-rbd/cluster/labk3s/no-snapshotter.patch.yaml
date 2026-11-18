@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ceph-csi-rbd-provisioner
+  namespace: ceph-csi-rbd
+spec:
+  template:
+    spec:
+      containers:
+        - name: csi-snapshotter
+          $patch: delete

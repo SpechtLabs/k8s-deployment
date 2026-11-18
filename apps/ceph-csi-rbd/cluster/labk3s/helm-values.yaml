@@ -1,0 +1,69 @@
+# ceph-csi (RBD) on labk3s, backed by the homelab Ceph cluster on
+# storagepi-ceph1..3 (cephadm, managed by Buckle from cedi/homelab, see
+# modules/ceph and vars/group-ceph.yaml there).
+#
+# Everything goes over the tailnet. The monitors are listed by their tailnet
+# addresses, the stable addresses behind storagepi-cephN.sphinx-map.ts.net:
+# in-cluster DNS forwards *.ts.net to the Tailscale operator's nameserver,
+# which only knows egress proxies (apps/coredns), while pods reach 100.x
+# directly through the node. After bootstrapping, ceph-csi follows the
+# cluster's own monmap, which holds the same addresses.
+csiConfig:
+  - clusterID: 85412c6c-e39c-11f1-ba59-2ccf678b0944
+    monitors:
+      - 100.105.212.35:6789 # storagepi-ceph1
+      - 100.107.71.68:6789 # storagepi-ceph2
+      - 100.118.224.54:6789 # storagepi-ceph3
+
+logLevel: 2
+
+nodeplugin:
+  # The node plugin runs in the host network: keep its metrics off the common
+  # 8080 on every node.
+  httpMetrics:
+    containerPort: 8681
+    service:
+      servicePort: 8681
+  # k8s-monitoring's annotation autodiscovery (apps/grafana-k8s-monitoring/
+  # cluster/labk3s) scrapes every declared container port into the homelab
+  # Mimir tenant.
+  podAnnotations:
+    k8s.grafana.com/scrape: "true"
+    k8s.grafana.com/job: ceph-csi-rbd/nodeplugin
+
+provisioner:
+  replicaCount: 2
+  podAnnotations:
+    k8s.grafana.com/scrape: "true"
+    k8s.grafana.com/job: ceph-csi-rbd/provisioner
+  # The sidecars' metrics (csi_sidecar_operations_seconds: provision, attach,
+  # resize latency and errors). Setting the port also declares it, so the
+  # autodiscovery above picks it up.
+  provisioner:
+    args:
+      httpEndpointPort: 8090
+  resizer:
+    args:
+      httpEndpointPort: 8091
+  attacher:
+    args:
+      httpEndpointPort: 8093
+
+storageClass:
+  create: true
+  name: ceph-rbd
+  clusterID: 85412c6c-e39c-11f1-ba59-2ccf678b0944
+  # Pool and client (client.k3s, AES-128 key for the nodes' kernel rbd) are
+  # created by Buckle; the key is in csi-rbd.secret.yaml.
+  pool: k3s
+  # What the Pi kernels' rbd supports (tested on 6.6 and 6.12).
+  imageFeatures: layering,exclusive-lock,object-map,fast-diff
+  fstype: ext4
+  reclaimPolicy: Delete
+  allowVolumeExpansion: true
+  mountOptions:
+    - discard
+
+# The secret comes from SOPS (csi-rbd.secret.yaml via ksops), not from values.
+secret:
+  create: false

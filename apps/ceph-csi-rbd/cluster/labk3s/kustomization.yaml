@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ceph-csi-rbd
+
+helmCharts:
+  - name: ceph-csi-rbd
+    repo: https://ceph.github.io/csi-charts
+    version: 3.18.2
+    releaseName: ceph-csi-rbd
+    namespace: ceph-csi-rbd
+    valuesFile: helm-values.yaml
+
+generators:
+  - ./secret-generator.yaml
+
+patches:
+  # The chart always ships the csi-snapshotter sidecar; labk3s has no
+  # VolumeSnapshot CRDs (nor a snapshot-controller), so it would only error.
+  - path: no-snapshotter.patch.yaml
