@@ -198,3 +198,13 @@ mimir:
         address: null
         topic: null
         auto_create_topic_default_partitions: null
+
+# Per-tenant limits, reloaded live by every component (no restart). The
+# spechtlabs tenant ran into Mimir's 150k series default (~130k active plus
+# churn still held in the ingesters' head) and dropped every new series, e.g.
+# meet's. 200k leaves the ingesters (1280Mi limit, ~750Mi in use for all
+# tenants, ~3.7KB per series) room; raise their memory before going higher.
+runtimeConfig:
+  overrides:
+    spechtlabs:
+      max_global_series_per_user: 200000
