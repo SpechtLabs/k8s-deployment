@@ -1,0 +1,158 @@
+# Ceph dashboards (ceph-mixin) for the homelab Ceph cluster on storagepi-ceph1..3,
+# delivered to Grafana Cloud in Infrastructure › Ceph. JSON and its source:
+# components/grafana-dashboards/ceph. Data: Mimir (homelab), cluster=homelab-ceph.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-cluster
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-cluster-json
+    key: ceph-cluster.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-cluster-advanced
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-cluster-advanced-json
+    key: ceph-cluster-advanced.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-hosts-overview
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-hosts-overview-json
+    key: hosts-overview.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-host-details
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-host-details-json
+    key: host-details.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-osds-overview
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-osds-overview-json
+    key: osds-overview.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-osd-device-details
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-osd-device-details-json
+    key: osd-device-details.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-pool-overview
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-pool-overview-json
+    key: pool-overview.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-pool-detail
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-pool-detail-json
+    key: pool-detail.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-rbd-overview
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-rbd-overview-json
+    key: rbd-overview.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-rbd-details
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-rbd-details-json
+    key: rbd-details.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-radosgw-overview
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-radosgw-overview-json
+    key: radosgw-overview.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: ceph-radosgw-detail
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  configMapRef:
+    name: ceph-radosgw-detail-json
+    key: radosgw-detail.json

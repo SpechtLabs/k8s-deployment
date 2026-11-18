@@ -1,0 +1,69 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The Ceph dashboards (ceph-mixin, monitoring/ceph-mixin/dashboards_out at
+# ceph v20.2.5) as ConfigMaps for the grafana-operator GrafanaDashboards on the
+# Grafana Cloud cluster. Only change: the datasource variable defaults to
+# Mimir (homelab), where the storage Pis' Alloy writes (cedi/homelab,
+# vars/group-ceph.yaml). Left out: CephFS, NVMe-oF, SMB, multisite, hardware.
+configMapGenerator:
+  - name: ceph-cluster-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - ceph-cluster.json
+  - name: ceph-cluster-advanced-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - ceph-cluster-advanced.json
+  - name: ceph-hosts-overview-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - hosts-overview.json
+  - name: ceph-host-details-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - host-details.json
+  - name: ceph-osds-overview-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - osds-overview.json
+  - name: ceph-osd-device-details-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - osd-device-details.json
+  - name: ceph-pool-overview-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - pool-overview.json
+  - name: ceph-pool-detail-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - pool-detail.json
+  - name: ceph-rbd-overview-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - rbd-overview.json
+  - name: ceph-rbd-details-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - rbd-details.json
+  - name: ceph-radosgw-overview-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - radosgw-overview.json
+  - name: ceph-radosgw-detail-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - radosgw-detail.json

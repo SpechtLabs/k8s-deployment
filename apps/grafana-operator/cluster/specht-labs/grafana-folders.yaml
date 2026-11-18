@@ -6,6 +6,7 @@
 #
 # Layout:
 #   Infrastructure          — cloud / hardware (hcloud servers)
+#     └─ Ceph               — homelab Ceph cluster (ceph-mixin, nested)
 #   Kubernetes Platform     — cluster add-ons (argocd, cert-manager)
 #     └─ Envoy Gateway      — ingress / networking (nested)
 #   Applications            — first-party apps (static-pages)
@@ -57,3 +58,16 @@ spec:
     matchLabels:
       dashboards: grafana-cloud
   title: "Applications"
+---
+# Ceph cluster on the homelab storage Pis (ceph-mixin dashboards), nested
+# under Infrastructure.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaFolder
+metadata:
+  name: ceph
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  title: "Ceph"
+  parentFolderRef: infrastructure
