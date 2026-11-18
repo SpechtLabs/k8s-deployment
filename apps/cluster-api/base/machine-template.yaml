@@ -37,3 +37,22 @@ items:
           placementGroupName: control-plane
           type: cx23
           sshKeys: *ssh_keys
+
+  # Control plane moved cx23 -> cx33 (4 vCPU / 8 GB): kube-apiserver peaks at
+  # ~2.5 GB and the nodes at ~84% CPU, which left a cx23 (3.7 GB allocatable)
+  # no headroom; on 2026-11-17 two apiservers were OOM-killed and a CP node went
+  # NotReady during an Argo CD rollout. The cx23 template above stays until no
+  # Machine references it (the cluster-specht-labs app does not prune).
+  - apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudMachineTemplate
+    metadata:
+      name: control-plane-cx33-ubuntu-24-04
+      namespace: default
+      labels: *labels
+    spec:
+      template:
+        spec:
+          imageName: *ubunut_24_04
+          placementGroupName: control-plane
+          type: cx33
+          sshKeys: *ssh_keys

@@ -172,6 +172,6 @@ spec:
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: HCloudMachineTemplate
-        name: control-plane-cx23-ubuntu-24-04
+        name: control-plane-cx33-ubuntu-24-04
   replicas: 3
   version: v1.35.4

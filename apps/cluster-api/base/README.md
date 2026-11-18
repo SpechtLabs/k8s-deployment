@@ -76,8 +76,9 @@ Instead:
 ## Current pinning
 
 - Kubernetes `v1.35.4`, containerd `2.3.1`, runc `1.2.5`, image `ubuntu-24.04`.
-- All nodes: **`cx23`** (2 vCPU / 4 GB, ~half the cost of `cpx22`; ~40–50 GB disk — watch etcd/image
-  disk pressure on the control plane). x86 only — ARM (`cax*`) is unavailable for now.
+- All nodes: **`cx33`** (4 vCPU / 8 GB). Workers moved first; the control plane followed on
+  2026-11-18 after kube-apiserver (~2.5 GB peak) outgrew `cx23` (2 vCPU / 4 GB) and got OOM-killed.
+  x86 only — ARM (`cax*`) is unavailable for now.
 
 ## Applying
 
