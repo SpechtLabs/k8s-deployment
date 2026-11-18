@@ -1,0 +1,636 @@
+# Ceph and ceph-csi HEALTH TARGETS for the homelab: the Ceph cluster on
+# storagepi-ceph1..3 (cluster=homelab-ceph) and ceph-csi on labk3s
+# (cluster=labk3s), Grafana-managed rules on the homelab Mimir tenant, in
+# Infrastructure > Ceph. A curated set, not the ceph-mixin's ~100 alerts:
+# what needs a human for a 3-node, size-3 cluster. Every query was checked
+# against mimir-homelab; routing by labels service (ceph, ceph-csi) and
+# severity in Grafana's notification policies.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: ceph-health
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: ceph
+  name: ceph-health
+  interval: 1m
+  rules:
+  - uid: ceph-health-error
+    title: Ceph — HEALTH_ERR
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ceph
+      category: health
+    annotations:
+      summary: Ceph reports HEALTH_ERR
+      description: The homelab Ceph cluster (storagepi-ceph1..3) has been in HEALTH_ERR for 5m. `ceph health detail` on a Ceph host (sudo cephadm shell) says why.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max(ceph_health_status{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 1.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-health-warn
+    title: Ceph — HEALTH_WARN
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph
+      category: health
+    annotations:
+      summary: Ceph has been in HEALTH_WARN for 30m
+      description: Persistent warning on the homelab Ceph cluster. `ceph health detail` says which check; deliberate ones are muted from cedi/homelab (ceph_health_mutes).
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max(ceph_health_status{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-metrics-absent
+    title: Ceph — no cluster metrics
+    condition: B
+    for: 10m
+    noDataState: Alerting
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ceph
+      category: health
+    annotations:
+      summary: No metrics from the Ceph cluster
+      description: 'No active mgr has reported ceph_health_status for 10m: every mgr is down, the prometheus module is off, or Alloy on the storage Pis can''t write.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: count(ceph_health_status{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-osd-down
+    title: Ceph — OSD down
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph
+      category: health
+    annotations:
+      summary: A Ceph OSD is down
+      description: At least one OSD has been down for 5m. With 3 replicas and min_size 2 the cluster still serves I/O with one down; two down blocks writes.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: count(ceph_osd_up{cluster="homelab-ceph"} == 0) or vector(0)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-pgs-inactive
+    title: Ceph — placement groups inactive
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ceph
+      category: health
+    annotations:
+      summary: Ceph placement groups are inactive
+      description: 'Some PGs have not been active for 10m: the data in them can''t be read or written (fewer than min_size OSDs, or stuck peering).'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: sum(ceph_pg_total{cluster="homelab-ceph"}) - sum(ceph_pg_active{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-mon-quorum
+    title: Ceph — monitor out of quorum
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph
+      category: health
+    annotations:
+      summary: A Ceph monitor is out of quorum
+      description: Fewer than 3 mons in quorum for 5m. The cluster keeps working with 2; losing a second stops it.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: sum(ceph_mon_quorum_status{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 3
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ceph-osd-nearfull
+    title: Ceph — OSD over 75% full
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph
+      category: health
+    annotations:
+      summary: A Ceph OSD is over 75% full
+      description: Ceph's nearfull is 85% and it stops writes at 95%; every PG lives on all three OSDs, so they fill together. Free space or add capacity.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max(ceph_osd_stat_bytes_used{cluster="homelab-ceph"} / ceph_osd_stat_bytes{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.75
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: csi-provisioner-down
+    title: Ceph CSI — no provisioner
+    condition: B
+    for: 5m
+    noDataState: Alerting
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ceph-csi
+      category: health
+    annotations:
+      summary: No live ceph-csi provisioner on labk3s
+      description: 'No provisioner pod reports csi_liveness: new PVCs on ceph-rbd stay Pending, attach/expand stop.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: sum(csi_liveness{cluster="labk3s", job="ceph-csi-rbd/provisioner"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: csi-nodeplugin-missing
+    title: Ceph CSI — node plugin missing
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph-csi
+      category: health
+    annotations:
+      summary: A labk3s node has no live ceph-csi node plugin
+      description: Pods with ceph-rbd volumes can't start on that node (no mount/unmount).
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: count(kube_node_info{cluster="labk3s"}) - (sum(csi_liveness{cluster="labk3s", job="ceph-csi-rbd/nodeplugin"}) or vector(0))
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: csi-operation-errors
+    title: Ceph CSI — volume operations failing
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph-csi
+      category: health
+    annotations:
+      summary: ceph-csi volume operations are failing
+      description: Create/delete/attach/expand calls have returned gRPC errors for 15m. The Ceph CSI (RBD) dashboard shows which method; the provisioner logs say why.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: sum(rate(csi_sidecar_operations_seconds_count{cluster="labk3s", driver_name="rbd.csi.ceph.com", grpc_status_code!="OK"}[10m])) or vector(0)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: csi-pvc-nearfull
+    title: Ceph CSI — PVC over 85% full
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph-csi
+      category: health
+    annotations:
+      summary: A ceph-rbd PVC is over 85% full
+      description: '{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is over 85% full. ceph-rbd volumes can be expanded: raise the PVC''s request.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{cluster="labk3s"} / kubelet_volume_stats_capacity_bytes{cluster="labk3s"} and on(namespace, persistentvolumeclaim)
+          kube_persistentvolumeclaim_info{cluster="labk3s", storageclass="ceph-rbd"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.85
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
