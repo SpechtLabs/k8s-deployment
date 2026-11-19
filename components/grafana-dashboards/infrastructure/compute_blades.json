@@ -1,20 +1,22 @@
 {
-  "title": "Compute Blades",
+  "title": "Compute Blade",
   "uid": "compute-blades",
-  "description": "compute-blade-agent on blade-pi1..4: health, power, fans, events (modules/compute-blade-agent in cedi/homelab).",
+  "description": "4-blade Raspberry Pi CM4 compute blade cluster: compute-blade-agent (health, thermals, fans, power, events) plus node_exporter (CPU, memory, network). Agent: modules/compute-blade-agent in cedi/homelab.",
   "tags": [
     "homelab",
     "compute-blade"
   ],
   "editable": true,
   "graphTooltip": 1,
-  "refresh": "30s",
-  "schemaVersion": 40,
+  "refresh": "1m",
+  "schemaVersion": 41,
+  "liveNow": false,
   "time": {
     "from": "now-24h",
     "to": "now"
   },
   "timezone": "browser",
+  "fiscalYearStartMonth": 0,
   "templating": {
     "list": [
       {
@@ -28,7 +30,10 @@
         "query": "prometheus",
         "refresh": 1,
         "regex": "",
-        "type": "datasource"
+        "type": "datasource",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false
       }
     ]
   },
@@ -37,16 +42,67 @@
       "title": "RPI Dashboard",
       "type": "link",
       "url": "/d/be3ouz53blwqoc",
-      "icon": "dashboard"
+      "icon": "dashboard",
+      "tooltip": "Raspberry Pi fleet: firmware, clocks, voltages",
+      "targetBlank": false,
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "tags": []
     }
   ],
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "name": "Health events",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "enable": true,
+        "iconColor": "red",
+        "hide": false,
+        "expr": "label_replace(sum by (instance, type) (increase(computeblade_agent_events_count{job=\"blade_exporter\",type=~\"critical|critical_reset|fan_stall|fan_stall_clear|undervoltage|undervoltage_clear|throttled|throttled_clear\"}[2m])) > 0.5, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+        "step": "2m",
+        "titleFormat": "{{type}}",
+        "textFormat": "{{blade}}",
+        "tagKeys": "blade,type",
+        "useValueForTime": false
+      },
+      {
+        "name": "Buttons & power limits",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "enable": true,
+        "iconColor": "#8e9bb0",
+        "hide": false,
+        "expr": "label_replace(sum by (instance, type) (increase(computeblade_agent_events_count{job=\"blade_exporter\",type=~\"button_gesture|power_limit|power_limit_clear\"}[2m])) > 0.5, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+        "step": "2m",
+        "titleFormat": "{{type}}",
+        "textFormat": "{{blade}}",
+        "tagKeys": "blade,type",
+        "useValueForTime": false
+      }
+    ]
   },
   "panels": [
     {
       "type": "row",
-      "title": "Now",
+      "title": "Cluster",
       "id": 1,
       "collapsed": false,
       "gridPos": {
@@ -59,8 +115,8 @@
     },
     {
       "type": "stat",
-      "title": "Agent",
-      "description": "Whether Alloy on the blade can scrape the agent's metrics (:9666).",
+      "title": "Blades online",
+      "description": "Blades whose compute-blade-agent answers the metrics scrape (:9666), out of the four in the chassis.",
       "targets": [
         {
           "datasource": {
@@ -68,8 +124,8 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(up{job=\"blade_exporter\"}, \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
+          "expr": "count(up{job=\"blade_exporter\"} == 1) or vector(0)",
+          "legendFormat": "online",
           "refId": "A",
           "range": false,
           "instant": true
@@ -77,7 +133,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
+          "unit": "suffix: / 4",
           "color": {
             "mode": "thresholds"
           },
@@ -85,28 +141,20 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
+                "color": "red",
                 "value": null
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "green",
+                "value": 4
               }
             ]
           },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "1": {
-                  "text": "up",
-                  "color": "green",
-                  "index": 0
-                },
-                "0": {
-                  "text": "down",
-                  "color": "red",
-                  "index": 1
-                }
-              }
-            }
-          ]
+          "mappings": []
         },
         "overrides": []
       },
@@ -118,19 +166,23 @@
           "fields": "",
           "values": false
         },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
-        "colorMode": "background",
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "wideLayout": true,
-        "showPercentChange": false
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
       },
       "id": 2,
       "gridPos": {
         "x": 0,
         "y": 1,
-        "w": 6,
+        "w": 4,
         "h": 4
       },
       "datasource": {
@@ -140,8 +192,8 @@
     },
     {
       "type": "stat",
-      "title": "Health",
-      "description": "Worst health condition the agent reports: critical mode (SoC at the critical temperature), a stalled fan, under-voltage or CPU throttling (Raspberry Pi firmware flags).",
+      "title": "Cluster health",
+      "description": "Worst condition any blade reports right now: critical mode (SoC at 60 °C), a stalled fan, under-voltage, CPU throttling. Identify only means someone asked a blade to blink its LED.",
       "targets": [
         {
           "datasource": {
@@ -149,8 +201,8 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(max by (instance) ((computeblade_state_state{state=\"critical\"} * 4) or (computeblade_state_state{state=\"fan_stall\"} * 3) or (computeblade_state_state{state=\"undervoltage\"} * 2) or (computeblade_state_state{state=\"throttled\"} * 1)), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
+          "expr": "max(max by (instance) ((computeblade_state_state{job=\"blade_exporter\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",state=\"identify\"} * 1)))",
+          "legendFormat": "health",
           "refId": "A",
           "range": false,
           "instant": true
@@ -166,7 +218,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
+                "color": "red",
                 "value": null
               }
             ]
@@ -176,33 +228,39 @@
               "type": "value",
               "options": {
                 "0": {
-                  "text": "OK",
+                  "text": "Normal",
                   "color": "green",
                   "index": 0
                 },
                 "1": {
-                  "text": "Throttled",
-                  "color": "yellow",
+                  "text": "Identify",
+                  "color": "purple",
                   "index": 1
                 },
                 "2": {
-                  "text": "Under-voltage",
-                  "color": "orange",
+                  "text": "Throttled",
+                  "color": "yellow",
                   "index": 2
                 },
                 "3": {
-                  "text": "Fan stalled",
-                  "color": "red",
+                  "text": "Under-voltage",
+                  "color": "orange",
                   "index": 3
                 },
                 "4": {
-                  "text": "Critical",
+                  "text": "Fan stalled",
                   "color": "red",
                   "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
                 }
               }
             }
-          ]
+          ],
+          "noValue": "Agent down"
         },
         "overrides": []
       },
@@ -214,19 +272,23 @@
           "fields": "",
           "values": false
         },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
-        "colorMode": "background",
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
         "graphMode": "none",
         "justifyMode": "center",
         "wideLayout": true,
-        "showPercentChange": false
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
       },
       "id": 3,
       "gridPos": {
-        "x": 6,
+        "x": 4,
         "y": 1,
-        "w": 6,
+        "w": 4,
         "h": 4
       },
       "datasource": {
@@ -236,8 +298,8 @@
     },
     {
       "type": "stat",
-      "title": "Power source",
-      "description": "802.3at PoE+, or 802.3af PoE / USB-C (then the power policy caps the CPU at 1200 MHz). Agents up to 0.11.4 label the source 1/0 instead of poe+/poeOrUsbC; both match.",
+      "title": "Hottest SoC",
+      "description": "Highest SoC temperature across the four blades. The fan reaches 100% at 60 °C, which is also where the agent enters critical mode.",
       "targets": [
         {
           "datasource": {
@@ -245,173 +307,11 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(max by (instance) (computeblade_power_status{type=~\"1|poe\\\\+\"}), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
+          "expr": "max(computeblade_soc_temperature{job=\"blade_exporter\"})",
+          "legendFormat": "hottest SoC",
           "refId": "A",
-          "range": false,
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "1": {
-                  "text": "PoE+",
-                  "color": "green",
-                  "index": 0
-                },
-                "0": {
-                  "text": "PoE / USB-C",
-                  "color": "orange",
-                  "index": 1
-                }
-              }
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "id": 4,
-      "gridPos": {
-        "x": 12,
-        "y": 1,
-        "w": 6,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "stat",
-      "title": "CPU capped by power policy",
-      "description": "Whether the agent's power policy currently limits the CPU (limited power or under-voltage).",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(max by (instance) (computeblade_power_limit_active) or max by (instance) (computeblade_soc_temperature * 0), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
-          "refId": "A",
-          "range": false,
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "no",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "capped",
-                  "color": "orange",
-                  "index": 1
-                }
-              }
-            }
-          ]
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true,
-        "showPercentChange": false
-      },
-      "id": 5,
-      "gridPos": {
-        "x": 18,
-        "y": 1,
-        "w": 6,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "stat",
-      "title": "SoC temperature",
-      "description": "Critical mode starts at 60 \u00b0C (critical_temperature_threshold) and ends 5 \u00b0C below.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(computeblade_soc_temperature, \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
-          "refId": "A",
-          "range": false,
-          "instant": true
+          "range": true,
+          "instant": false
         }
       ],
       "fieldConfig": {
@@ -450,19 +350,23 @@
           "fields": "",
           "values": false
         },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
+        "orientation": "auto",
+        "textMode": "value",
         "colorMode": "value",
-        "graphMode": "none",
+        "graphMode": "area",
         "justifyMode": "center",
         "wideLayout": true,
-        "showPercentChange": false
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
       },
-      "id": 6,
+      "id": 4,
       "gridPos": {
-        "x": 0,
-        "y": 5,
-        "w": 8,
+        "x": 8,
+        "y": 1,
+        "w": 4,
         "h": 4
       },
       "datasource": {
@@ -472,8 +376,8 @@
     },
     {
       "type": "stat",
-      "title": "Fan speed",
-      "description": "Measured fan speed, median over 5 minutes. A blade reading hundreds of thousands of RPM missed its smart fan unit at startup and reads its serial data as tachometer pulses (fixed upstream in compute-blade-agent#233).",
+      "title": "CPU busy",
+      "description": "Share of all 16 Cortex-A72 cores (4 per blade) that are busy.",
       "targets": [
         {
           "datasource": {
@@ -481,8 +385,435 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(quantile_over_time(0.5, computeblade_fan_speed[5m]), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
+          "expr": "sum(sum by (instance) (rate(node_cpu_seconds_total{instance=~\"blade-pi[0-9]+:9100\",mode!=\"idle\"}[$__rate_interval]))) / count(node_cpu_seconds_total{instance=~\"blade-pi[0-9]+:9100\",mode=\"idle\"})",
+          "legendFormat": "CPU",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [],
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
+      },
+      "id": 5,
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Memory used",
+      "description": "Memory in use across the cluster (4 × 8 GB), as 1 − MemAvailable / MemTotal.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "1 - sum(node_memory_MemAvailable_bytes{instance=~\"blade-pi[0-9]+:9100\"}) / sum(node_memory_MemTotal_bytes{instance=~\"blade-pi[0-9]+:9100\"})",
+          "legendFormat": "memory",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [],
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
+      },
+      "id": 6,
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Network",
+      "description": "Traffic through the blades' gigabit eth0 ports (the PoE+ uplinks), receive plus transmit, all blades.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(node_network_receive_bytes_total{instance=~\"blade-pi[0-9]+:9100\",device=\"eth0\"}[$__rate_interval]) + rate(node_network_transmit_bytes_total{instance=~\"blade-pi[0-9]+:9100\",device=\"eth0\"}[$__rate_interval])) * 8",
+          "legendFormat": "eth0",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [],
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 30
+        }
+      },
+      "id": 7,
+      "gridPos": {
+        "x": 20,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Chassis (front view)",
+      "id": 8,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "options": {
+        "mode": "html",
+        "code": {
+          "language": "html",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display:flex;align-items:center;gap:10px;height:100%;padding:0 4px;border-bottom:3px solid #3987e5;\"><span style=\"font-size:18px;font-weight:600;\">blade-pi1</span><span style=\"opacity:.6;font-size:12px;\">Raspberry Pi CM4 · smart fan unit</span></div>"
+      },
+      "id": 9,
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 6,
+        "h": 2
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi1: worst condition the agent reports (critical, fan stall, under-voltage, throttled), or Identify while its edge LED is blinking. Single button press toggles identify; hold 5 s to shut down; 5 quick presses power it off immediately.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) ((computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",state=\"identify\"} * 1))",
+          "legendFormat": "health",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Identify",
+                  "color": "purple",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Throttled",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Under-voltage",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Fan stalled",
+                  "color": "red",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "noValue": "Agent down"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 22
+        }
+      },
+      "id": 10,
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 6,
+        "h": 2
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "SoC",
+      "description": "blade-pi1 SoC temperature. Fan curve: 40% at 45 °C, 80% at 55 °C, 100% at 60 °C; critical mode at 60 °C (clears 5 °C below).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_soc_temperature{job=\"blade_exporter\",instance=~\"blade-pi1:.*\"}",
+          "legendFormat": "SoC",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "decimals": 1,
+          "min": 30,
+          "max": 70,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 55
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 11,
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Fan",
+      "description": "blade-pi1 smart fan unit speed (RPM over UART). Around 7000 RPM is 100%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_fan_speed{job=\"blade_exporter\",instance=~\"blade-pi1:.*\"} < 20000",
+          "legendFormat": "fan",
           "refId": "A",
           "range": false,
           "instant": true
@@ -491,20 +822,23 @@
       "fieldConfig": {
         "defaults": {
           "unit": "rotrpm",
+          "decimals": 0,
+          "min": 0,
+          "max": 7500,
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
+                "color": "#3987e5",
                 "value": null
               }
             ]
           },
-          "mappings": [],
-          "decimals": 0
+          "noValue": "–"
         },
         "overrides": []
       },
@@ -516,20 +850,19 @@
           "fields": "",
           "values": false
         },
-        "orientation": "vertical",
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "wideLayout": true,
-        "showPercentChange": false
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
       },
-      "id": 7,
+      "id": 12,
       "gridPos": {
-        "x": 8,
-        "y": 5,
-        "w": 8,
-        "h": 4
+        "x": 3,
+        "y": 10,
+        "w": 3,
+        "h": 5
       },
       "datasource": {
         "type": "prometheus",
@@ -538,8 +871,8 @@
     },
     {
       "type": "stat",
-      "title": "Fan target",
-      "description": "Fan speed the agent commands from the fan curve (40% at 45 \u00b0C, 80% at 55 \u00b0C, 100% at 60 \u00b0C).",
+      "title": "",
+      "description": "blade-pi1: power source (802.3at PoE+, else 802.3af PoE or USB-C and the CPU is capped at 1200 MHz), air temperature at the smart fan unit, CPU busy, time since boot.",
       "targets": [
         {
           "datasource": {
@@ -547,18 +880,55 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(computeblade_fan_target_percent, \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
+          "expr": "max by (instance) (computeblade_power_status{job=\"blade_exporter\",instance=~\"blade-pi1:.*\",type=~\"1|poe\\\\+\"})",
+          "legendFormat": "Power",
           "refId": "A",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_airflow_temperature{job=\"blade_exporter\",instance=~\"blade-pi1:.*\"}",
+          "legendFormat": "Airflow",
+          "refId": "B",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{instance=\"blade-pi1:9100\",mode=\"idle\"}[$__rate_interval]))",
+          "legendFormat": "CPU",
+          "refId": "C",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "time() - node_boot_time_seconds{instance=\"blade-pi1:9100\"}",
+          "legendFormat": "Uptime",
+          "refId": "D",
           "range": false,
           "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "text"
           },
           "thresholds": {
             "mode": "absolute",
@@ -569,10 +939,92 @@
               }
             ]
           },
-          "mappings": [],
-          "decimals": 0
+          "mappings": []
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "PoE+",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "0": {
+                        "text": "PoE/USB-C",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "reduceOptions": {
@@ -588,374 +1040,1503 @@
         "graphMode": "none",
         "justifyMode": "center",
         "wideLayout": true,
-        "showPercentChange": false
-      },
-      "id": 8,
-      "gridPos": {
-        "x": 16,
-        "y": 5,
-        "w": 8,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "row",
-      "title": "Health",
-      "id": 9,
-      "collapsed": false,
-      "gridPos": {
-        "x": 0,
-        "y": 9,
-        "w": 24,
-        "h": 1
-      },
-      "panels": []
-    },
-    {
-      "type": "state-timeline",
-      "title": "Health conditions",
-      "description": "Worst active condition per blade over time.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(max by (instance) ((computeblade_state_state{state=\"critical\"} * 4) or (computeblade_state_state{state=\"fan_stall\"} * 3) or (computeblade_state_state{state=\"undervoltage\"} * 2) or (computeblade_state_state{state=\"throttled\"} * 1)), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "OK",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "Throttled",
-                  "color": "yellow",
-                  "index": 1
-                },
-                "2": {
-                  "text": "Under-voltage",
-                  "color": "orange",
-                  "index": 2
-                },
-                "3": {
-                  "text": "Fan stalled",
-                  "color": "red",
-                  "index": 3
-                },
-                "4": {
-                  "text": "Critical",
-                  "color": "red",
-                  "index": 4
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "alignValue": "left",
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "id": 10,
-      "gridPos": {
-        "x": 0,
-        "y": 10,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "state-timeline",
-      "title": "Identify",
-      "description": "Identify mode (edge LED), toggled by a single button press or `bladectl set identify`.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(max by (instance) (computeblade_state_state{state=\"identify\"}), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}}",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "off",
-                  "color": "transparent",
-                  "index": 0
-                },
-                "1": {
-                  "text": "identify",
-                  "color": "purple",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "alignValue": "left",
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "id": 11,
-      "gridPos": {
-        "x": 12,
-        "y": 10,
-        "w": 12,
-        "h": 6
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "state-timeline",
-      "title": "Firmware throttle flags",
-      "description": "Raspberry Pi firmware flags while active: under-voltage, ARM frequency capped, throttled, soft temperature limit.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(max by (instance, flag) (computeblade_throttle_active), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}} {{flag}}",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "clear",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "active",
-                  "color": "orange",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "alignValue": "left",
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "id": 12,
-      "gridPos": {
-        "x": 0,
-        "y": 16,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "state-timeline",
-      "title": "CPU capped by power policy",
-      "description": "When the agent's power policy limits the CPU, and why (limited_power: not on PoE+; undervoltage).",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(max by (instance, reason) (computeblade_power_limit_active), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
-          "legendFormat": "{{blade}} {{reason}}",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "no",
-                  "color": "green",
-                  "index": 0
-                },
-                "1": {
-                  "text": "capped",
-                  "color": "orange",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "mergeValues": true,
-        "rowHeight": 0.8,
-        "alignValue": "left",
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 17
         }
       },
       "id": 13,
       "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 6,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "options": {
+        "mode": "html",
+        "code": {
+          "language": "html",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display:flex;align-items:center;gap:10px;height:100%;padding:0 4px;border-bottom:3px solid #d95926;\"><span style=\"font-size:18px;font-weight:600;\">blade-pi2</span><span style=\"opacity:.6;font-size:12px;\">Raspberry Pi CM4 · smart fan unit</span></div>"
+      },
+      "id": 14,
+      "gridPos": {
+        "x": 6,
+        "y": 6,
+        "w": 6,
+        "h": 2
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi2: worst condition the agent reports (critical, fan stall, under-voltage, throttled), or Identify while its edge LED is blinking. Single button press toggles identify; hold 5 s to shut down; 5 quick presses power it off immediately.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) ((computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",state=\"identify\"} * 1))",
+          "legendFormat": "health",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Identify",
+                  "color": "purple",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Throttled",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Under-voltage",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Fan stalled",
+                  "color": "red",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "noValue": "Agent down"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 22
+        }
+      },
+      "id": 15,
+      "gridPos": {
+        "x": 6,
+        "y": 8,
+        "w": 6,
+        "h": 2
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "SoC",
+      "description": "blade-pi2 SoC temperature. Fan curve: 40% at 45 °C, 80% at 55 °C, 100% at 60 °C; critical mode at 60 °C (clears 5 °C below).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_soc_temperature{job=\"blade_exporter\",instance=~\"blade-pi2:.*\"}",
+          "legendFormat": "SoC",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "decimals": 1,
+          "min": 30,
+          "max": 70,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 55
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 16,
+      "gridPos": {
+        "x": 6,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Fan",
+      "description": "blade-pi2 smart fan unit speed (RPM over UART). Around 7000 RPM is 100%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_fan_speed{job=\"blade_exporter\",instance=~\"blade-pi2:.*\"} < 20000",
+          "legendFormat": "fan",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "decimals": 0,
+          "min": 0,
+          "max": 7500,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#d95926"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d95926",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 17,
+      "gridPos": {
+        "x": 9,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi2: power source (802.3at PoE+, else 802.3af PoE or USB-C and the CPU is capped at 1200 MHz), air temperature at the smart fan unit, CPU busy, time since boot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) (computeblade_power_status{job=\"blade_exporter\",instance=~\"blade-pi2:.*\",type=~\"1|poe\\\\+\"})",
+          "legendFormat": "Power",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_airflow_temperature{job=\"blade_exporter\",instance=~\"blade-pi2:.*\"}",
+          "legendFormat": "Airflow",
+          "refId": "B",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{instance=\"blade-pi2:9100\",mode=\"idle\"}[$__rate_interval]))",
+          "legendFormat": "CPU",
+          "refId": "C",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "time() - node_boot_time_seconds{instance=\"blade-pi2:9100\"}",
+          "legendFormat": "Uptime",
+          "refId": "D",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "PoE+",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "0": {
+                        "text": "PoE/USB-C",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "vertical",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 17
+        }
+      },
+      "id": 18,
+      "gridPos": {
+        "x": 6,
+        "y": 15,
+        "w": 6,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "options": {
+        "mode": "html",
+        "code": {
+          "language": "html",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display:flex;align-items:center;gap:10px;height:100%;padding:0 4px;border-bottom:3px solid #199e70;\"><span style=\"font-size:18px;font-weight:600;\">blade-pi3</span><span style=\"opacity:.6;font-size:12px;\">Raspberry Pi CM4 · smart fan unit</span></div>"
+      },
+      "id": 19,
+      "gridPos": {
         "x": 12,
-        "y": 16,
-        "w": 12,
-        "h": 8
+        "y": 6,
+        "w": 6,
+        "h": 2
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi3: worst condition the agent reports (critical, fan stall, under-voltage, throttled), or Identify while its edge LED is blinking. Single button press toggles identify; hold 5 s to shut down; 5 quick presses power it off immediately.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) ((computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",state=\"identify\"} * 1))",
+          "legendFormat": "health",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Identify",
+                  "color": "purple",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Throttled",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Under-voltage",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Fan stalled",
+                  "color": "red",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "noValue": "Agent down"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 22
+        }
+      },
+      "id": 20,
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 6,
+        "h": 2
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "SoC",
+      "description": "blade-pi3 SoC temperature. Fan curve: 40% at 45 °C, 80% at 55 °C, 100% at 60 °C; critical mode at 60 °C (clears 5 °C below).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_soc_temperature{job=\"blade_exporter\",instance=~\"blade-pi3:.*\"}",
+          "legendFormat": "SoC",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "decimals": 1,
+          "min": 30,
+          "max": 70,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 55
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 21,
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Fan",
+      "description": "blade-pi3 smart fan unit speed (RPM over UART). Around 7000 RPM is 100%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_fan_speed{job=\"blade_exporter\",instance=~\"blade-pi3:.*\"} < 20000",
+          "legendFormat": "fan",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "decimals": 0,
+          "min": 0,
+          "max": 7500,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#199e70"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#199e70",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 22,
+      "gridPos": {
+        "x": 15,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi3: power source (802.3at PoE+, else 802.3af PoE or USB-C and the CPU is capped at 1200 MHz), air temperature at the smart fan unit, CPU busy, time since boot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) (computeblade_power_status{job=\"blade_exporter\",instance=~\"blade-pi3:.*\",type=~\"1|poe\\\\+\"})",
+          "legendFormat": "Power",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_airflow_temperature{job=\"blade_exporter\",instance=~\"blade-pi3:.*\"}",
+          "legendFormat": "Airflow",
+          "refId": "B",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{instance=\"blade-pi3:9100\",mode=\"idle\"}[$__rate_interval]))",
+          "legendFormat": "CPU",
+          "refId": "C",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "time() - node_boot_time_seconds{instance=\"blade-pi3:9100\"}",
+          "legendFormat": "Uptime",
+          "refId": "D",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "PoE+",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "0": {
+                        "text": "PoE/USB-C",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "vertical",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 17
+        }
+      },
+      "id": 23,
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 6,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "text",
+      "title": "",
+      "transparent": true,
+      "options": {
+        "mode": "html",
+        "code": {
+          "language": "html",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<div style=\"display:flex;align-items:center;gap:10px;height:100%;padding:0 4px;border-bottom:3px solid #c98500;\"><span style=\"font-size:18px;font-weight:600;\">blade-pi4</span><span style=\"opacity:.6;font-size:12px;\">Raspberry Pi CM4 · smart fan unit</span></div>"
+      },
+      "id": 24,
+      "gridPos": {
+        "x": 18,
+        "y": 6,
+        "w": 6,
+        "h": 2
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi4: worst condition the agent reports (critical, fan stall, under-voltage, throttled), or Identify while its edge LED is blinking. Single button press toggles identify; hold 5 s to shut down; 5 quick presses power it off immediately.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) ((computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",state=\"identify\"} * 1))",
+          "legendFormat": "health",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Identify",
+                  "color": "purple",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Throttled",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Under-voltage",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Fan stalled",
+                  "color": "red",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "noValue": "Agent down"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "valueSize": 22
+        }
+      },
+      "id": 25,
+      "gridPos": {
+        "x": 18,
+        "y": 8,
+        "w": 6,
+        "h": 2
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "SoC",
+      "description": "blade-pi4 SoC temperature. Fan curve: 40% at 45 °C, 80% at 55 °C, 100% at 60 °C; critical mode at 60 °C (clears 5 °C below).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_soc_temperature{job=\"blade_exporter\",instance=~\"blade-pi4:.*\"}",
+          "legendFormat": "SoC",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "decimals": 1,
+          "min": 30,
+          "max": 70,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 55
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 26,
+      "gridPos": {
+        "x": 18,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Fan",
+      "description": "blade-pi4 smart fan unit speed (RPM over UART). Around 7000 RPM is 100%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_fan_speed{job=\"blade_exporter\",instance=~\"blade-pi4:.*\"} < 20000",
+          "legendFormat": "fan",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "decimals": 0,
+          "min": 0,
+          "max": 7500,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#c98500"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c98500",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "–"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": false,
+        "showThresholdLabels": false,
+        "orientation": "auto",
+        "sizing": "auto",
+        "minVizHeight": 75,
+        "minVizWidth": 75
+      },
+      "id": 27,
+      "gridPos": {
+        "x": 21,
+        "y": 10,
+        "w": 3,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "",
+      "description": "blade-pi4: power source (802.3at PoE+, else 802.3af PoE or USB-C and the CPU is capped at 1200 MHz), air temperature at the smart fan unit, CPU busy, time since boot.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) (computeblade_power_status{job=\"blade_exporter\",instance=~\"blade-pi4:.*\",type=~\"1|poe\\\\+\"})",
+          "legendFormat": "Power",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "computeblade_airflow_temperature{job=\"blade_exporter\",instance=~\"blade-pi4:.*\"}",
+          "legendFormat": "Airflow",
+          "refId": "B",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "1 - avg by (instance) (rate(node_cpu_seconds_total{instance=\"blade-pi4:9100\",mode=\"idle\"}[$__rate_interval]))",
+          "legendFormat": "CPU",
+          "refId": "C",
+          "range": false,
+          "instant": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "time() - node_boot_time_seconds{instance=\"blade-pi4:9100\"}",
+          "legendFormat": "Uptime",
+          "refId": "D",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "1": {
+                        "text": "PoE+",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "0": {
+                        "text": "PoE/USB-C",
+                        "color": "orange",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percentunit"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "vertical",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 11,
+          "valueSize": 17
+        }
+      },
+      "id": 28,
+      "gridPos": {
+        "x": 18,
+        "y": 15,
+        "w": 6,
+        "h": 3
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "Blade state",
+      "description": "Worst condition per blade over time. Purple is identify mode (LED blinking), green is normal.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(max by (instance) ((computeblade_state_state{job=\"blade_exporter\",state=\"critical\"} * 5) or (computeblade_state_state{job=\"blade_exporter\",state=\"fan_stall\"} * 4) or (computeblade_state_state{job=\"blade_exporter\",state=\"undervoltage\"} * 3) or (computeblade_state_state{job=\"blade_exporter\",state=\"throttled\"} * 2) or (computeblade_state_state{job=\"blade_exporter\",state=\"identify\"} * 1)), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Identify",
+                  "color": "purple",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Throttled",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Under-voltage",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Fan stalled",
+                  "color": "red",
+                  "index": 4
+                },
+                "5": {
+                  "text": "Critical",
+                  "color": "red",
+                  "index": 5
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 75,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.75,
+        "alignValue": "center",
+        "perPage": 20,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "id": 29,
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 5
       },
       "datasource": {
         "type": "prometheus",
@@ -964,12 +2545,12 @@
     },
     {
       "type": "row",
-      "title": "Thermals and fans",
-      "id": 14,
+      "title": "Thermals & airflow",
+      "id": 30,
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 24,
+        "y": 23,
         "w": 24,
         "h": 1
       },
@@ -978,7 +2559,7 @@
     {
       "type": "timeseries",
       "title": "SoC temperature",
-      "description": "SoC temperature per blade; the red line is the critical threshold (60 \u00b0C).",
+      "description": "SoC temperature per blade. Dashed lines: 55 °C (fan curve at 80%) and 60 °C (fan at 100%, critical mode).",
       "targets": [
         {
           "datasource": {
@@ -986,7 +2567,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(computeblade_soc_temperature, \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "expr": "label_replace(computeblade_soc_temperature{job=\"blade_exporter\"} > 0, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{blade}}",
           "refId": "A",
           "range": true,
@@ -997,19 +2578,38 @@
         "defaults": {
           "unit": "celsius",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 0,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "showPoints": "never",
             "spanNulls": false,
-            "axisSoftMin": null,
             "thresholdsStyle": {
               "mode": "dashed"
             },
             "drawStyle": "line",
-            "lineInterpolation": "linear"
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "thresholds": {
             "mode": "absolute",
@@ -1017,6 +2617,10 @@
               {
                 "color": "transparent",
                 "value": null
+              },
+              {
+                "color": "orange",
+                "value": 55
               },
               {
                 "color": "red",
@@ -1095,19 +2699,21 @@
           "placement": "right",
           "showLegend": true,
           "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "desc",
+          "hideZeros": false
         }
       },
-      "id": 15,
+      "id": 31,
       "gridPos": {
         "x": 0,
-        "y": 25,
+        "y": 24,
         "w": 12,
         "h": 8
       },
@@ -1119,7 +2725,7 @@
     {
       "type": "timeseries",
       "title": "Airflow temperature",
-      "description": "Air temperature at the smart fan unit (a standard fan unit has no sensor, so its blade has no line here).",
+      "description": "Air temperature measured by each smart fan unit: the air the fan pushes over the blade. The sensor reports whole degrees; 0 °C readings (no smart fan unit detected) are dropped.",
       "targets": [
         {
           "datasource": {
@@ -1127,7 +2733,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(computeblade_airflow_temperature and on (instance) (computeblade_fan_unit{type=\"smart\"} == 1), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "expr": "label_replace(computeblade_airflow_temperature{job=\"blade_exporter\"} > 0, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{blade}}",
           "refId": "A",
           "range": true,
@@ -1138,19 +2744,196 @@
         "defaults": {
           "unit": "celsius",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 0,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "showPoints": "never",
             "spanNulls": false,
-            "axisSoftMin": null,
             "thresholdsStyle": {
               "mode": "off"
             },
             "drawStyle": "line",
-            "lineInterpolation": "linear"
+            "lineInterpolation": "stepAfter",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 32,
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "SoC above airflow",
+      "description": "How much hotter the SoC runs than the air around it. A rising gap at the same load points at the cooling (heatsink contact, fan, dust), not the room.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace((computeblade_soc_temperature{job=\"blade_exporter\"} > 0) - on (instance) (computeblade_airflow_temperature{job=\"blade_exporter\"} > 0), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "thresholds": {
             "mode": "absolute",
@@ -1232,19 +3015,21 @@
           "placement": "right",
           "showLegend": true,
           "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "desc",
+          "hideZeros": false
         }
       },
-      "id": 16,
+      "id": 33,
       "gridPos": {
-        "x": 12,
-        "y": 25,
+        "x": 0,
+        "y": 32,
         "w": 12,
         "h": 8
       },
@@ -1255,8 +3040,8 @@
     },
     {
       "type": "timeseries",
-      "title": "Fan speed",
-      "description": "Measured fan speed, median over 5 minutes.",
+      "title": "NVMe temperature",
+      "description": "Composite temperature of each blade's NVMe SSD (node_exporter hwmon).",
       "targets": [
         {
           "datasource": {
@@ -1264,7 +3049,178 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(quantile_over_time(0.5, computeblade_fan_speed[5m]), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "expr": "label_replace(node_hwmon_temp_celsius{instance=~\"blade-pi[0-9]+:9100\",chip=\"nvme_nvme0\",sensor=\"temp1\"}, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 34,
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Fans",
+      "id": 35,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Fan speed",
+      "description": "Measured fan speed per blade. Readings above 20000 RPM are dropped: they come from a smart fan unit the agent missed at startup (it then reads UART bytes as tach pulses; fixed in compute-blade-agent 0.11.5).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(computeblade_fan_speed{job=\"blade_exporter\"} < 20000, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{blade}}",
           "refId": "A",
           "range": true,
@@ -1275,19 +3231,38 @@
         "defaults": {
           "unit": "rotrpm",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 0,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "showPoints": "never",
             "spanNulls": false,
-            "axisSoftMin": 0,
             "thresholdsStyle": {
               "mode": "off"
             },
             "drawStyle": "line",
-            "lineInterpolation": "linear"
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "thresholds": {
             "mode": "absolute",
@@ -1370,19 +3345,21 @@
           "placement": "right",
           "showLegend": true,
           "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "desc",
+          "hideZeros": false
         }
       },
-      "id": 17,
+      "id": 36,
       "gridPos": {
         "x": 0,
-        "y": 33,
+        "y": 41,
         "w": 12,
         "h": 8
       },
@@ -1394,7 +3371,7 @@
     {
       "type": "timeseries",
       "title": "Fan target",
-      "description": "Fan speed the agent commands from the fan curve.",
+      "description": "Fan speed the agent commands from the fan curve: 40% at 45 °C, 80% at 55 °C, 100% at 60 °C (linear in between). Stealth mode would pin it low.",
       "targets": [
         {
           "datasource": {
@@ -1402,7 +3379,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "label_replace(computeblade_fan_target_percent, \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "expr": "label_replace(computeblade_fan_target_percent{job=\"blade_exporter\"}, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{blade}}",
           "refId": "A",
           "range": true,
@@ -1413,19 +3390,38 @@
         "defaults": {
           "unit": "percent",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
           },
           "custom": {
             "lineWidth": 2,
-            "fillOpacity": 0,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "showPoints": "never",
             "spanNulls": false,
-            "axisSoftMin": 0,
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "dashed"
             },
             "drawStyle": "line",
-            "lineInterpolation": "linear"
+            "lineInterpolation": "stepAfter",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "thresholds": {
             "mode": "absolute",
@@ -1433,6 +3429,18 @@
               {
                 "color": "transparent",
                 "value": null
+              },
+              {
+                "color": "#8e9bb0",
+                "value": 40
+              },
+              {
+                "color": "orange",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 100
               }
             ]
           },
@@ -1509,19 +3517,21 @@
           "placement": "right",
           "showLegend": true,
           "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "desc",
+          "hideZeros": false
         }
       },
-      "id": 18,
+      "id": 37,
       "gridPos": {
         "x": 12,
-        "y": 33,
+        "y": 41,
         "w": 12,
         "h": 8
       },
@@ -1532,21 +3542,21 @@
     },
     {
       "type": "row",
-      "title": "Events",
-      "id": 19,
+      "title": "Power & throttling",
+      "id": 38,
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 41,
+        "y": 49,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "type": "bargauge",
-      "title": "Agent events (last 24h)",
-      "description": "Events the agent handled in the last 24 hours, by type (button gestures, identify, critical, fan stall, power limits, ...). `bladectl -A events` streams them live.",
+      "type": "state-timeline",
+      "title": "Power source",
+      "description": "802.3at PoE+ (green) or 802.3af PoE / USB-C (orange; the power policy then caps the CPU at 1200 MHz). Agents up to 0.11.4 label the source 1/0 instead of poe+/poeOrUsbC; both match.",
       "targets": [
         {
           "datasource": {
@@ -1554,63 +3564,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sort_desc(sum by (type) (increase(computeblade_agent_events_count{type!=\"noop\"}[24h])) > 0)",
-          "legendFormat": "{{type}}",
-          "refId": "A",
-          "range": false,
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "min": 0,
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#3987e5"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "orientation": "horizontal",
-        "displayMode": "basic",
-        "showUnfilled": true,
-        "namePlacement": "left",
-        "valueMode": "text",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "id": 20,
-      "gridPos": {
-        "x": 0,
-        "y": 42,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Button presses",
-      "description": "Presses of the edge and fan unit buttons. A 5 s hold shuts the blade down, five quick presses power it off at once.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "label_replace(increase(computeblade_edge_button_event_count[$__rate_interval]), \"blade\", \"$1\", \"instance\", \"([^:]+):.*\")",
+          "expr": "label_replace(max by (instance) (computeblade_power_status{job=\"blade_exporter\",type=~\"1|poe\\\\+\"}), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{blade}}",
           "refId": "A",
           "range": true,
@@ -1619,21 +3573,228 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
           "color": {
-            "mode": "palette-classic"
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "PoE+",
+                  "color": "green",
+                  "index": 0
+                },
+                "0": {
+                  "text": "PoE / USB-C",
+                  "color": "orange",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 75,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "alignValue": "center",
+        "perPage": 20,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "id": 39,
+      "gridPos": {
+        "x": 0,
+        "y": 50,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "CPU limited by power policy",
+      "description": "Whether the agent's power policy limits the CPU: 1200 MHz cap when not on PoE+, powersave governor during under-voltage.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(max by (instance) ((computeblade_power_limit_active{job=\"blade_exporter\",reason=\"limited_power\"} * 1) or (computeblade_power_limit_active{job=\"blade_exporter\",reason=\"undervoltage\"} * 2) or (computeblade_soc_temperature{job=\"blade_exporter\"} * 0)), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Unlimited",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Capped 1200 MHz",
+                  "color": "orange",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Powersave (under-voltage)",
+                  "color": "red",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 75,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "alignValue": "center",
+        "perPage": 20,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "id": 40,
+      "gridPos": {
+        "x": 12,
+        "y": 50,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU frequency",
+      "description": "Core clock per blade, averaged over 10 minutes (ondemand governor: 600 MHz idle, 1.5 GHz busy). The dashed line is the 1200 MHz cap the power policy applies off PoE+.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(avg by (instance) (avg_over_time(node_cpu_scaling_frequency_hertz{instance=~\"blade-pi[0-9]+:9100\"}[10m])), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "hertz",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
           },
           "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 80,
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
             "showPoints": "never",
             "spanNulls": false,
-            "axisSoftMin": 0,
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "dashed"
             },
-            "drawStyle": "bars",
-            "lineInterpolation": "linear"
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "axisSoftMax": 1500000000.0
           },
           "thresholds": {
             "mode": "absolute",
@@ -1641,11 +3802,15 @@
               {
                 "color": "transparent",
                 "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1200000000.0
               }
             ]
           },
           "min": 0,
-          "decimals": 0
+          "decimals": 2
         },
         "overrides": [
           {
@@ -1716,20 +3881,1330 @@
           "placement": "right",
           "showLegend": true,
           "calcs": [
-            "lastNotNull",
-            "max"
-          ]
+            "max",
+            "lastNotNull"
+          ],
+          "width": 270
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "desc"
+          "sort": "desc",
+          "hideZeros": false
         }
       },
-      "id": 21,
+      "id": 41,
+      "gridPos": {
+        "x": 0,
+        "y": 55,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "Firmware throttling (now)",
+      "description": "Most serious Raspberry Pi firmware throttle flag active per blade (vcgencmd get_throttled).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(max by (instance) ((computeblade_throttle_active{job=\"blade_exporter\",flag=\"under_voltage\"} * 4) or (computeblade_throttle_active{job=\"blade_exporter\",flag=\"throttled\"} * 3) or (computeblade_throttle_active{job=\"blade_exporter\",flag=\"soft_temp_limit\"} * 2) or (computeblade_throttle_active{job=\"blade_exporter\",flag=\"arm_freq_capped\"} * 1)), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Clear",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Frequency capped",
+                  "color": "yellow",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Soft temp limit",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Throttled",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Under-voltage",
+                  "color": "red",
+                  "index": 4
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 75,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto",
+        "mergeValues": true,
+        "rowHeight": 0.8,
+        "alignValue": "center",
+        "perPage": 20,
+        "legend": {
+          "showLegend": false,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none",
+          "hideZeros": false
+        }
+      },
+      "id": 42,
       "gridPos": {
         "x": 12,
-        "y": 42,
+        "y": 55,
         "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Throttling since boot",
+      "description": "Most serious firmware throttle flag seen since each blade booted.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(max by (instance) ((computeblade_throttle_occurred{job=\"blade_exporter\",flag=\"under_voltage\"} * 4) or (computeblade_throttle_occurred{job=\"blade_exporter\",flag=\"throttled\"} * 3) or (computeblade_throttle_occurred{job=\"blade_exporter\",flag=\"soft_temp_limit\"} * 2) or (computeblade_throttle_occurred{job=\"blade_exporter\",flag=\"arm_freq_capped\"} * 1)), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Never",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Freq capped",
+                  "color": "yellow",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Soft temp limit",
+                  "color": "yellow",
+                  "index": 2
+                },
+                "3": {
+                  "text": "Throttled",
+                  "color": "orange",
+                  "index": 3
+                },
+                "4": {
+                  "text": "Under-voltage",
+                  "color": "red",
+                  "index": 4
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "vertical",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 18
+        }
+      },
+      "id": 43,
+      "gridPos": {
+        "x": 12,
+        "y": 60,
+        "w": 12,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Compute",
+      "id": 44,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU cores busy",
+      "description": "Busy cores per blade, stacked: the top edge is the whole cluster (16 cores).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(sum by (instance) (rate(node_cpu_seconds_total{instance=~\"blade-pi[0-9]+:9100\",mode!=\"idle\"}[$__rate_interval])), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 45,
+      "gridPos": {
+        "x": 0,
+        "y": 65,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory used",
+      "description": "Memory in use per blade (MemTotal − MemAvailable), stacked: the top edge is the cluster (4 × 8 GB).",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(node_memory_MemTotal_bytes{instance=~\"blade-pi[0-9]+:9100\"} - node_memory_MemAvailable_bytes{instance=~\"blade-pi[0-9]+:9100\"}, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 46,
+      "gridPos": {
+        "x": 8,
+        "y": 65,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Load per core",
+      "description": "1-minute load average divided by the core count. Sustained values above 1 mean work waits for a CPU.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(node_load1{instance=~\"blade-pi[0-9]+:9100\"} / on (instance) count by (instance) (node_cpu_seconds_total{instance=~\"blade-pi[0-9]+:9100\",mode=\"idle\"}), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "dashed"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 47,
+      "gridPos": {
+        "x": 16,
+        "y": 65,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Network receive",
+      "description": "eth0 receive rate per blade, stacked: the top edge is the cluster.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(rate(node_network_receive_bytes_total{instance=~\"blade-pi[0-9]+:9100\",device=\"eth0\"}[$__rate_interval]) * 8, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 48,
+      "gridPos": {
+        "x": 0,
+        "y": 73,
+        "w": 9,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Network transmit",
+      "description": "eth0 transmit rate per blade, stacked: the top edge is the cluster.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(rate(node_network_transmit_bytes_total{instance=~\"blade-pi[0-9]+:9100\",device=\"eth0\"}[$__rate_interval]) * 8, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 49,
+      "gridPos": {
+        "x": 9,
+        "y": 73,
+        "w": 9,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "NVMe root filesystem used",
+      "description": "Used share of each blade's root filesystem (NVMe). Orange from 80%, red from 90%.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(1 - node_filesystem_avail_bytes{instance=~\"blade-pi[0-9]+:9100\",mountpoint=\"/\"} / node_filesystem_size_bytes{instance=~\"blade-pi[0-9]+:9100\",mountpoint=\"/\"}, \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "valueMode": "color",
+        "sizing": "auto",
+        "minVizHeight": 16,
+        "maxVizHeight": 28,
+        "text": {
+          "titleSize": 13,
+          "valueSize": 16
+        },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 50,
+      "gridPos": {
+        "x": 18,
+        "y": 73,
+        "w": 6,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Events",
+      "id": 51,
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 81,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "bargauge",
+      "title": "Agent events in range",
+      "description": "Events the agents handled in the selected time range, all blades, by type. `bladectl -A events` streams them live. The counter appears with the first event after an agent restart, so that first one isn't counted.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sort_desc(round(sum by (type) (increase(computeblade_agent_events_count{job=\"blade_exporter\",type!=\"noop\"}[$__range]))) > 0)",
+          "legendFormat": "{{type}}",
+          "refId": "A",
+          "range": false,
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "noValue": "No events",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "valueMode": "text",
+        "sizing": "manual",
+        "minVizHeight": 18,
+        "maxVizHeight": 22,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "id": 52,
+      "gridPos": {
+        "x": 0,
+        "y": 82,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Events per blade",
+      "description": "Agent events per blade per 15 minutes (or longer on wide time ranges) (button presses, identify, critical, fan stall, power limits). Critical/fan stall and button gestures/power limits are also drawn as annotations on every time chart.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "label_replace(sum by (instance) (increase(computeblade_agent_events_count{job=\"blade_exporter\",type!=\"noop\"}[$__interval])), \"blade\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "legendFormat": "{{blade}}",
+          "refId": "A",
+          "range": true,
+          "instant": false,
+          "interval": "15m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#8e9bb0"
+          },
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "off"
+            },
+            "drawStyle": "bars",
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "barAlignment": 0,
+            "insertNulls": false,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              }
+            ]
+          },
+          "min": 0,
+          "decimals": 0,
+          "noValue": "No events"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi1"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi2"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi3"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#199e70"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "blade-pi4"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#c98500"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      },
+      "id": 53,
+      "gridPos": {
+        "x": 8,
+        "y": 82,
+        "w": 16,
         "h": 8
       },
       "datasource": {
