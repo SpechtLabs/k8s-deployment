@@ -473,7 +473,7 @@
     {
       "type": "stat",
       "title": "Fan speed",
-      "description": "Measured fan speed, median over 5 minutes. blade-pi4 has the standard fan unit: since agent 0.11.3 its tachometer reads far too high (noise edges count as revolutions), so trust its fan target instead.",
+      "description": "Measured fan speed, median over 5 minutes. A blade reading hundreds of thousands of RPM missed its smart fan unit at startup and reads its serial data as tachometer pulses (fixed upstream in compute-blade-agent#233).",
       "targets": [
         {
           "datasource": {
@@ -1119,7 +1119,7 @@
     {
       "type": "timeseries",
       "title": "Airflow temperature",
-      "description": "Air temperature at the smart fan unit (blade-pi4's standard fan unit has no sensor).",
+      "description": "Air temperature at the smart fan unit (a standard fan unit has no sensor, so its blade has no line here).",
       "targets": [
         {
           "datasource": {
@@ -1256,7 +1256,7 @@
     {
       "type": "timeseries",
       "title": "Fan speed",
-      "description": "Measured fan speed, median over 5 minutes. blade-pi4's standard fan unit reads far too high since agent 0.11.3.",
+      "description": "Measured fan speed, median over 5 minutes.",
       "targets": [
         {
           "datasource": {
