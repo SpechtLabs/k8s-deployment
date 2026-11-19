@@ -27,6 +27,11 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - compute_blades.json
+  - name: stratum1-dashboard-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - stratum1.json
   - name: synology-dashboard-json
     options:
       disableNameSuffixHash: true

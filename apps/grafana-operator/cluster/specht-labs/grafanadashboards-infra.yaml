@@ -67,6 +67,22 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  name: stratum1
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: raspberry-pi
+  # timepi, the GPS/PPS Stratum 1 and PTP grandmaster: ntpsec, gpsd, PPS,
+  # ptp4l/phc2sys (textfile collector, cedi/homelab modules/ptp-server) and
+  # every client's chrony/ptp4l view (modules/time-sync).
+  configMapRef:
+    name: stratum1-dashboard-json
+    key: stratum1.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
   name: synology
 spec:
   instanceSelector:
