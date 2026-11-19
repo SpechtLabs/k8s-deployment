@@ -50,7 +50,7 @@
       "type": "stat",
       "id": 1,
       "title": "Fleet health",
-      "description": "Worst state per Pi across these checks. DOWN: rpi_exporter or node_exporter not scraped. ALERT: SoC >= 80 \u00b0C, under-voltage now, root FS >= 90 % or read-only, < 10 % memory available. WARN: SoC >= 70 \u00b0C, blade firmware throttling, root FS >= 80 %, < 20 % memory available, Pi 5 fan commanded on but tach reads 0 RPM, clock not NTP-synchronised. Details in the table below.",
+      "description": "Worst state per Pi across these checks. DOWN: rpi_exporter or node_exporter not scraped. ALERT: SoC >= 80 \u00b0C, under-voltage now, root FS >= 90 % or read-only, < 10 % memory available. WARN: SoC >= 70 \u00b0C, blade firmware throttling, root FS >= 80 %, < 20 % memory available, Pi 5 fan commanded on but tach reads 0 RPM, clock not NTP-synchronised. Details in the table below. A fan counts as stalled only if its tachometer has reported a speed in the last 30 days; a fan without a tach signal reads 0 RPM while spinning.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -67,7 +67,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (host) (\n  label_replace((1 - min by (host) (label_replace(up{job=~\"rpi_exporter|integrations/unix\", instance=~\"($host):(9243|9100)\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\"))) * 3, \"check\", \"down\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((rpi_cpu_temperature_celsius{job=\"rpi_exporter\", instance=~\"($host):9243\"} >= bool 70) + (rpi_cpu_temperature_celsius{job=\"rpi_exporter\", instance=~\"($host):9243\"} >= bool 80), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"temp\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(node_hwmon_in_lcrit_alarm_volts{job=\"integrations/unix\", instance=~\"($host):9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"undervolt\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(computeblade_throttle_active{job=\"blade_exporter\", instance=~\"($host):9666\", flag!=\"under_voltage\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"bladethrottle\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(computeblade_throttle_active{job=\"blade_exporter\", instance=~\"($host):9666\", flag=\"under_voltage\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"bladeundervolt\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((1 - node_filesystem_avail_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} >= bool 0.8) + (1 - node_filesystem_avail_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} >= bool 0.9), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"rootfs\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(node_filesystem_readonly{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"readonly\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((node_memory_MemAvailable_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} / node_memory_MemTotal_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} < bool 0.2) + (node_memory_MemAvailable_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} / node_memory_MemTotal_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} < bool 0.1), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"memory\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((node_hwmon_pwm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"} > bool 0) * on (instance) group_left () (node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"} == bool 0), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"fanstall\", \"\", \"\")\n  or label_replace(1 - min by (host) (label_replace(node_timex_sync_status{job=\"integrations/unix\", instance=~\"($host):9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"timesync\", \"\", \"\")\n)",
+          "expr": "max by (host) (\n  label_replace((1 - min by (host) (label_replace(up{job=~\"rpi_exporter|integrations/unix\", instance=~\"($host):(9243|9100)\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\"))) * 3, \"check\", \"down\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((rpi_cpu_temperature_celsius{job=\"rpi_exporter\", instance=~\"($host):9243\"} >= bool 70) + (rpi_cpu_temperature_celsius{job=\"rpi_exporter\", instance=~\"($host):9243\"} >= bool 80), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"temp\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(node_hwmon_in_lcrit_alarm_volts{job=\"integrations/unix\", instance=~\"($host):9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"undervolt\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(computeblade_throttle_active{job=\"blade_exporter\", instance=~\"($host):9666\", flag!=\"under_voltage\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"bladethrottle\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(computeblade_throttle_active{job=\"blade_exporter\", instance=~\"($host):9666\", flag=\"under_voltage\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"bladeundervolt\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((1 - node_filesystem_avail_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} >= bool 0.8) + (1 - node_filesystem_avail_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"} >= bool 0.9), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"rootfs\", \"\", \"\")\n  or label_replace(max by (host) (label_replace(node_filesystem_readonly{job=\"integrations/unix\", instance=~\"($host):9100\", mountpoint=\"/\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) * 2, \"check\", \"readonly\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((node_memory_MemAvailable_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} / node_memory_MemTotal_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} < bool 0.2) + (node_memory_MemAvailable_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} / node_memory_MemTotal_bytes{job=\"integrations/unix\", instance=~\"($host):9100\"} < bool 0.1), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"memory\", \"\", \"\")\n  or label_replace(max by (host) (label_replace((node_hwmon_pwm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"} > bool 0) * on (instance) group_left () (node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"} == bool 0) * on (instance) group_left () (max_over_time(node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"}[30d]) > bool 0), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"fanstall\", \"\", \"\")\n  or label_replace(1 - min by (host) (label_replace(node_timex_sync_status{job=\"integrations/unix\", instance=~\"($host):9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")), \"check\", \"timesync\", \"\", \"\")\n)",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": false,
@@ -829,7 +829,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (host) (label_replace(rpi_fan_rpm{job=\"rpi_exporter\", instance=~\"($host):9243\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) or max by (host) (label_replace(computeblade_fan_speed{job=\"blade_exporter\", instance=~\"($host):9666\"} < 20000, \"host\", \"$1\", \"instance\", \"([^:]+):.*\"))",
+          "expr": "(max by (host) (label_replace(rpi_fan_rpm{job=\"rpi_exporter\", instance=~\"($host):9243\"}, \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) unless on (host) (max by (host) (label_replace(max_over_time(node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"}[30d]), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) == 0)) or ((max by (host) (label_replace(max_over_time(node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"}[30d]), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) == 0) - 1) or max by (host) (label_replace(computeblade_fan_speed{job=\"blade_exporter\", instance=~\"($host):9666\"} < 20000, \"host\", \"$1\", \"instance\", \"([^:]+):.*\"))",
           "legendFormat": "",
           "refId": "D",
           "range": false,
@@ -1242,6 +1242,20 @@
               {
                 "id": "custom.width",
                 "value": 100
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "-1": {
+                        "text": "no tach",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -2475,7 +2489,7 @@
       "type": "status-history",
       "id": 15,
       "title": "Fan speed",
-      "description": "Tachometer reading averaged per cell: Pi 5 active cooler (rpi_exporter) and blade fan unit (compute-blade-agent; readings above 20k RPM are sensor glitches and dropped). Grey = stopped. The Pi 4 PoE-HAT fans on the k3s workers have no tachometer. A Pi with duty on the right but grey here has a stalled or unplugged fan.",
+      "description": "Tachometer reading averaged per cell: Pi 5 active cooler (rpi_exporter) and blade fan unit (compute-blade-agent; readings above 20k RPM are sensor glitches and dropped). Grey = stopped. The Pi 4 PoE-HAT fans on the k3s workers have no tachometer. A Pi with duty on the right but grey here has a stalled or unplugged fan. Pis whose fan has never reported a speed (no tach signal at the fan header, e.g. storagepi-ceph2) are left out rather than shown as stopped.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -2492,7 +2506,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (host) (label_replace(avg_over_time(rpi_fan_rpm{job=\"rpi_exporter\", instance=~\"($host):9243\"}[$__interval]), \"host\", \"$1\", \"instance\", \"([^:]+):.*\"))",
+          "expr": "max by (host) (label_replace(avg_over_time(rpi_fan_rpm{job=\"rpi_exporter\", instance=~\"($host):9243\"}[$__interval]), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) unless on (host) (max by (host) (label_replace(max_over_time(node_hwmon_fan_rpm{job=\"integrations/unix\", instance=~\"($host):9100\", chip=\"platform_cooling_fan\"}[30d]), \"host\", \"$1\", \"instance\", \"([^:]+):.*\")) == 0)",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": true,
