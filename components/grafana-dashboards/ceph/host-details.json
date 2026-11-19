@@ -1233,7 +1233,7 @@
         "useTags": false
       },
       {
-        "allValue": null,
+        "allValue": "storagepi-ceph[^.:]*",
         "current": {},
         "datasource": "$datasource",
         "hide": 0,
