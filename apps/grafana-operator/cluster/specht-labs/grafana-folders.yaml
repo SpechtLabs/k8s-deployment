@@ -7,6 +7,7 @@
 # Layout:
 #   Infrastructure          — cloud / hardware (hcloud servers)
 #     └─ Ceph               — homelab Ceph cluster (ceph-mixin, nested)
+#     └─ Raspberry Pi       — the Pi fleet and the compute blades (nested)
 #   Kubernetes Platform     — cluster add-ons (argocd, cert-manager)
 #     └─ Envoy Gateway      — ingress / networking (nested)
 #   Applications            — first-party apps (static-pages)
@@ -70,4 +71,15 @@ spec:
     matchLabels:
       dashboards: grafana-cloud
   title: "Ceph"
+  parentFolderRef: infrastructure
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaFolder
+metadata:
+  name: raspberry-pi
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  title: "Raspberry Pi"
   parentFolderRef: infrastructure

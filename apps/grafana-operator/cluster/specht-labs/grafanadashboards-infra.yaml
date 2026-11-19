@@ -42,7 +42,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folderRef: infrastructure
+  folderRef: raspberry-pi
   # Uses grafana-polystat-panel; install it on the Cloud stack out-of-band (the
   # operator rejects spec.plugins for external Grafana). See node-exporter note.
   configMapRef:
@@ -57,7 +57,7 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  folderRef: infrastructure
+  folderRef: raspberry-pi
   # compute-blade-agent metrics (job blade_exporter, scraped by Alloy on the
   # blades; cedi/homelab modules/compute-blade-agent). Core panels only.
   configMapRef:
