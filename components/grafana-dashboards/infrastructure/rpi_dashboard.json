@@ -159,7 +159,44 @@
           },
           "unit": "rotrpm"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "blade-pi.*"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 6000
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 4500
+                    },
+                    {
+                      "color": "orange",
+                      "value": 5000
+                    },
+                    {
+                      "color": "red",
+                      "value": 5500
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 5,
@@ -197,10 +234,24 @@
           "legendFormat": "{{instance}}",
           "range": false,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) (computeblade_fan_speed)",
+          "legendFormat": "{{instance}}",
+          "refId": "B",
+          "instant": true,
+          "range": false,
+          "exemplar": false
         }
       ],
       "title": "Fan Speed (RPM)",
-      "type": "gauge"
+      "type": "gauge",
+      "description": "Pis with a fan header: rpi_exporter's rpi_fan_rpm. Compute blades (blade-pi*): compute-blade-agent's computeblade_fan_speed; the Compute Blades dashboard has the rest."
     },
     {
       "datasource": {
@@ -544,7 +595,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Only works for Pi 5",
+      "description": "Pis with a fan header: rpi_exporter's rpi_fan_rpm. Compute blades (blade-pi*): compute-blade-agent's computeblade_fan_speed; the Compute Blades dashboard has the rest.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -639,6 +690,17 @@
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "max by (instance) (computeblade_fan_speed)",
+          "legendFormat": "{{instance}}",
+          "refId": "B",
+          "range": true
         }
       ],
       "title": "Fan RPM",
