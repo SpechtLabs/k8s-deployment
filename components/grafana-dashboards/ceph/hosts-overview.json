@@ -199,7 +199,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(1 - (\n  avg by(instance) (\n    rate(node_cpu_seconds_total{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}[$__rate_interval]) or\n    rate(node_cpu{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}[$__rate_interval])\n  )\n))\n",
+          "expr": "avg(1 - (\n  avg by(instance) (\n    rate(node_cpu_seconds_total{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}[$__rate_interval]) or\n    rate(node_cpu{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}[$__rate_interval])\n  )\n))\n",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -282,7 +282,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg ((\n  (\n    node_memory_MemTotal{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n    node_memory_MemTotal_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}\n  ) - ((\n    node_memory_MemFree{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n    node_memory_MemFree_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}) +\n    (\n      node_memory_Cached{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n      node_memory_Cached_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}\n    ) + (\n      node_memory_Buffers{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n      node_memory_Buffers_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}\n    ) + (\n      node_memory_Slab{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n      node_memory_Slab_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}\n    )\n  )\n) / (\n  node_memory_MemTotal{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"} or\n   node_memory_MemTotal_bytes{instance=~\"($osd_hosts|$rgw_hosts|$mon_hosts|$mds_hosts).*\"}\n))\n",
+          "expr": "avg ((\n  (\n    node_memory_MemTotal{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n    node_memory_MemTotal_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}\n  ) - ((\n    node_memory_MemFree{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n    node_memory_MemFree_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}) +\n    (\n      node_memory_Cached{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n      node_memory_Cached_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}\n    ) + (\n      node_memory_Buffers{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n      node_memory_Buffers_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}\n    ) + (\n      node_memory_Slab{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n      node_memory_Slab_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}\n    )\n  )\n) / (\n  node_memory_MemTotal{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"} or\n   node_memory_MemTotal_bytes{instance=~\"($osd_hosts|$rgw_hosts|$mon_hosts).*\"}\n))\n",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -531,7 +531,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum (\n  (\n    rate(node_network_receive_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_receive_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n  label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\")\n) +\nsum (\n  (\n    rate(node_network_transmit_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_transmit_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n  label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\")\n)\n",
+          "expr": "sum (\n  (\n    rate(node_network_receive_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_receive_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n  label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\")\n) +\nsum (\n  (\n    rate(node_network_transmit_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_transmit_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n  label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\")\n)\n",
           "format": "time_series",
           "instant": true,
           "intervalFactor": 1,
@@ -622,7 +622,7 @@
       "seriesOverrides": [],
       "targets": [
         {
-          "expr": "topk(10,\n  100 * (\n    1 - (\n      avg by(instance) (\n        rate(node_cpu_seconds_total{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}[$__rate_interval]) or\n        rate(node_cpu{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\"}[$__rate_interval])\n      )\n    )\n  )\n)\n",
+          "expr": "topk(10,\n  100 * (\n    1 - (\n      avg by(instance) (\n        rate(node_cpu_seconds_total{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}[$__rate_interval]) or\n        rate(node_cpu{mode='idle',instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\"}[$__rate_interval])\n      )\n    )\n  )\n)\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}}",
@@ -702,7 +702,7 @@
       "seriesOverrides": [],
       "targets": [
         {
-          "expr": "topk(10, (sum by(instance) (\n  (\n    rate(node_network_receive_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_receive_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) +\n  (\n    rate(node_network_transmit_bytes{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_transmit_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$mds_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n    label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\"))\n))\n",
+          "expr": "topk(10, (sum by(instance) (\n  (\n    rate(node_network_receive_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_receive_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) +\n  (\n    rate(node_network_transmit_bytes{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval]) or\n    rate(node_network_transmit_bytes_total{instance=~\"($osd_hosts|$mon_hosts|$rgw_hosts).*\",device!=\"lo\"}[$__rate_interval])\n  ) unless on (device, instance)\n    label_replace((node_bonding_slaves > 0), \"device\", \"$1\", \"master\", \"(.+)\"))\n))\n",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}}",
@@ -798,10 +798,10 @@
         "useTags": false
       },
       {
-        "allValue": "$^",
+        "allValue": null,
         "current": {},
         "datasource": "$datasource",
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": null,
         "multi": false,
