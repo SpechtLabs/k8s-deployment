@@ -13,6 +13,16 @@ configMapGenerator:
     files:
       - infrastructure/rpi_dashboard.json
 
+  - name: compute-blades-dashboard
+    namespace: observability
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: "Infrastructure"
+    files:
+      - infrastructure/compute_blades.json
+
   - name: synology-dashboard
     namespace: observability
     options:

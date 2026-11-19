@@ -22,6 +22,11 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - rpi_dashboard.json
+  - name: compute-blades-dashboard-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - compute_blades.json
   - name: synology-dashboard-json
     options:
       disableNameSuffixHash: true

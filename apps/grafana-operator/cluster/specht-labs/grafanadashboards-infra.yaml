@@ -52,6 +52,21 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
+  name: compute-blades
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  # compute-blade-agent metrics (job blade_exporter, scraped by Alloy on the
+  # blades; cedi/homelab modules/compute-blade-agent). Core panels only.
+  configMapRef:
+    name: compute-blades-dashboard-json
+    key: compute_blades.json
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
   name: synology
 spec:
   instanceSelector:
