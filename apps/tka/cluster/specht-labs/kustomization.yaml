@@ -13,3 +13,8 @@ patches:
       kind: ConfigMap
       name: tka-config
     path: tka-config.patch.yaml
+# `main` is published arm64-only (fine for labk3s); prod nodes are all amd64,
+# so pin a multi-arch release tag here.
+images:
+  - name: ghcr.io/spechtlabs/tka
+    newTag: v0.3.1
