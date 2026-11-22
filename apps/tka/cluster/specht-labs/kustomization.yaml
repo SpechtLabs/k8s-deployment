@@ -9,8 +9,6 @@ generators:
   - ./secret-generator.yaml
 
 patches:
-  - path: delete-sm.yaml
-  - path: delete-rule.yaml
   - target:
       kind: ConfigMap
       name: tka-config
