@@ -1,0 +1,34 @@
+- op: replace
+  path: "/data/config.yaml"
+  value: |
+    debug: true
+
+    tailscale:
+      hostname: "tka"
+      port: 8123
+      stateDir: "/var/lib/tka/tsnet-state"
+      tailnet: "sphinx-map.ts.net"
+      capName: "specht-labs.de/cap/tka"
+
+    server:
+      readTimeout: "10s"
+      readHeaderTimeout: "5s"
+      writeTimeout: "20s"
+      idleTimeout: "120s"
+
+    operator:
+      namespace: "tka-system"
+      clusterName: "tka-cluster"
+      contextPrefix: "tka-context-"
+      userPrefix: "tka-user-"
+
+    api:
+      retryAfterSeconds: 1
+
+    clusterInfo:
+        apiEndpoint: "https://91.98.221.216:443"
+        caData: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURFekNDQWZ1Z0F3SUJBZ0lJQmJwQ1Z6MHdkT1F3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TmpBMU16QXhOalEyTlRWYUZ3MHlOekExTXpBeE5qVXhOVFZhTURReApGekFWQmdOVkJBb1REbk41YzNSbGJUcHRZWE4wWlhKek1Sa3dGd1lEVlFRREV4QnJkV0psY201bGRHVnpMV0ZrCmJXbHVNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQTZEb2VVQkxWeCttbzJTUnUKYlBQZXdFQXBwNStSRW5zRlIwUHBldDRNTmRuSkcwamoydzlUU01ZS1JoZ1VrM1B4U3pUdEhacVJrTnZ1REhRcAp2akpuaGE1UjVNc1RkMWpHTlF0SEgyS1o2QTZSQVBHd0FXZHRDWlZtU01JeW0xVmRsRUxlczBaTGU2MTZKLzRTCnhxUXFoUTNSTS8xTTZjTGFnWllmRHN3RElxeTUzSXBFaTFsZEs0QTZIbURPdHVCbGVaa1hqaWxnU0pVaWlGYnIKOWZ2alA3SXlMTWh0Q3VUeXZETlNWb0RxcnlmRHdzeVpSVmw2cmhJOG0yQnFKUDcrU0FJY1U1MXR5Ui90M1RJbgo1R3FpUVN5ZnYrL1FPWXBEaEZJUy9WcGtqVDdMMVhHb1FrYjVzRHQrYmtGNDdsOWhvVHFmSkhLYkdvMUp4VVlDCkZHaW5wd0lEQVFBQm8wZ3dSakFPQmdOVkhROEJBZjhFQkFNQ0JhQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUgKQXdJd0h3WURWUjBqQkJnd0ZvQVVlR2JwZVpYeUhMNExDeC9pdXFjeVNvY3oyZWd3RFFZSktvWklodmNOQVFFTApCUUFEZ2dFQkFJWkNFVFpvRllINjVYWjZTQVhVV1FnamZBQTlXSVRGY2JvMDZqOWFVTzc0STVZTmd3ZUZQeHpKCmxDVHg3a3liM2lsYVJPdWZsZWZ1S25WdER2ZFVtYUF0ZHRKejNtcUtwNmtUcGZnbHR6YndkTTNQRUhINDhEZU0KUHVMbk10YjJrdmFMN2NoZFhCTFBtSndUMnhZeHgyRnBxUDRPb1BTb2JkWmVIR2NCVG83R2JTcG1RSm1jU3BJWAptZW1oZ0V3VHQrRHJ2cjdCRGhFSzdzeDZvWGZldjd4UFFXQ09yN3YxVEloODF1WTRabUdJMFJhTklKMy8xaXdTClJiWnlOd1ZyWW1kNjFTeXRXL2dacUVudWxBM04zenRIS0JCMDMySU5McXJCMk93aFkvRkdBQzlXQlNVOFRSdW4KN0piZmY4VUxHNHJFUXRLUWJIZTc0bzBWcE5qdzVZND0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo="
+        labels:
+            environment: "prod"
+            owner: "specht-labs"
+            flavor: "capi"

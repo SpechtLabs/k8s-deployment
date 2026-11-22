@@ -4,7 +4,7 @@
     debug: true
 
     tailscale:
-      hostname: "tka-lab"
+      hostname: "lab-tka"
       port: 8123
       stateDir: "/var/lib/tka/tsnet-state"
       tailnet: "sphinx-map.ts.net"
