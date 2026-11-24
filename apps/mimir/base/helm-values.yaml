@@ -105,14 +105,16 @@ ingester:
   persistentVolume:
     enabled: true
     size: 10Gi
-  # The heaviest component (holds the in-memory TSDB + WAL). Capped at 1.25Gi so a
-  # replay flood OOM-kills THIS pod, never the node.
+  # The heaviest component (holds the in-memory TSDB + WAL). Capped so a replay
+  # flood OOM-kills THIS pod, never the node. 1280Mi was hit at ~262k in-memory
+  # series across tenants (1.2Gi peak, 2026-11-24); 2560Mi covers the 300k
+  # spechtlabs limit below plus the other tenants at ~3.7KB per series.
   resources:
     requests:
       cpu: 200m
-      memory: 640Mi
+      memory: 1Gi
     limits:
-      memory: 1280Mi
+      memory: 2560Mi
 
 store_gateway:
   # Zone-aware RF3, mirroring the ingester: one StatefulSet per region.
@@ -209,12 +211,17 @@ mimir:
         topic: null
         auto_create_topic_default_partitions: null
 
-# Per-tenant limits, reloaded live by every component (no restart). The
-# spechtlabs tenant ran into Mimir's 150k series default (~130k active plus
-# churn still held in the ingesters' head) and dropped every new series, e.g.
-# meet's. 200k leaves the ingesters (1280Mi limit, ~750Mi in use for all
-# tenants, ~3.7KB per series) room; raise their memory before going higher.
+# Per-tenant limits, reloaded live by every component (no restart). The limit
+# counts every series in the ingesters' memory, including ones gone stale since
+# the last head compaction (every 2h), so pod rollouts and churn count against
+# it. spechtlabs hit 150k, then 200k (2026-11-24: ~170k active after the SLO
+# recordings, span metrics from the trace surge and that day's rollouts, every
+# ingester at 200000): Mimir rejected all new series (err-mimir-max-series-per-
+# user), including SLO recordings and metrics-generator output. 300k needs the
+# 2560Mi ingesters above (~3.7KB per series); raise their memory before going
+# higher. If rejections recur with fewer active series, check the ingester ring
+# for a stale member first (it shrinks each ingester's share of the limit).
 runtimeConfig:
   overrides:
     spechtlabs:
-      max_global_series_per_user: 200000
+      max_global_series_per_user: 300000
