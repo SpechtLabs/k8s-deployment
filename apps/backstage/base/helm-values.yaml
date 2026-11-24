@@ -11,8 +11,10 @@ backstage:
   image:
     registry: ghcr.io
     repository: spechtlabs/backstage
+    # Placeholder: the release is pinned by `images:` in kustomization.yaml,
+    # where Renovate bumps it.
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
 
   # The chart only passes --config for its own ConfigMaps, and Backstage reads
   # no default files once any --config is given. Load the image's files first.
