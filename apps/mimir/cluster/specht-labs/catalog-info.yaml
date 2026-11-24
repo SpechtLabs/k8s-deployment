@@ -52,7 +52,7 @@ spec:
   owner: group:spechtlabs
   system: specht-labs
   definition:
-    $text: https://github.com/prometheus/prometheus/blob/v3.5.0/prompb/remote.proto
+    $text: https://raw.githubusercontent.com/prometheus/prometheus/v3.5.0/prompb/remote.proto
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API

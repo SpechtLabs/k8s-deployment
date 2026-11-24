@@ -50,7 +50,7 @@ spec:
   owner: group:spechtlabs
   system: specht-labs
   definition:
-    $text: https://github.com/grafana/pyroscope/blob/v2.4.4/api/push/v1/push.proto
+    $text: https://raw.githubusercontent.com/grafana/pyroscope/v2.4.4/api/push/v1/push.proto
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -69,7 +69,7 @@ spec:
   owner: group:spechtlabs
   system: specht-labs
   definition:
-    $text: https://github.com/grafana/pyroscope/blob/v2.4.4/api/querier/v1/querier.proto
+    $text: https://raw.githubusercontent.com/grafana/pyroscope/v2.4.4/api/querier/v1/querier.proto
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource

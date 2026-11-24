@@ -56,4 +56,4 @@ spec:
   system: specht-labs
   # Pinned to the chart's appVersion.
   definition:
-    $text: https://github.com/argoproj/argo-cd/blob/v3.6.2/assets/swagger.json
+    $text: https://raw.githubusercontent.com/argoproj/argo-cd/v3.6.2/assets/swagger.json

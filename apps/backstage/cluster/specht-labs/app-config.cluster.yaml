@@ -10,11 +10,24 @@ backend:
   cors:
     origin: https://backstage.k8s.specht-labs.de
   # Hosts the catalog may fetch API specs from ($text in k8s-deployment's
-  # catalog). github.com goes through the GitHub integration instead.
+  # catalog), anonymously, through the plain fetch reader. Upstream specs
+  # on GitHub are read from raw.githubusercontent.com: a github.com URL goes
+  # through the GitHub integration, and the catalog refuses $text through an
+  # integration unless it is in the entity's own repo. Limited to the repos
+  # whose specs we pin.
   reading:
     allow:
       - host: docs.hetzner.cloud
       - host: api.tailscale.com
+      - host: raw.githubusercontent.com
+        paths:
+          - /argoproj/argo-cd/
+          - /grafana/grafana/
+          - /grafana/loki/
+          - /grafana/pyroscope/
+          - /open-telemetry/opentelemetry-proto/
+          - /prometheus/prometheus/
+          - /SpechtLabs/tka/
 
 auth:
   environment: production

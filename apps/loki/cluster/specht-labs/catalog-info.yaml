@@ -52,7 +52,7 @@ spec:
   owner: group:spechtlabs
   system: specht-labs
   definition:
-    $text: https://github.com/grafana/loki/blob/v3.6.11/pkg/push/push.proto
+    $text: https://raw.githubusercontent.com/grafana/loki/v3.6.11/pkg/push/push.proto
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API

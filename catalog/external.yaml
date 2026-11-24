@@ -201,7 +201,7 @@ spec:
   system: external-services
   # Grafana Cloud runs a current Grafana; the spec from main matches it best.
   definition:
-    $text: https://github.com/grafana/grafana/blob/main/public/openapi3.json
+    $text: https://raw.githubusercontent.com/grafana/grafana/main/public/openapi3.json
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component

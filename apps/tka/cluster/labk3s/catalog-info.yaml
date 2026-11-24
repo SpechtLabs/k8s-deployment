@@ -34,4 +34,4 @@ spec:
   owner: group:spechtlabs
   system: homelab
   definition:
-    $text: https://github.com/SpechtLabs/tka/blob/v0.3.1/pkg/swagger/swagger.yaml
+    $text: https://raw.githubusercontent.com/SpechtLabs/tka/v0.3.1/pkg/swagger/swagger.yaml
