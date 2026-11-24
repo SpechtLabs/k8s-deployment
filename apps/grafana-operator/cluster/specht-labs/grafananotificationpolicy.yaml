@@ -1,0 +1,26 @@
+# The Grafana Cloud notification policy tree (the operator owns all of it).
+# Every alert goes to Grafana IRM, which decides who is notified how; this tree
+# only sets the pace. Critical alerts are sent fast and re-sent every 4h while
+# firing; warnings are batched and re-sent daily. Rules set severity and service
+# labels (grafanaalertrules-*.yaml, the SLO plugin's burn alerts).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaNotificationPolicy
+metadata:
+  name: notification-policy
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  route:
+    receiver: Grafana IRM — Homelab
+    group_by: [grafana_folder, alertname]
+    group_wait: 1m
+    group_interval: 15m
+    repeat_interval: 24h
+    routes:
+    - receiver: Grafana IRM — Homelab
+      object_matchers:
+      - [severity, "=", critical]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h

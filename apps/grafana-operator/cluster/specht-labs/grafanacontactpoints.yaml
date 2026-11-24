@@ -1,0 +1,24 @@
+# Where Grafana Cloud alerts go: the Grafana IRM integration "Homelab" (Grafana
+# Alerting type). IRM routes severity=critical to the "Homelab — page"
+# escalation chain (important mobile push, repeated every 15 min until acked)
+# and everything else to "Homelab — notify" (one normal push). The integration
+# and its chains live in IRM; its URL is in grafana-irm-homelab.secret.yaml.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaContactPoint
+metadata:
+  name: irm-homelab
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  name: Grafana IRM — Homelab
+  receivers:
+  - uid: irm-homelab
+    type: oncall
+    settings: {}
+    valuesFrom:
+    - targetPath: url
+      valueFrom:
+        secretKeyRef:
+          name: grafana-irm-homelab
+          key: url

@@ -34,6 +34,9 @@ resources:
   - grafanaalertrules-ceph.yaml
   # Time sync: timepi (GPS/PPS, ntpsec, PTP grandmaster) and every host's chrony/ptp4l.
   - grafanaalertrules-time-sync.yaml
+  # Where alerts go: Grafana IRM (contact point) and the notification policy tree.
+  - grafanacontactpoints.yaml
+  - grafananotificationpolicy.yaml
   # Self-hosted LGTM datasources (one per backend × tenant), reached over PDC.
   # gcx cannot create datasources, so they are operator-pushed here like dashboards.
   - grafanadatasources.yaml
