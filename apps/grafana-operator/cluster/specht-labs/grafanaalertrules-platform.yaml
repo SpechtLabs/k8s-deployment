@@ -267,10 +267,8 @@ spec:
       service: kubernetes
       category: health
     annotations:
-      summary: '{{ $labels.namespace }}/{{ $labels.pod }} restarted more than 3 times in 6h'
-      description: A container in this pod keeps restarting (OOMKilled, failing probes, crashing). kube-state-metrics'
-        waiting_reason isn't collected here, so this counts restarts instead of CrashLoopBackOff. `kubectl
-        -n <ns> describe pod <pod>` for the last state.
+      summary: '{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) restarted more than 3 times in 6h, last: {{ or $labels.reason "unknown" }}'
+      description: 'Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }} restarted {{ printf "%.0f" $values.A.Value }} times in the last 6h; it last stopped with {{ or $labels.reason "an unknown reason" }}. OOMKilled: raise its memory limit or find what grew. Error/Completed: `kubectl -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous`.'
     data:
     - refId: A
       relativeTimeRange:
@@ -282,7 +280,18 @@ spec:
           type: prometheus
           uid: mimir-spechtlabs
         editorMode: code
-        expr: sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+        expr: |-
+          (
+            sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+            * on (namespace, pod, container) group_left (reason)
+            max by (namespace, pod, container, reason) (kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1)
+          )
+          or
+          (
+            sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+            unless on (namespace, pod, container)
+            kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1
+          )
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
