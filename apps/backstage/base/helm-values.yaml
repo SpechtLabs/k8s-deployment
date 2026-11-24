@@ -80,7 +80,9 @@ backstage:
       cpu: 100m
       memory: 512Mi
     limits:
-      memory: 1Gi
+      # The V8 heap is capped at 768Mi (NODE_OPTIONS); the rest is headroom
+      # for TechDocs, which runs mkdocs in this container.
+      memory: 1536Mi
 
   podSecurityContext:
     runAsNonRoot: true

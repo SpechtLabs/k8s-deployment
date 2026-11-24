@@ -18,6 +18,14 @@ auth:
   session:
     secret: ${AUTH_SESSION_SECRET}
   providers:
+    # Not for sign-in: the user's GitHub token for the GitHub insights and
+    # pull requests cards, through the spechtlabs-backstage GitHub App's
+    # user authorization. The App's callback URL must include
+    #   https://backstage.k8s.specht-labs.de/api/auth/github/handler/frame
+    github:
+      production:
+        clientId: ${GITHUB_APP_CLIENT_ID}
+        clientSecret: ${GITHUB_APP_CLIENT_SECRET}
     # tsidp (Tailscale's OIDC IdP), public through Funnel, so no tailnet
     # egress is needed from the cluster. The client is registered in tsidp
     # with redirect URI
@@ -65,8 +73,11 @@ proxy:
       # argocd.k8s.specht-labs.de, which doesn't match the Service name.
       # The hop never leaves the cluster.
       secure: false
+      # Authorization, not ArgoCD's argocd.token cookie: the proxy's config
+      # schema marks Authorization secret, so DevTools' config view redacts
+      # it. A Cookie header it would show to every signed-in user.
       headers:
-        Cookie: ${ARGOCD_AUTH_TOKEN}
+        Authorization: Bearer ${ARGOCD_AUTH_TOKEN}
 
 argocd:
   # Links from the cards to the ArgoCD UI.
@@ -86,8 +97,8 @@ integrations:
           allowedInstallationOwners: [SpechtLabs]
 
 # Discovery: every SpechtLabs repo's catalog-info.yaml on its default branch.
-# Merges with the image's file locations (catalog/org.yaml and Backstage's
-# own catalog-info.yaml).
+# Merges with the image's file location for catalog/org.yaml; everything
+# else, Backstage's own entities included, comes from here.
 catalog:
   providers:
     github:
