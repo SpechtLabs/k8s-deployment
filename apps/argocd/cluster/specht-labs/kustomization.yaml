@@ -41,6 +41,10 @@ patches:
         name: argocd-cm
       data:
         url: https://argocd.k8s.specht-labs.de
+        # Backstage's ArgoCD plugin: an API-key-only account (no UI login).
+        # Read access comes from rbac policy.default (role:readonly); its
+        # token is in apps/backstage/cluster/specht-labs/argocd.secret.yaml.
+        accounts.backstage: apiKey
         dex.config: |
           connectors:
             - type: oidc
