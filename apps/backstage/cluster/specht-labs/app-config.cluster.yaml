@@ -84,6 +84,15 @@ proxy:
       # it. A Cookie header it would show to every signed-in user.
       headers:
         Authorization: Bearer ${ARGOCD_AUTH_TOKEN}
+    '/opencost':
+      target: http://grafana-k8s-monitoring-opencost.monitoring.svc.cluster.local:9003
+      changeOrigin: true
+
+# OpenCost: the plugin's page fetches opencost.baseUrl from the browser, with
+# the Backstage token, so it goes through this proxy endpoint to the
+# in-cluster OpenCost API (grafana-k8s-monitoring's OpenCost, port 9003).
+opencost:
+  baseUrl: https://backstage.k8s.specht-labs.de/api/proxy/opencost
 
 argocd:
   # Links from the cards to the ArgoCD UI.
