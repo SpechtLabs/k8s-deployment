@@ -4,6 +4,12 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: tailscale-labk3s
+  annotations:
+    # ArgoCD cards from the labk3s ArgoCD, through Backstage's /argocd/labk3s
+    # proxy. No Kubernetes annotations: the Kubernetes plugin only knows
+    # specht-labs, where the same selectors would match the wrong pods.
+    argocd/app-name: tailscale
+    argocd/proxy-url: /argocd/labk3s
   title: Tailscale operator (labk3s)
   description: Joins labk3s to the tailnet. Runs the egress proxies (tsidp, the specht-labs LGTM ingress) and the ts.net nameserver.
   tags: [networking, tailscale]

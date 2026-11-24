@@ -4,6 +4,12 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: argocd-labk3s
+  annotations:
+    # ArgoCD cards from the labk3s ArgoCD, through Backstage's /argocd/labk3s
+    # proxy. No Kubernetes annotations: the Kubernetes plugin only knows
+    # specht-labs, where the same selectors would match the wrong pods.
+    argocd/app-name: argocd
+    argocd/proxy-url: /argocd/labk3s
   title: Argo CD (labk3s)
   description: Syncs every app in argo-apps/labk3s to the labk3s cluster. Reachable as lab-argocd on the tailnet, and publicly through Tailscale Funnel.
   tags: [gitops]

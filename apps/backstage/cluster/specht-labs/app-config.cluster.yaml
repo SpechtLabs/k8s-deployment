@@ -101,6 +101,16 @@ proxy:
       # it. A Cookie header it would show to every signed-in user.
       headers:
         Authorization: Bearer ${ARGOCD_AUTH_TOKEN}
+    # The labk3s ArgoCD, over the tailnet (lab-argocd-egress.yaml); labk3s
+    # entities select it with argocd/proxy-url: /argocd/labk3s. argocd-server
+    # there terminates TLS with a self-signed certificate; the hop runs
+    # inside WireGuard. Token: the labk3s `backstage` account (read-only).
+    '/argocd/labk3s':
+      target: https://lab-argocd.backstage.svc.cluster.local/api/v1/
+      changeOrigin: true
+      secure: false
+      headers:
+        Authorization: Bearer ${ARGOCD_LABK3S_TOKEN}
     '/opencost':
       target: http://grafana-k8s-monitoring-opencost.monitoring.svc.cluster.local:9003
       changeOrigin: true

@@ -9,6 +9,11 @@ metadata:
   annotations:
     github.com/project-slug: SpechtLabs/tka
     backstage.io/source-location: url:https://github.com/SpechtLabs/tka/tree/main/
+    # ArgoCD cards from the labk3s ArgoCD, through Backstage's /argocd/labk3s
+    # proxy. No Kubernetes annotations: the Kubernetes plugin only knows
+    # specht-labs, where the same selectors would match the wrong pods.
+    argocd/app-name: tka
+    argocd/proxy-url: /argocd/labk3s
   tags: [auth, kubernetes]
 spec:
   type: service

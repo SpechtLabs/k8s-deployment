@@ -1,0 +1,19 @@
+# The labk3s ArgoCD API, reached over the tailnet: a Tailscale egress proxy
+# (tag:backstage) to lab-argocd-api (tag:lab-argocd), the only path the
+# tailnet policy in cedi/homelab allows it. Backstage's /argocd/labk3s proxy
+# targets this Service. The operator rewrites externalName to its proxy;
+# the Argo app ignores that field.
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-argocd
+  annotations:
+    tailscale.com/tailnet-fqdn: lab-argocd-api.sphinx-map.ts.net
+    tailscale.com/tags: tag:backstage
+spec:
+  type: ExternalName
+  externalName: placeholder # overwritten by the Tailscale operator
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP

@@ -6,6 +6,7 @@ resources:
   - ../../base
   - httproute.yaml
   - postgres-backup.yaml
+  - lab-argocd-egress.yaml
 
 configMapGenerator:
   - name: backstage-app-config-cluster

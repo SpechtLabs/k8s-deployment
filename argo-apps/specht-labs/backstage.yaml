@@ -23,6 +23,8 @@ spec:
       # The Cluster, ObjectStore and ScheduledBackup CRDs come from the
       # cloudnative-pg app; don't fail the dry run before it has synced.
       - SkipDryRunOnMissingResource=true
+      # Keep the Tailscale operator's externalName (lab-argocd-egress.yaml).
+      - RespectIgnoreDifferences=true
     retry:
       limit: 10
       backoff:
@@ -33,3 +35,9 @@ spec:
       labels:
         pod-security.kubernetes.io/enforce: restricted
         pod-security.kubernetes.io/enforce-version: latest
+  ignoreDifferences:
+    # The Tailscale operator points egress Services at its proxy.
+    - kind: Service
+      name: lab-argocd
+      jsonPointers:
+        - /spec/externalName

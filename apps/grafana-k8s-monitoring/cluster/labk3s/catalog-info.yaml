@@ -4,6 +4,12 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: grafana-k8s-monitoring-labk3s
+  annotations:
+    # ArgoCD cards from the labk3s ArgoCD, through Backstage's /argocd/labk3s
+    # proxy. No Kubernetes annotations: the Kubernetes plugin only knows
+    # specht-labs, where the same selectors would match the wrong pods.
+    argocd/app-name: grafana-k8s-monitoring
+    argocd/proxy-url: /argocd/labk3s
   title: Grafana k8s-monitoring (labk3s)
   description: Alloy on labk3s. Ships metrics, logs and traces as the homelab tenant to the specht-labs LGTM stack, over tailnet egress to k8s-load-balancer.sphinx-map.ts.net.
   tags: [observability]

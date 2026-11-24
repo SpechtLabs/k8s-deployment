@@ -4,6 +4,12 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: coredns-labk3s
+  annotations:
+    # ArgoCD cards from the labk3s ArgoCD, through Backstage's /argocd/labk3s
+    # proxy. No Kubernetes annotations: the Kubernetes plugin only knows
+    # specht-labs, where the same selectors would match the wrong pods.
+    argocd/app-name: coredns
+    argocd/proxy-url: /argocd/labk3s
   title: CoreDNS (labk3s)
   description: k3s's bundled CoreDNS. This app only adds a ts.net forward to the Tailscale operator's nameserver, so in-cluster lookups of tailnet names resolve to the egress proxies.
   tags: [networking, dns]
