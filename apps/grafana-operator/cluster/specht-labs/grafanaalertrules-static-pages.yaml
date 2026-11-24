@@ -7,8 +7,11 @@
 # burn alerts. Health targets answer "is it healthy right now?"; the SLOs answer
 # "have we been good enough over 28 days?". See docs/static-pages-slos.md.
 #
-# All queries are verified against grafanacloud-prom, service_name/job
-# "static-pages". probe_ssl_earliest_cert_expiry currently has no data, so a
+# Queries are verified against the datasource each rule names: the service's
+# own metrics (up, OTel HTTP server) are in the self-hosted mimir-spechtlabs,
+# Synthetic Monitoring's probe_success in grafanacloud-prom. (Until 2026-11-24
+# every rule queried grafanacloud-prom, where up and the HTTP metrics no longer
+# arrive: sp-target-absent sat in NoData from 2026-10-20.) probe_ssl_earliest_cert_expiry currently has no data, so a
 # cert-expiry health target is intentionally omitted until SSL probing is on.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
@@ -102,11 +105,11 @@ spec:
           relativeTimeRange:
             from: 600
             to: 0
-          datasourceUid: grafanacloud-prom
+          datasourceUid: mimir-spechtlabs
           model:
             datasource:
               type: prometheus
-              uid: grafanacloud-prom
+              uid: mimir-spechtlabs
             editorMode: code
             expr: sum(up{job="static-pages"})
             instant: true
@@ -161,11 +164,11 @@ spec:
           relativeTimeRange:
             from: 600
             to: 0
-          datasourceUid: grafanacloud-prom
+          datasourceUid: mimir-spechtlabs
           model:
             datasource:
               type: prometheus
-              uid: grafanacloud-prom
+              uid: mimir-spechtlabs
             editorMode: code
             expr: sum(up{job="static-pages"})
             instant: true
@@ -220,11 +223,11 @@ spec:
           relativeTimeRange:
             from: 600
             to: 0
-          datasourceUid: grafanacloud-prom
+          datasourceUid: mimir-spechtlabs
           model:
             datasource:
               type: prometheus
-              uid: grafanacloud-prom
+              uid: mimir-spechtlabs
             editorMode: code
             expr: >-
               sum(rate(http_server_request_duration_seconds_count{service_name="static-pages", http_response_status_code=~"5.."}[5m]))
