@@ -1,0 +1,32 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cloudnative-pg
+  title: CloudNativePG
+  description: PostgreSQL operator, plus its Barman Cloud plugin for WAL archiving and backups to object storage.
+  annotations:
+    argocd/app-name: cloudnative-pg
+    backstage.io/kubernetes-namespace: cnpg-system
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name in (cloudnative-pg,plugin-barman-cloud)
+  tags: [database, postgresql]
+  links:
+    - url: https://cloudnative-pg.io
+      title: cloudnative-pg.io
+    - url: https://cloudnative-pg.io/documentation/current/
+      title: CloudNativePG docs
+      icon: docs
+    - url: https://github.com/cloudnative-pg/cloudnative-pg
+      title: cloudnative-pg/cloudnative-pg
+      icon: github
+    - url: https://github.com/cloudnative-pg/plugin-barman-cloud
+      title: cloudnative-pg/plugin-barman-cloud
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs

@@ -1,0 +1,29 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cilium
+  title: Cilium
+  description: The cluster's CNI and kube-proxy replacement, with Hubble for flow visibility.
+  annotations:
+    argocd/app-name: cilium
+    backstage.io/kubernetes-namespace: kube-system
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/part-of=cilium
+  tags: [networking]
+  links:
+    - url: https://cilium.io
+      title: cilium.io
+    - url: https://docs.cilium.io
+      title: Cilium docs
+      icon: docs
+    - url: https://github.com/cilium/cilium
+      title: cilium/cilium
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs

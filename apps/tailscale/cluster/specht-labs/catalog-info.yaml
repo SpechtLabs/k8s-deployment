@@ -1,0 +1,30 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tailscale
+  title: Tailscale operator (specht-labs)
+  description: Joins specht-labs to the tailnet. Runs the proxies behind the tailnet Gateway's load balancer and the egress Services.
+  annotations:
+    argocd/app-name: tailscale
+    backstage.io/kubernetes-namespace: tailscale
+    backstage.io/kubernetes-label-selector: app=operator
+  tags: [networking, tailscale]
+  links:
+    - url: https://tailscale.com/kb/1236/kubernetes-operator
+      title: Operator docs
+      icon: docs
+    - url: https://github.com/tailscale/tailscale
+      title: tailscale/tailscale
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:tailscale-api
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet

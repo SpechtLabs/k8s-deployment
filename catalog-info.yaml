@@ -1,0 +1,47 @@
+# Backstage catalog entry point for this repo. Backstage's GitHub discovery
+# reads only this file (catalogPath /catalog-info.yaml in the backstage
+# overlay). The Location below pulls in everything else:
+#   catalog/*.yaml                         Systems and third-party services
+#   apps/<app>/cluster/<cluster>/catalog-info.yaml
+#                                          each deployed app, next to its overlay
+# A new app only needs its own catalog-info.yaml.
+#
+# What is what:
+#   Component  software we run (it has pods, a version, an upstream project),
+#              and third-party services, so they can provide APIs
+#   Resource   infrastructure it runs on or stores to: clusters, buckets,
+#              databases, Gateways, DNS zones, the ClusterIssuer, the tailnet
+#   API        an interface of one specific Component instance, with its spec
+#              pinned to the deployed version where upstream publishes one
+#   System     one per cluster (Specht Labs here, Homelab in cedi/homelab),
+#              plus External services
+# Functional groupings (networking, observability, ...) are tags.
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: k8s-deployment
+  description: Every catalog entity defined in k8s-deployment.
+spec:
+  targets:
+    - ./catalog/systems.yaml
+    - ./catalog/external.yaml
+    - ./apps/*/cluster/*/catalog-info.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: k8s-deployment
+  title: k8s-deployment
+  description: GitOps repo for the specht-labs and labk3s clusters, synced by their Argo CDs.
+  annotations:
+    github.com/project-slug: SpechtLabs/k8s-deployment
+    # The app-of-apps that creates every other Application on specht-labs.
+    argocd/app-name: 1-meta-specht-labs-cluster
+  tags: [gitops]
+spec:
+  type: gitops-repository
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:github

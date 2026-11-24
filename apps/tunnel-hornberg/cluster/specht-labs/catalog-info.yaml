@@ -1,0 +1,26 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tunnel-hornberg
+  title: tunnel-hornberg
+  description: The tunnel-hornberg.de website (image from fam-kienzler/tunnel-hornberg).
+  annotations:
+    argocd/app-name: tunnel-hornberg
+    backstage.io/kubernetes-namespace: tunnel-hornberg
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name=tunnel-hornberg
+  tags: [website]
+  links:
+    - url: https://tunnel-hornberg.de
+      title: tunnel-hornberg.de
+    - url: https://tunnel.kienzlers-world.de
+      title: tunnel.kienzlers-world.de
+spec:
+  type: website
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs
+    - resource:shared-gateway

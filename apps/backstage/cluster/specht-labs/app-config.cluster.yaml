@@ -9,6 +9,12 @@ backend:
   baseUrl: https://backstage.k8s.specht-labs.de
   cors:
     origin: https://backstage.k8s.specht-labs.de
+  # Hosts the catalog may fetch API specs from ($text in k8s-deployment's
+  # catalog). github.com goes through the GitHub integration instead.
+  reading:
+    allow:
+      - host: docs.hetzner.cloud
+      - host: api.tailscale.com
 
 auth:
   environment: production
@@ -94,12 +100,26 @@ integrations:
           clientId: ${GITHUB_APP_CLIENT_ID}
           clientSecret: ${GITHUB_APP_CLIENT_SECRET}
           privateKey: ${GITHUB_APP_PRIVATE_KEY}
-          allowedInstallationOwners: [SpechtLabs]
+          # cedi: for cedi/homelab only (the App is installed on that one
+          # repo there). See catalog.locations below.
+          allowedInstallationOwners: [SpechtLabs, cedi]
 
 # Discovery: every SpechtLabs repo's catalog-info.yaml on its default branch.
 # Merges with the image's file location for catalog/org.yaml; everything
 # else, Backstage's own entities included, comes from here.
 catalog:
+  # cedi/homelab is outside the SpechtLabs org, so discovery doesn't see it;
+  # its catalog (System homelab, labk3s, the tailnet, tsidp, Ceph, the NAS)
+  # is registered here. This array replaces the image's catalog.locations
+  # (app-config.production.yaml) rather than merging with it, so the image's
+  # org.yaml entry is repeated.
+  locations:
+    - type: file
+      target: ./catalog/org.yaml
+      rules:
+        - allow: [User, Group]
+    - type: url
+      target: https://github.com/cedi/homelab/blob/main/catalog-info.yaml
   providers:
     github:
       spechtlabs:

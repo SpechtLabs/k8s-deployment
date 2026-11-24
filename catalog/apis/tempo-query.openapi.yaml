@@ -1,0 +1,98 @@
+# Hand-written: the Tempo query endpoints Grafana uses.
+# Source: https://grafana.com/docs/tempo/latest/api_docs/
+openapi: 3.0.3
+info:
+  title: Tempo query
+  version: v2
+  description: Trace lookup, TraceQL search and TraceQL metrics. Every request needs the tenant in the X-Scope-OrgID header.
+servers:
+  - url: http://tempo-query-frontend.lgtm.svc.cluster.local:3200
+    description: In-cluster
+security: []
+paths:
+  /api/v2/traces/{traceID}:
+    get:
+      summary: Get a trace by ID
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: traceID, in: path, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: integer}, description: Unix seconds}
+        - {name: end, in: query, schema: {type: integer}, description: Unix seconds}
+      responses:
+        '200':
+          description: The trace (OTLP JSON, or protobuf with Accept application/protobuf)
+          content:
+            application/json: {schema: {type: object}}
+        '404': {description: Trace not found}
+  /api/search:
+    get:
+      summary: Search traces with TraceQL
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: q, in: query, schema: {type: string}, description: TraceQL query}
+        - {name: tags, in: query, schema: {type: string}, description: logfmt tag filter (legacy)}
+        - {name: minDuration, in: query, schema: {type: string}}
+        - {name: maxDuration, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: spss, in: query, schema: {type: integer}, description: Spans per span set}
+        - {name: start, in: query, schema: {type: integer}}
+        - {name: end, in: query, schema: {type: integer}}
+      responses:
+        '200':
+          description: Matching traces and metrics
+          content:
+            application/json: {schema: {type: object}}
+  /api/v2/search/tags:
+    get:
+      summary: List attribute names by scope
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: scope, in: query, schema: {type: string, enum: [resource, span, intrinsic, event, link, instrumentation]}}
+        - {name: q, in: query, schema: {type: string}}
+        - {name: start, in: query, schema: {type: integer}}
+        - {name: end, in: query, schema: {type: integer}}
+      responses:
+        '200':
+          description: Tag names
+          content:
+            application/json: {schema: {type: object}}
+  /api/v2/search/tag/{tag}/values:
+    get:
+      summary: List an attribute's values
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: tag, in: path, required: true, schema: {type: string}, description: 'Scoped attribute, e.g. resource.service.name'}
+        - {name: q, in: query, schema: {type: string}}
+        - {name: start, in: query, schema: {type: integer}}
+        - {name: end, in: query, schema: {type: integer}}
+      responses:
+        '200':
+          description: Tag values
+          content:
+            application/json: {schema: {type: object}}
+  /api/metrics/query_range:
+    get:
+      summary: TraceQL metrics over a time range
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: q, in: query, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+        - {name: step, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Time series
+          content:
+            application/json: {schema: {type: object}}
+  /api/echo:
+    get:
+      summary: Connectivity check (Grafana's "Test" button)
+      responses:
+        '200':
+          description: echo
+          content:
+            text/plain: {schema: {type: string}}
+components:
+  parameters:
+    tenant:
+      {name: X-Scope-OrgID, in: header, required: true, schema: {type: string}, description: Tempo tenant}

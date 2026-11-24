@@ -1,0 +1,32 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: grafana-k8s-monitoring-labk3s
+  title: Grafana k8s-monitoring (labk3s)
+  description: Alloy on labk3s. Ships metrics, logs and traces as the homelab tenant to the specht-labs LGTM stack, over tailnet egress to k8s-load-balancer.sphinx-map.ts.net.
+  tags: [observability]
+  links:
+    - url: https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/
+      title: Kubernetes Monitoring docs
+      icon: docs
+    - url: https://github.com/grafana/k8s-monitoring-helm
+      title: grafana/k8s-monitoring-helm
+      icon: github
+    - url: https://github.com/grafana/alloy
+      title: grafana/alloy
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  consumesApis:
+    - api:mimir-remote-write
+    - api:loki-push
+    - api:tempo-otlp
+  dependsOn:
+    - resource:labk3s
+    - resource:tailnet
+    - resource:tailnet-gateway

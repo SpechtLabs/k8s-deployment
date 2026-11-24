@@ -1,0 +1,29 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: hcloud-exporter
+  title: hcloud-exporter
+  description: Prometheus exporter for the Hetzner Cloud project (servers, load balancers, volumes, costs).
+  annotations:
+    argocd/app-name: hcloud-exporter
+    backstage.io/kubernetes-namespace: monitoring
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=hcloud-exporter
+  tags: [hetzner, observability]
+  links:
+    - url: https://promhippie.github.io/hcloud_exporter/
+      title: hcloud_exporter docs
+      icon: docs
+    - url: https://github.com/promhippie/hcloud_exporter
+      title: promhippie/hcloud_exporter
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:hetzner-cloud-api
+  dependsOn:
+    - resource:specht-labs

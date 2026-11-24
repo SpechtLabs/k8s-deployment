@@ -1,0 +1,69 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: envoy-gateway
+  title: Envoy Gateway
+  description: Gateway API controller. Runs the Envoy proxies for the shared (public) and tailnet Gateways.
+  annotations:
+    argocd/app-name: envoy-gateway
+    backstage.io/kubernetes-namespace: envoy-gateway-system
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name in (gateway-helm,envoy)
+  tags: [networking, gateway-api]
+  links:
+    - url: https://gateway.envoyproxy.io
+      title: Envoy Gateway docs
+      icon: docs
+    - url: https://github.com/envoyproxy/gateway
+      title: envoyproxy/gateway
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: shared-gateway
+  title: shared Gateway (public)
+  description: The public Gateway (HTTP/HTTPS, plus :22 for gibson) behind a Hetzner load balancer with PROXY protocol.
+  annotations:
+    argocd/app-name: envoy-gateway
+    backstage.io/kubernetes-namespace: envoy-gateway-system
+    backstage.io/kubernetes-label-selector: gateway.networking.k8s.io/gateway-name=shared
+  tags: [networking, gateway-api, load-balancer]
+spec:
+  type: gateway
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:envoy-gateway
+    # The load balancer, created by hcloud-ccm.
+    - component:hcloud-ccm
+    - resource:letsencrypt-prod
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: tailnet-gateway
+  title: tailnet Gateway
+  description: The tailnet-only Gateway (*.k8s.specht-labs.de and k8s-load-balancer.sphinx-map.ts.net), behind a Tailscale load balancer.
+  annotations:
+    argocd/app-name: envoy-gateway
+    backstage.io/kubernetes-namespace: envoy-gateway-system
+    backstage.io/kubernetes-label-selector: gateway.networking.k8s.io/gateway-name=tailnet
+  tags: [networking, gateway-api, tailscale]
+spec:
+  type: gateway
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:envoy-gateway
+    - component:tailscale
+    - resource:tailnet
+    - resource:letsencrypt-prod

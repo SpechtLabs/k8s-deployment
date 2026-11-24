@@ -1,0 +1,89 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: mimir
+  title: Grafana Mimir
+  description: Multi-tenant metrics store, zone-aware RF3 across hel1/nbg1/fsn1. Tenants come in through the tailnet Gateway's per-tenant routes.
+  annotations:
+    argocd/app-name: mimir
+    backstage.io/kubernetes-namespace: lgtm
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=mimir
+  tags: [observability, metrics]
+  links:
+    - url: https://grafana.com/oss/mimir/
+      title: grafana.com/oss/mimir
+    - url: https://grafana.com/docs/mimir/latest/
+      title: Mimir docs
+      icon: docs
+    - url: https://github.com/grafana/mimir
+      title: grafana/mimir
+      icon: github
+    - url: https://github.com/grafana/mimir/tree/main/operations/helm/charts/mimir-distributed
+      title: Helm chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  providesApis:
+    - api:mimir-remote-write
+    - api:mimir-query
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet-gateway
+    - resource:specht-labs-mimir-blocks
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: mimir-remote-write
+  title: Mimir remote write
+  description: Prometheus remote write 1.0 (snappy-compressed protobuf over HTTP POST) at mimir-gateway /api/v1/push. The tenant is the X-Scope-OrgID header, set per route on the tailnet Gateway.
+  tags: [observability, metrics, protobuf]
+  links:
+    - url: https://prometheus.io/docs/specs/prw/remote_write_spec/
+      title: Remote write spec
+      icon: docs
+spec:
+  type: protobuf
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition:
+    $text: https://github.com/prometheus/prometheus/blob/v3.5.0/prompb/remote.proto
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: mimir-query
+  title: Mimir query (Prometheus HTTP API)
+  description: PromQL queries, series and label lookups at mimir-gateway /prometheus/api/v1. Grafana Cloud reads it through PDC; OpenCost reads it in-cluster.
+  tags: [observability, metrics, rest]
+  links:
+    - url: https://prometheus.io/docs/prometheus/latest/querying/api/
+      title: Prometheus HTTP API
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  # Hand-written: Prometheus publishes no OpenAPI document.
+  definition:
+    $text: ../../../../catalog/apis/prometheus-query.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs-mimir-blocks
+  title: specht-labs-mimir-blocks (bucket)
+  description: Hetzner Object Storage bucket (hel1) for Mimir's TSDB blocks.
+  tags: [storage, s3]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:hetzner-cloud

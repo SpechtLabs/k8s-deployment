@@ -1,0 +1,24 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: bogen-web
+  title: bogen-web
+  description: The bogen.kienzlers-world.de blog (image from fam-kienzler/bogen-blog).
+  annotations:
+    argocd/app-name: bogen-web
+    backstage.io/kubernetes-namespace: bogen-web
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name=bogen-web
+  tags: [website]
+  links:
+    - url: https://bogen.kienzlers-world.de
+      title: bogen.kienzlers-world.de
+spec:
+  type: website
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs
+    - resource:shared-gateway

@@ -1,0 +1,86 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: pyroscope
+  title: Grafana Pyroscope
+  description: Continuous-profiling store (monolithic, single region, fsn1).
+  annotations:
+    argocd/app-name: pyroscope
+    backstage.io/kubernetes-namespace: lgtm
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=pyroscope
+  tags: [observability, profiles]
+  links:
+    - url: https://grafana.com/oss/pyroscope/
+      title: grafana.com/oss/pyroscope
+    - url: https://grafana.com/docs/pyroscope/latest/
+      title: Pyroscope docs
+      icon: docs
+    - url: https://github.com/grafana/pyroscope
+      title: grafana/pyroscope
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  providesApis:
+    - api:pyroscope-push
+    - api:pyroscope-query
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet-gateway
+    - resource:specht-labs-pyroscope
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: pyroscope-push
+  title: Pyroscope push
+  description: Profile ingestion (push.v1.PusherService, Connect/gRPC) on pyroscope :4040.
+  tags: [observability, profiles, grpc]
+  links:
+    - url: https://grafana.com/docs/pyroscope/latest/reference-server-api/
+      title: Server API docs
+      icon: docs
+spec:
+  type: grpc
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition:
+    $text: https://github.com/grafana/pyroscope/blob/v2.4.4/api/push/v1/push.proto
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: pyroscope-query
+  title: Pyroscope query
+  description: Profile queries (querier.v1.QuerierService, Connect/gRPC) on pyroscope :4040. Grafana Cloud reads it through PDC.
+  tags: [observability, profiles, grpc]
+  links:
+    - url: https://grafana.com/docs/pyroscope/latest/reference-server-api/
+      title: Server API docs
+      icon: docs
+spec:
+  type: grpc
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition:
+    $text: https://github.com/grafana/pyroscope/blob/v2.4.4/api/querier/v1/querier.proto
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs-pyroscope
+  title: specht-labs-pyroscope (bucket)
+  description: Hetzner Object Storage bucket (hel1) for Pyroscope's profile blocks.
+  tags: [storage, s3]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:hetzner-cloud

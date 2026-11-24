@@ -1,0 +1,44 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: external-dns
+  title: external-dns
+  description: Publishes the Gateways' addresses and route hostnames in the specht-labs.de zone (upsert-only).
+  annotations:
+    argocd/app-name: external-dns
+    backstage.io/kubernetes-namespace: external-dns
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=external-dns
+  tags: [networking, dns]
+  links:
+    - url: https://kubernetes-sigs.github.io/external-dns/
+      title: external-dns docs
+      icon: docs
+    - url: https://github.com/kubernetes-sigs/external-dns
+      title: kubernetes-sigs/external-dns
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:cloudflare-api
+  dependsOn:
+    - resource:specht-labs
+    - resource:specht-labs.de
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs.de
+  title: specht-labs.de (DNS zone)
+  description: The specht-labs.de zone on Cloudflare. external-dns manages the apex, wildcard and *.k8s records; cert-manager writes its DNS-01 challenges here.
+  tags: [dns]
+spec:
+  type: dns-zone
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:cloudflare

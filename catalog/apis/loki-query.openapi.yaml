@@ -1,0 +1,102 @@
+# Hand-written: the Loki HTTP API query endpoints.
+# Source: https://grafana.com/docs/loki/latest/reference/loki-http-api/
+openapi: 3.0.3
+info:
+  title: Loki query
+  version: v1
+  description: LogQL queries and label lookups. Every request needs the tenant in the X-Scope-OrgID header.
+servers:
+  - url: http://loki-gateway.lgtm.svc.cluster.local
+    description: In-cluster
+security: []
+paths:
+  /loki/api/v1/query:
+    get:
+      summary: Instant LogQL query
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: time, in: query, schema: {type: string}}
+        - {name: direction, in: query, schema: {type: string, enum: [forward, backward]}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /loki/api/v1/query_range:
+    get:
+      summary: Range LogQL query
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+        - {name: since, in: query, schema: {type: string}}
+        - {name: step, in: query, schema: {type: string}}
+        - {name: interval, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+        - {name: direction, in: query, schema: {type: string, enum: [forward, backward]}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /loki/api/v1/labels:
+    get:
+      summary: List label names
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+        - {name: query, in: query, schema: {type: string}, description: Stream selector}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /loki/api/v1/label/{name}/values:
+    get:
+      summary: List a label's values
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: name, in: path, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+        - {name: query, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /loki/api/v1/series:
+    get:
+      summary: Find streams by selector
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - name: match[]
+          in: query
+          required: true
+          schema: {type: array, items: {type: string}}
+          style: form
+          explode: true
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /loki/api/v1/index/stats:
+    get:
+      summary: Streams, chunks, entries and bytes matched by a selector
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200':
+          description: Stats
+          content:
+            application/json:
+              schema: {type: object}
+components:
+  parameters:
+    tenant:
+      {name: X-Scope-OrgID, in: header, required: true, schema: {type: string}, description: Loki tenant}
+  responses:
+    ok:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status: {type: string}
+              data: {description: Shape depends on the endpoint and resultType}

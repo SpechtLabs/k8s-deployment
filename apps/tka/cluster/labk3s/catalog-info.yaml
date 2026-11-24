@@ -1,0 +1,37 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tka-labk3s
+  title: TKA (labk3s)
+  description: Kubernetes access to labk3s through Tailscale, with ephemeral service accounts.
+  annotations:
+    github.com/project-slug: SpechtLabs/tka
+    backstage.io/source-location: url:https://github.com/SpechtLabs/tka/tree/main/
+  tags: [auth, kubernetes]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  providesApis:
+    - api:tka-labk3s-api
+  dependsOn:
+    - resource:labk3s
+    - resource:tailnet
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: tka-labk3s-api
+  title: TKA API (labk3s)
+  description: TKA's REST API on labk3s, served on the tailnet.
+  tags: [auth, rest]
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  definition:
+    $text: https://github.com/SpechtLabs/tka/blob/v0.3.1/pkg/swagger/swagger.yaml

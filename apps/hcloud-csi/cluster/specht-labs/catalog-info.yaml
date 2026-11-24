@@ -1,0 +1,26 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: hcloud-csi
+  title: Hetzner Cloud CSI driver
+  description: Hetzner Cloud Volumes for PersistentVolumeClaims.
+  annotations:
+    argocd/app-name: hcloud-csi
+    backstage.io/kubernetes-namespace: kube-system
+    backstage.io/kubernetes-label-selector: app in (hcloud-csi,hcloud-csi-controller)
+  tags: [hetzner, storage]
+  links:
+    - url: https://github.com/hetznercloud/csi-driver
+      title: hetznercloud/csi-driver
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:hetzner-cloud-api
+  dependsOn:
+    - resource:specht-labs

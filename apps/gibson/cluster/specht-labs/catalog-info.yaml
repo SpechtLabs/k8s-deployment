@@ -1,0 +1,23 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: gibson
+  title: gibson
+  description: "`ssh specht-labs.de` plays the SpechtLabs intro, through the shared Gateway's :22 listener."
+  annotations:
+    github.com/project-slug: SpechtLabs/gibson
+    backstage.io/source-location: url:https://github.com/SpechtLabs/gibson/tree/main/
+    argocd/app-name: gibson
+    backstage.io/kubernetes-namespace: gibson
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name=gibson
+  tags: [website, ssh]
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs
+    - resource:shared-gateway

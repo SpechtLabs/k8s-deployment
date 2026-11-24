@@ -1,0 +1,59 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: argocd
+  title: Argo CD
+  description: Syncs every app in argo-apps/specht-labs to the specht-labs cluster.
+  annotations:
+    argocd/app-name: argocd
+    backstage.io/kubernetes-namespace: argocd
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/part-of=argocd
+  tags: [gitops]
+  links:
+    - url: https://argocd.k8s.specht-labs.de
+      title: Argo CD UI
+      icon: dashboard
+    - url: https://argo-cd.readthedocs.io
+      title: Argo CD docs
+      icon: docs
+    - url: https://github.com/argoproj/argo-cd
+      title: argoproj/argo-cd
+      icon: github
+    - url: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
+      title: Helm chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  providesApis:
+    - api:argocd-api
+  consumesApis:
+    - api:tsidp-oidc
+    - api:alloy-otlp
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet-gateway
+    - component:github
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: argocd-api
+  title: Argo CD API (specht-labs)
+  description: Argo CD's REST API on specht-labs, behind argocd.k8s.specht-labs.de. Backstage reads it through its /argocd/api proxy.
+  tags: [gitops, rest]
+  links:
+    - url: https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/
+      title: API docs
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  # Pinned to the chart's appVersion.
+  definition:
+    $text: https://github.com/argoproj/argo-cd/blob/v3.6.2/assets/swagger.json

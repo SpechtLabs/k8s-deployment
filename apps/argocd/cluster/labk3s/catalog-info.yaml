@@ -1,0 +1,50 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: argocd-labk3s
+  title: Argo CD (labk3s)
+  description: Syncs every app in argo-apps/labk3s to the labk3s cluster. Reachable as lab-argocd on the tailnet, and publicly through Tailscale Funnel.
+  tags: [gitops]
+  links:
+    - url: https://argo-cd.readthedocs.io
+      title: Argo CD docs
+      icon: docs
+    - url: https://github.com/argoproj/argo-cd
+      title: argoproj/argo-cd
+      icon: github
+    - url: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
+      title: Helm chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  providesApis:
+    - api:argocd-labk3s-api
+  consumesApis:
+    - api:tsidp-oidc
+  dependsOn:
+    - resource:labk3s
+    - resource:tailnet
+    - component:github
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: argocd-labk3s-api
+  title: Argo CD API (labk3s)
+  description: Argo CD's REST API on labk3s.
+  tags: [gitops, rest]
+  links:
+    - url: https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/
+      title: API docs
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  definition:
+    $text: https://github.com/argoproj/argo-cd/blob/v3.6.2/assets/swagger.json

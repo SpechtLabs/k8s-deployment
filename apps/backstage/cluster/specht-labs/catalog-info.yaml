@@ -1,0 +1,79 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+# Moved here from SpechtLabs/backstage, which holds the app's code.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage
+  title: Backstage
+  description: SpechtLabs' developer portal and software catalog.
+  annotations:
+    github.com/project-slug: SpechtLabs/backstage
+    backstage.io/source-location: url:https://github.com/SpechtLabs/backstage/tree/main/
+    # TechDocs: mkdocs.yml and docs/ in the app's repo.
+    backstage.io/techdocs-ref: url:https://github.com/SpechtLabs/backstage/tree/main
+    argocd/app-name: backstage
+    backstage.io/kubernetes-namespace: backstage
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/name=backstage
+  tags: [developer-portal]
+  links:
+    - url: https://backstage.k8s.specht-labs.de
+      title: Backstage
+      icon: dashboard
+    - url: https://backstage.io/docs
+      title: Backstage docs
+      icon: docs
+    - url: https://github.com/backstage/backstage
+      title: backstage/backstage
+      icon: github
+    - url: https://github.com/backstage/charts/tree/main/charts/backstage
+      title: Helm chart
+spec:
+  type: website
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:argocd-api
+    - api:tsidp-oidc
+  dependsOn:
+    - resource:specht-labs
+    - resource:backstage-db
+    - resource:tailnet-gateway
+    # Discovery, insights and PRs through the spechtlabs-backstage GitHub App.
+    - component:github
+    # The Grafana cards.
+    - component:grafana-cloud
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: backstage-db
+  title: Backstage database
+  description: Backstage's PostgreSQL, a CloudNativePG Cluster with WAL archiving and base backups to Hetzner Object Storage.
+  annotations:
+    argocd/app-name: backstage
+    backstage.io/kubernetes-namespace: backstage
+    backstage.io/kubernetes-label-selector: cnpg.io/cluster=backstage-db
+  tags: [database, postgresql]
+spec:
+  type: database
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:cloudnative-pg
+    - resource:specht-labs-backstage-db
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs-backstage-db
+  title: specht-labs-backstage-db (bucket)
+  description: Hetzner Object Storage bucket (fsn1) for backstage-db's WAL archive and base backups.
+  tags: [storage, s3, backup]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:hetzner-cloud

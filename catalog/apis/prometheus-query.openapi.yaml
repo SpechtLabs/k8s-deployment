@@ -1,0 +1,124 @@
+# Hand-written: the Prometheus HTTP API endpoints Mimir serves under
+# /prometheus. Source: https://prometheus.io/docs/prometheus/latest/querying/api/
+openapi: 3.0.3
+info:
+  title: Mimir query (Prometheus HTTP API)
+  version: v1
+  description: >-
+    PromQL queries and metadata lookups. Every request needs the tenant in the
+    X-Scope-OrgID header. GET and POST (form-encoded) are both accepted.
+servers:
+  - url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+    description: In-cluster
+security: []
+paths:
+  /api/v1/query:
+    get:
+      summary: Evaluate an instant query
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}, description: PromQL expression}
+        - {name: time, in: query, schema: {type: string}, description: RFC 3339 or Unix timestamp; default now}
+        - {name: timeout, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+        '400': {$ref: '#/components/responses/error'}
+        '422': {$ref: '#/components/responses/error'}
+  /api/v1/query_range:
+    get:
+      summary: Evaluate a range query
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}}
+        - {name: start, in: query, required: true, schema: {type: string}}
+        - {name: end, in: query, required: true, schema: {type: string}}
+        - {name: step, in: query, required: true, schema: {type: string}, description: Duration or float seconds}
+        - {name: timeout, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+        '400': {$ref: '#/components/responses/error'}
+        '422': {$ref: '#/components/responses/error'}
+  /api/v1/series:
+    get:
+      summary: Find series by label matchers
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/match'
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /api/v1/labels:
+    get:
+      summary: List label names
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/match'
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /api/v1/label/{name}/values:
+    get:
+      summary: List a label's values
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: name, in: path, required: true, schema: {type: string}}
+        - $ref: '#/components/parameters/match'
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /api/v1/metadata:
+    get:
+      summary: Metric metadata (type, help, unit)
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: metric, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+  /api/v1/query_exemplars:
+    get:
+      summary: Exemplars for a query
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - {name: query, in: query, required: true, schema: {type: string}}
+        - {name: start, in: query, schema: {type: string}}
+        - {name: end, in: query, schema: {type: string}}
+      responses:
+        '200': {$ref: '#/components/responses/ok'}
+components:
+  parameters:
+    tenant:
+      {name: X-Scope-OrgID, in: header, required: true, schema: {type: string}, description: Mimir tenant}
+    match:
+      name: match[]
+      in: query
+      schema: {type: array, items: {type: string}}
+      style: form
+      explode: true
+      description: Series selector; repeatable
+  schemas:
+    Envelope:
+      type: object
+      required: [status]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {description: Shape depends on the endpoint and resultType}
+        errorType: {type: string}
+        error: {type: string}
+        warnings: {type: array, items: {type: string}}
+        infos: {type: array, items: {type: string}}
+  responses:
+    ok:
+      description: Success
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Envelope'}
+    error:
+      description: Bad request or unprocessable expression
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Envelope'}

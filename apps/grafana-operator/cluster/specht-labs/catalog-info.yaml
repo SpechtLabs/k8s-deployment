@@ -1,0 +1,29 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: grafana-operator
+  title: grafana-operator
+  description: Pushes the dashboards, datasources (over PDC) and SLOs in git to the Grafana Cloud stack.
+  annotations:
+    argocd/app-name: grafana-operator
+    backstage.io/kubernetes-namespace: grafana-operator
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=grafana-operator
+  tags: [observability]
+  links:
+    - url: https://grafana.github.io/grafana-operator/docs/
+      title: grafana-operator docs
+      icon: docs
+    - url: https://github.com/grafana/grafana-operator
+      title: grafana/grafana-operator
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:grafana-http-api
+  dependsOn:
+    - resource:specht-labs

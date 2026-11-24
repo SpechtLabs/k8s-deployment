@@ -1,0 +1,23 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: coredns-labk3s
+  title: CoreDNS (labk3s)
+  description: k3s's bundled CoreDNS. This app only adds a ts.net forward to the Tailscale operator's nameserver, so in-cluster lookups of tailnet names resolve to the egress proxies.
+  tags: [networking, dns]
+  links:
+    - url: https://coredns.io
+      title: coredns.io
+    - url: https://github.com/coredns/coredns
+      title: coredns/coredns
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  dependsOn:
+    - resource:labk3s
+    - component:tailscale-labk3s

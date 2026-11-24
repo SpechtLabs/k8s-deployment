@@ -1,0 +1,24 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cert-checker
+  title: cert-checker
+  description: Exports the expiry of the public TLS certificates as Prometheus metrics.
+  annotations:
+    argocd/app-name: cert-checker
+    backstage.io/kubernetes-namespace: cert-checker
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=cert-checker
+  tags: [observability, certificates]
+  links:
+    - url: https://github.com/mogensen/cert-checker
+      title: mogensen/cert-checker
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs

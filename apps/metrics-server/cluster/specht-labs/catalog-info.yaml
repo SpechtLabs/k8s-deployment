@@ -1,0 +1,24 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: metrics-server
+  title: metrics-server
+  description: Serves the resource metrics API (metrics.k8s.io) used by kubectl top, autoscalers and Backstage's Kubernetes tab.
+  annotations:
+    argocd/app-name: metrics-server
+    backstage.io/kubernetes-namespace: kube-system
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=metrics-server
+  tags: [observability, kubernetes]
+  links:
+    - url: https://github.com/kubernetes-sigs/metrics-server
+      title: kubernetes-sigs/metrics-server
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - resource:specht-labs

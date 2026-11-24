@@ -1,0 +1,80 @@
+# Hand-written from RFC 8555 and https://acme-v02.api.letsencrypt.org/directory.
+# Every POST body is a JWS (application/jose+json) signed with the account key,
+# carrying a fresh nonce from new-nonce or the previous response.
+openapi: 3.0.3
+info:
+  title: Let's Encrypt ACME v2
+  version: RFC 8555
+  description: >-
+    Only the directory's fixed endpoints are listed. The authorization,
+    challenge, finalize and certificate URLs come from the order object
+    (RFC 8555 section 7.1.3), and their paths are the CA's to choose. The
+    client POSTs to them as JWS, or POST-as-GET to read them.
+servers:
+  - url: https://acme-v02.api.letsencrypt.org
+paths:
+  /directory:
+    get:
+      summary: The endpoint URLs and the CA's metadata
+      responses:
+        '200':
+          description: Directory
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newNonce: {type: string}
+                  newAccount: {type: string}
+                  newOrder: {type: string}
+                  revokeCert: {type: string}
+                  keyChange: {type: string}
+                  renewalInfo: {type: string}
+                  meta: {type: object}
+  /acme/new-nonce:
+    head:
+      summary: Get a fresh anti-replay nonce
+      responses:
+        '200':
+          description: Nonce in the Replay-Nonce header
+          headers:
+            Replay-Nonce: {schema: {type: string}}
+  /acme/new-acct:
+    post:
+      summary: Create or find an account
+      requestBody: {$ref: '#/components/requestBodies/jws'}
+      responses:
+        '200': {description: Existing account}
+        '201': {description: Account created}
+  /acme/new-order:
+    post:
+      summary: Order a certificate for a set of identifiers
+      requestBody: {$ref: '#/components/requestBodies/jws'}
+      responses:
+        '201': {description: Order with its authorization and finalize URLs}
+  /acme/renewal-info/{certID}:
+    get:
+      summary: Suggested renewal window (ARI, RFC 9773)
+      parameters:
+        - {name: certID, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Renewal window}
+  /acme/revoke-cert:
+    post:
+      summary: Revoke a certificate
+      requestBody: {$ref: '#/components/requestBodies/jws'}
+      responses:
+        '200': {description: Revoked}
+components:
+  requestBodies:
+    jws:
+      required: true
+      content:
+        application/jose+json:
+          schema:
+            type: object
+            required: [protected, payload, signature]
+            properties:
+              protected: {type: string}
+              payload: {type: string}
+              signature: {type: string}

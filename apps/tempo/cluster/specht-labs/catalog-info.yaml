@@ -1,0 +1,89 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tempo
+  title: Grafana Tempo
+  description: Multi-tenant trace store (tempo-distributed), zone-aware RF3 across hel1/nbg1/fsn1, with the metrics-generator.
+  annotations:
+    argocd/app-name: tempo
+    backstage.io/kubernetes-namespace: lgtm
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=tempo
+  tags: [observability, traces]
+  links:
+    - url: https://grafana.com/oss/tempo/
+      title: grafana.com/oss/tempo
+    - url: https://grafana.com/docs/tempo/latest/
+      title: Tempo docs
+      icon: docs
+    - url: https://github.com/grafana/tempo
+      title: grafana/tempo
+      icon: github
+    - url: https://github.com/grafana/helm-charts/tree/main/charts/tempo-distributed
+      title: Helm chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  providesApis:
+    - api:tempo-otlp
+    - api:tempo-query
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet-gateway
+    - resource:specht-labs-tempo-traces
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: tempo-otlp
+  title: Tempo OTLP traces
+  description: OTLP trace ingestion on tempo-distributor (gRPC :4317, HTTP :4318 /v1/traces). The tenant is the X-Scope-OrgID header.
+  tags: [observability, traces, otlp]
+  links:
+    - url: https://opentelemetry.io/docs/specs/otlp/
+      title: OTLP spec
+      icon: docs
+spec:
+  type: grpc
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition:
+    $text: https://github.com/open-telemetry/opentelemetry-proto/blob/v1.5.0/opentelemetry/proto/collector/trace/v1/trace_service.proto
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: tempo-query
+  title: Tempo query
+  description: Trace lookup, TraceQL search and TraceQL metrics on tempo-query-frontend :3200. Grafana Cloud reads it through PDC.
+  tags: [observability, traces, rest]
+  links:
+    - url: https://grafana.com/docs/tempo/latest/api_docs/
+      title: Tempo HTTP API
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  # Hand-written: Tempo publishes no OpenAPI document.
+  definition:
+    $text: ../../../../catalog/apis/tempo-query.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs-tempo-traces
+  title: specht-labs-tempo-traces (bucket)
+  description: Hetzner Object Storage bucket (hel1) for Tempo's trace blocks.
+  tags: [storage, s3]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:hetzner-cloud

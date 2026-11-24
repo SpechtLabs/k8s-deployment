@@ -1,0 +1,48 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: static-pages
+  title: StaticPages
+  description: Serves specht-labs.de and the other static sites from object storage, with preview URLs.
+  annotations:
+    github.com/project-slug: SpechtLabs/StaticPages
+    backstage.io/source-location: url:https://github.com/SpechtLabs/StaticPages/tree/main/
+    argocd/app-name: static-pages
+    backstage.io/kubernetes-namespace: static-pages
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=static-pages
+  tags: [website]
+  links:
+    - url: https://specht-labs.de
+      title: specht-labs.de
+    - url: https://pages.specht-labs.de
+      title: pages.specht-labs.de
+    - url: https://github.com/SpechtLabs/StaticPages-Upload
+      title: Upload action
+      icon: github
+spec:
+  type: website
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:alloy-otlp
+  dependsOn:
+    - resource:specht-labs
+    - resource:shared-gateway
+    - resource:cedi-testing
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: cedi-testing
+  title: cedi-testing (bucket)
+  description: Backblaze B2 bucket (eu-central-003) holding the sites StaticPages serves, fronted by cdn.specht-labs.de.
+  tags: [storage, s3]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:backblaze-b2

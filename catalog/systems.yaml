@@ -1,0 +1,30 @@
+# Backstage catalog: the Systems. Each cluster is one System. The functional
+# groupings (networking, observability, ...) are tags, because a Component
+# belongs to exactly one System. System homelab, and the home infrastructure
+# the labk3s apps depend on (resource:labk3s, resource:tailnet,
+# resource:ceph-rbd-k3s, component:tsidp, api:tsidp-oidc, api:nas-nfs), are
+# defined in cedi/homelab.
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: specht-labs
+  title: Specht Labs
+  description: The specht-labs cluster on Hetzner Cloud and everything Argo CD deploys to it from argo-apps/specht-labs.
+  links:
+    - url: https://argocd.k8s.specht-labs.de
+      title: Argo CD
+      icon: dashboard
+    - url: https://github.com/SpechtLabs/k8s-deployment/tree/main/argo-apps/specht-labs
+      title: argo-apps/specht-labs
+      icon: github
+spec:
+  owner: group:spechtlabs
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: external-services
+  title: External services
+  description: Third-party services the clusters depend on. Modelled as Components so they can provide the APIs our components consume.
+spec:
+  owner: group:spechtlabs

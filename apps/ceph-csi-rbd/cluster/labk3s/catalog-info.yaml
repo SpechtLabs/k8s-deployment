@@ -1,0 +1,25 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ceph-csi-rbd
+  title: Ceph CSI (RBD)
+  description: RBD volumes for labk3s from the storagepi Ceph cluster's k3s pool, reaching the monitors over the tailnet.
+  tags: [storage, ceph]
+  links:
+    - url: https://docs.ceph.com/en/latest/rbd/rbd-kubernetes/
+      title: Ceph RBD on Kubernetes
+      icon: docs
+    - url: https://github.com/ceph/ceph-csi
+      title: ceph/ceph-csi
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  dependsOn:
+    - resource:labk3s
+    - resource:ceph-rbd-k3s
+    - resource:tailnet

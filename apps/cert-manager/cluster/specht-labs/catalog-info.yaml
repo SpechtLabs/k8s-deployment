@@ -1,0 +1,30 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cert-manager
+  title: cert-manager (specht-labs)
+  description: Issues and renews the cluster's TLS certificates from Let's Encrypt, solving DNS-01 challenges on Cloudflare.
+  annotations:
+    argocd/app-name: cert-manager
+    backstage.io/kubernetes-namespace: cert-manager
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=cert-manager
+  tags: [certificates]
+  links:
+    - url: https://cert-manager.io/docs/
+      title: cert-manager docs
+      icon: docs
+    - url: https://github.com/cert-manager/cert-manager
+      title: cert-manager/cert-manager
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    - api:letsencrypt-acme
+    - api:cloudflare-api
+  dependsOn:
+    - resource:specht-labs

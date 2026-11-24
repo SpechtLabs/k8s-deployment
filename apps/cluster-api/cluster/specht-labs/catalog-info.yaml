@@ -1,0 +1,28 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs
+  title: specht-labs cluster
+  description: The specht-labs Kubernetes cluster on Hetzner Cloud (hel1, nbg1, fsn1), declared as Cluster API objects and reconciled by CAPI and CAPH, which run on the cluster itself.
+  annotations:
+    argocd/app-name: cluster-specht-labs
+  tags: [kubernetes, hetzner, cluster-api]
+  links:
+    - url: https://cluster-api.sigs.k8s.io
+      title: Cluster API docs
+      icon: docs
+    - url: https://syself.com/docs/caph
+      title: CAPH docs
+      icon: docs
+    - url: https://github.com/syself/cluster-api-provider-hetzner
+      title: syself/cluster-api-provider-hetzner
+      icon: github
+spec:
+  type: kubernetes-cluster
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:cluster-api-operator
+    - component:hetzner-cloud

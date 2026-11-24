@@ -1,0 +1,89 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: loki
+  title: Grafana Loki
+  description: Multi-tenant log store (distributed mode), zone-aware RF3 across hel1/nbg1/fsn1.
+  annotations:
+    argocd/app-name: loki
+    backstage.io/kubernetes-namespace: lgtm
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=loki
+  tags: [observability, logs]
+  links:
+    - url: https://grafana.com/oss/loki/
+      title: grafana.com/oss/loki
+    - url: https://grafana.com/docs/loki/latest/
+      title: Loki docs
+      icon: docs
+    - url: https://github.com/grafana/loki
+      title: grafana/loki
+      icon: github
+    - url: https://github.com/grafana/loki/tree/main/production/helm/loki
+      title: Helm chart
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  providesApis:
+    - api:loki-push
+    - api:loki-query
+  dependsOn:
+    - resource:specht-labs
+    - resource:tailnet-gateway
+    - resource:specht-labs-loki-chunks
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: loki-push
+  title: Loki push
+  description: Log ingestion at loki-gateway /loki/api/v1/push (snappy-compressed PushRequest protobuf, or JSON). The tenant is the X-Scope-OrgID header.
+  tags: [observability, logs, protobuf]
+  links:
+    - url: https://grafana.com/docs/loki/latest/reference/loki-http-api/#ingest-logs
+      title: Push API docs
+      icon: docs
+spec:
+  type: grpc
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition:
+    $text: https://github.com/grafana/loki/blob/v3.6.11/pkg/push/push.proto
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: loki-query
+  title: Loki query
+  description: LogQL queries and label lookups at loki-gateway /loki/api/v1. Grafana Cloud reads it through PDC.
+  tags: [observability, logs, rest]
+  links:
+    - url: https://grafana.com/docs/loki/latest/reference/loki-http-api/
+      title: Loki HTTP API
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  # Hand-written: Loki publishes no OpenAPI document.
+  definition:
+    $text: ../../../../catalog/apis/loki-query.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: specht-labs-loki-chunks
+  title: specht-labs-loki-chunks (bucket)
+  description: Hetzner Object Storage bucket (hel1) for Loki's chunks, index, ruler and admin data.
+  tags: [storage, s3]
+spec:
+  type: s3-bucket
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:hetzner-cloud

@@ -1,0 +1,23 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: letsencrypt-prod
+  title: letsencrypt-prod (ClusterIssuer)
+  description: cert-manager's ClusterIssuer for Let's Encrypt production certificates, with DNS-01 challenges on Cloudflare.
+  annotations:
+    argocd/app-name: cluster-issuer
+  tags: [certificates]
+  links:
+    - url: https://cert-manager.io/docs/configuration/acme/dns01/cloudflare/
+      title: Cloudflare DNS-01 docs
+      icon: docs
+spec:
+  type: certificate-issuer
+  owner: group:spechtlabs
+  system: specht-labs
+  dependsOn:
+    - component:cert-manager
+    - component:lets-encrypt
+    - resource:specht-labs.de

@@ -1,0 +1,107 @@
+# Hand-written subset of the Cloudflare v4 API: zones and DNS records.
+# Full schema: https://github.com/cloudflare/api-schemas
+openapi: 3.0.3
+info:
+  title: Cloudflare API (DNS)
+  version: v4
+servers:
+  - url: https://api.cloudflare.com/client/v4
+security:
+  - apiToken: []
+paths:
+  /zones:
+    get:
+      summary: List zones
+      parameters:
+        - {name: name, in: query, schema: {type: string}, description: 'Zone name, e.g. specht-labs.de'}
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+  /zones/{zone_id}/dns_records:
+    parameters:
+      - $ref: '#/components/parameters/zoneId'
+    get:
+      summary: List DNS records
+      parameters:
+        - {name: type, in: query, schema: {type: string}}
+        - {name: name, in: query, schema: {type: string}}
+        - {name: content, in: query, schema: {type: string}}
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/perPage'
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+    post:
+      summary: Create a DNS record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DnsRecord'}
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+  /zones/{zone_id}/dns_records/{dns_record_id}:
+    parameters:
+      - $ref: '#/components/parameters/zoneId'
+      - {name: dns_record_id, in: path, required: true, schema: {type: string}}
+    get:
+      summary: Get a DNS record
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+    put:
+      summary: Overwrite a DNS record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DnsRecord'}
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+    patch:
+      summary: Update a DNS record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DnsRecord'}
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+    delete:
+      summary: Delete a DNS record
+      responses:
+        '200': {$ref: '#/components/responses/envelope'}
+components:
+  securitySchemes:
+    apiToken:
+      type: http
+      scheme: bearer
+      description: API token scoped to Zone:Read and DNS:Edit
+  parameters:
+    zoneId: {name: zone_id, in: path, required: true, schema: {type: string}}
+    page: {name: page, in: query, schema: {type: integer, minimum: 1}}
+    perPage: {name: per_page, in: query, schema: {type: integer}}
+  schemas:
+    DnsRecord:
+      type: object
+      required: [type, name, content]
+      properties:
+        id: {type: string, readOnly: true}
+        type: {type: string, example: A, description: 'A, AAAA, CNAME, TXT, ...'}
+        name: {type: string, example: www.specht-labs.de}
+        content: {type: string}
+        ttl: {type: integer, description: 1 means automatic}
+        proxied: {type: boolean}
+        comment: {type: string}
+  responses:
+    envelope:
+      description: Cloudflare response envelope
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: {type: boolean}
+              errors: {type: array, items: {type: object}}
+              messages: {type: array, items: {type: object}}
+              result: {}
+              result_info: {type: object}

@@ -1,0 +1,23 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cert-manager-labk3s
+  title: cert-manager (labk3s)
+  description: cert-manager on labk3s. No ClusterIssuer is deployed there through Argo CD.
+  tags: [certificates]
+  links:
+    - url: https://cert-manager.io/docs/
+      title: cert-manager docs
+      icon: docs
+    - url: https://github.com/cert-manager/cert-manager
+      title: cert-manager/cert-manager
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  dependsOn:
+    - resource:labk3s

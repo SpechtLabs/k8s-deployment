@@ -1,0 +1,268 @@
+# Backstage catalog: third-party services and the APIs of theirs we use.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: hetzner-cloud
+  title: Hetzner Cloud
+  description: Servers, networks, load balancers, volumes and Object Storage for the specht-labs cluster.
+  tags: [third-party, hetzner]
+  links:
+    - url: https://console.hetzner.cloud
+      title: Cloud Console
+      icon: dashboard
+    - url: https://docs.hetzner.cloud
+      title: API docs
+      icon: docs
+    - url: https://docs.hetzner.com/storage/object-storage/
+      title: Object Storage docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  providesApis:
+    - api:hetzner-cloud-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: hetzner-cloud-api
+  title: Hetzner Cloud API
+  description: REST API for the Hetzner Cloud project (api.hetzner.cloud/v1).
+  tags: [third-party, hetzner, rest]
+  links:
+    - url: https://docs.hetzner.cloud
+      title: API reference
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  # Hetzner's published spec (~3.5 MB). Its host must be in
+  # backend.reading.allow (backstage overlay).
+  definition:
+    $text: https://docs.hetzner.cloud/cloud.spec.json
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backblaze-b2
+  title: Backblaze B2
+  description: S3-compatible object storage holding the static sites StaticPages serves.
+  tags: [third-party, storage, s3]
+  links:
+    - url: https://secure.backblaze.com/b2_buckets.htm
+      title: B2 buckets
+      icon: dashboard
+    - url: https://www.backblaze.com/docs/cloud-storage-s3-compatible-api
+      title: S3-compatible API docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cloudflare
+  title: Cloudflare
+  description: DNS for specht-labs.de.
+  tags: [third-party, dns]
+  links:
+    - url: https://dash.cloudflare.com
+      title: Dashboard
+      icon: dashboard
+    - url: https://developers.cloudflare.com/api/
+      title: API docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  providesApis:
+    - api:cloudflare-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: cloudflare-api
+  title: Cloudflare API (DNS)
+  description: The zone and DNS record endpoints of the Cloudflare v4 API, the part external-dns and cert-manager's DNS-01 solver use.
+  tags: [third-party, dns, rest]
+  links:
+    - url: https://developers.cloudflare.com/api/resources/dns/subresources/records/
+      title: DNS records API
+      icon: docs
+    - url: https://github.com/cloudflare/api-schemas
+      title: Full OpenAPI schema
+      icon: github
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  # Hand-written subset: Cloudflare's full schema is ~22 MB.
+  definition:
+    $text: ./apis/cloudflare-dns.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tailscale-control-plane
+  title: Tailscale
+  description: Tailscale's coordination service for the sphinx-map tailnet (keys, ACLs, DNS, Funnel).
+  tags: [third-party, tailscale]
+  links:
+    - url: https://login.tailscale.com/admin
+      title: Admin console
+      icon: dashboard
+    - url: https://tailscale.com/kb
+      title: Tailscale docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  providesApis:
+    - api:tailscale-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: tailscale-api
+  title: Tailscale API
+  description: Tailscale's v2 REST API (api.tailscale.com/api/v2). The operators use it to create auth keys and manage their devices.
+  tags: [third-party, tailscale, rest]
+  links:
+    - url: https://tailscale.com/api
+      title: API reference
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  # Tailscale's published spec. Its host must be in backend.reading.allow
+  # (backstage overlay).
+  definition:
+    $text: https://api.tailscale.com/api/v2?outputOpenapiSchema=true
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: grafana-cloud
+  title: Grafana Cloud
+  description: The spechtlabs Grafana Cloud stack. Dashboards, alerts and SLOs over the self-hosted LGTM stack, which it queries through PDC.
+  tags: [third-party, observability]
+  links:
+    - url: https://spechtlabs.grafana.net
+      title: spechtlabs.grafana.net
+      icon: dashboard
+    - url: https://grafana.com/docs/grafana-cloud/
+      title: Grafana Cloud docs
+      icon: docs
+    - url: https://grafana.com/docs/grafana-cloud/connect-externally-hosted/private-data-source-connect/
+      title: PDC docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  providesApis:
+    - api:grafana-http-api
+  consumesApis:
+    - api:mimir-query
+    - api:loki-query
+    - api:tempo-query
+    - api:pyroscope-query
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: grafana-http-api
+  title: Grafana HTTP API
+  description: The Grafana Cloud stack's HTTP API (spechtlabs.grafana.net/api), used with a service account token.
+  tags: [third-party, observability, rest]
+  links:
+    - url: https://grafana.com/docs/grafana/latest/developers/http_api/
+      title: HTTP API docs
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  # Grafana Cloud runs a current Grafana; the spec from main matches it best.
+  definition:
+    $text: https://github.com/grafana/grafana/blob/main/public/openapi3.json
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: lets-encrypt
+  title: Let's Encrypt
+  description: The ACME certificate authority behind letsencrypt-prod.
+  tags: [third-party, certificates]
+  links:
+    - url: https://letsencrypt.org
+      title: letsencrypt.org
+    - url: https://letsencrypt.org/docs/
+      title: Docs
+      icon: docs
+    - url: https://letsencrypt.status.io
+      title: Status
+      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  providesApis:
+    - api:letsencrypt-acme
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: letsencrypt-acme
+  title: Let's Encrypt ACME v2
+  description: The ACME (RFC 8555) endpoints at acme-v02.api.letsencrypt.org.
+  tags: [third-party, certificates, rest]
+  links:
+    - url: https://datatracker.ietf.org/doc/html/rfc8555
+      title: RFC 8555
+      icon: docs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services
+  # Hand-written from RFC 8555 and the live directory.
+  definition:
+    $text: ./apis/letsencrypt-acme.openapi.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: github
+  title: GitHub
+  description: Hosts the SpechtLabs repos. Argo CD pulls from them; Backstage discovers catalog entities and shows insights through the spechtlabs-backstage GitHub App.
+  tags: [third-party, git]
+  links:
+    - url: https://github.com/SpechtLabs
+      title: github.com/SpechtLabs
+      icon: github
+    - url: https://docs.github.com/en/rest
+      title: REST API docs
+      icon: docs
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: external-services

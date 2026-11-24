@@ -1,0 +1,37 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cluster-api-operator
+  title: Cluster API Operator
+  description: Installs and upgrades the Cluster API providers (core, kubeadm bootstrap and control plane, Hetzner/CAPH) that reconcile the specht-labs cluster.
+  annotations:
+    argocd/app-name: cluster-api-operator
+    # The operator and the provider controllers it installs, in their own
+    # namespaces.
+    backstage.io/kubernetes-label-selector: control-plane in (controller-manager,caph-controller-manager)
+  tags: [cluster-api, hetzner]
+  links:
+    - url: https://cluster-api-operator.sigs.k8s.io
+      title: Operator docs
+      icon: docs
+    - url: https://github.com/kubernetes-sigs/cluster-api-operator
+      title: kubernetes-sigs/cluster-api-operator
+      icon: github
+    - url: https://github.com/kubernetes-sigs/cluster-api
+      title: kubernetes-sigs/cluster-api
+      icon: github
+    - url: https://github.com/syself/cluster-api-provider-hetzner
+      title: syself/cluster-api-provider-hetzner
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  consumesApis:
+    # CAPH creates the servers, networks, placement groups and load balancer.
+    - api:hetzner-cloud-api
+  dependsOn:
+    - resource:specht-labs

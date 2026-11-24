@@ -1,0 +1,26 @@
+# Backstage catalog: this app's entities. Not part of the kustomization;
+# Backstage reads it through the Location in the repo-root catalog-info.yaml.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tailscale-labk3s
+  title: Tailscale operator (labk3s)
+  description: Joins labk3s to the tailnet. Runs the egress proxies (tsidp, the specht-labs LGTM ingress) and the ts.net nameserver.
+  tags: [networking, tailscale]
+  links:
+    - url: https://tailscale.com/kb/1236/kubernetes-operator
+      title: Operator docs
+      icon: docs
+    - url: https://github.com/tailscale/tailscale
+      title: tailscale/tailscale
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:spechtlabs
+  system: homelab
+  consumesApis:
+    - api:tailscale-api
+  dependsOn:
+    - resource:labk3s
+    - resource:tailnet
