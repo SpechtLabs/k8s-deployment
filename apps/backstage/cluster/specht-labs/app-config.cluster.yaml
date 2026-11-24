@@ -29,6 +29,10 @@ backend:
           - /prometheus/prometheus/
           - /SpechtLabs/tka/
 
+# Sign in by redirecting the page instead of opening a popup. iOS Safari
+# blocks the popup (the Sign In button did nothing on a phone).
+enableExperimentalRedirectFlow: true
+
 auth:
   environment: production
   # The oidc provider keeps the login's state and nonce in an express session,
