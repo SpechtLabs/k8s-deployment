@@ -101,6 +101,13 @@ backstage:
   # The database settings (pg, schema per plugin, POSTGRES_* env) ship in the
   # image's app-config.production.yaml.
 
+# Its own service account: the Kubernetes plugin reads the cluster as it
+# (kubernetes-rbac.yaml).
+serviceAccount:
+  create: true
+  name: backstage
+  automountServiceAccountToken: true
+
 # The database is a CNPG Cluster (postgres-cluster.yaml), not the chart's
 # Bitnami subchart.
 postgresql:

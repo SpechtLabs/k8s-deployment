@@ -36,3 +36,17 @@ auth:
             # spec.profile.email. tsidp's email is the tailnet login name,
             # so the User entity must carry that exact value.
             - resolver: emailMatchingUserEntityProfileEmail
+
+# The Kubernetes plugin: this cluster, read as the pod's service account
+# (no token here means the mounted one; RBAC in base/kubernetes-rbac.yaml).
+# An entity opts in with backstage.io/kubernetes-label-selector or
+# backstage.io/kubernetes-id.
+kubernetes:
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - name: specht-labs
+          url: https://kubernetes.default.svc
+          authProvider: serviceAccount

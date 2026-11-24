@@ -15,10 +15,11 @@ helmCharts:
 
 resources:
   - postgres-cluster.yaml
+  - kubernetes-rbac.yaml
 
 # The release to run. Renovate's kustomize manager bumps newTag for each new
 # vX.Y.Z of SpechtLabs/backstage (and automerges minor/patch). This overrides
 # the chart's image tag.
 images:
   - name: ghcr.io/spechtlabs/backstage
-    newTag: 1.0.0
+    newTag: 1.1.0
