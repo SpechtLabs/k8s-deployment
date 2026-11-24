@@ -2,9 +2,8 @@
 # Grafana Cloud as Grafana-managed alert rules via grafana-operator.
 #
 # These are deliberately NOT the SLO burn-rate alerts: the availability/latency
-# SLOs live in the Grafana Cloud SLO plugin (synced via `gcx slo definitions
-# push`, see ../../../../grafana/slos/) which auto-generates its own fast/slow
-# burn alerts. Health targets answer "is it healthy right now?"; the SLOs answer
+# SLOs live in the Grafana Cloud SLO plugin (GrafanaManifests in slos/, applied
+# by the operator) which auto-generates its own fast/slow burn alerts. Health targets answer "is it healthy right now?"; the SLOs answer
 # "have we been good enough over 28 days?". See docs/static-pages-slos.md.
 #
 # Queries are verified against the datasource each rule names: the service's

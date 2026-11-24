@@ -1,4 +1,4 @@
-# specht-labs PLATFORM HEALTH TARGETS: what the SLOs in grafana/slos/ cannot see.
+# specht-labs PLATFORM HEALTH TARGETS: what the SLOs in slos/ cannot see.
 # An SLO is a ratio of events, so it goes quiet (NoData, which never alerts) exactly
 # when things are worst: the cluster's telemetry stops arriving, a backend is
 # so dead it gets no traffic, or the SLO plugin can no longer write its recordings.

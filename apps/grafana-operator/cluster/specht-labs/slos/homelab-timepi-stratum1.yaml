@@ -1,0 +1,53 @@
+# SLO hltimepistratum1: Homelab — timepi on GPS time (stratum 1). Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaManifest
+metadata:
+  name: slo-hltimepistratum1
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  template:
+    apiVersion: slo.ext.grafana.app/v1alpha1
+    kind: SLO
+    metadata:
+      name: hltimepistratum1
+    spec:
+      name: Homelab — timepi on GPS time (stratum 1)
+      description: >-
+        Share of minutes in which timepi's ntpsec followed the GPS PPS (stratum 1, ~1 µs) instead of network
+        time (PTB/pool, ~1 ms). Bounded by the antenna's sky view, not by anything running: 84.5% over
+        the 7 days before 2026-11-24, so 80% for now; raise it once the antenna sees open sky. Never pages.
+      destinationDatasource:
+        uid: mimir-homelab
+      query:
+        type: freeform
+        freeform:
+          query: >-
+            avg_over_time((max(ntpsec_peer_selection{instance="timepi:9100", peer="PPS"}) >= bool 6)[$__rate_interval:1m])
+      objectives:
+      - value: 0.8
+        window: 28d
+      labels:
+      - key: service
+        value: time-sync
+      - key: site
+        value: homelab
+      alerting:
+        labels:
+        - key: service
+          value: time-sync
+        fastBurn:
+          labels:
+          - key: severity
+            value: warning
+          annotations:
+          - key: summary
+            value: Homelab — timepi on GPS time (stratum 1) is burning its error budget fast.
+        slowBurn:
+          labels:
+          - key: severity
+            value: warning
+          annotations:
+          - key: summary
+            value: Homelab — timepi on GPS time (stratum 1) is burning its error budget slowly.

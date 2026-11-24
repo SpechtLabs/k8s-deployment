@@ -113,7 +113,7 @@ disabledAlertConfigs:
 
   # static-pages — outbound calls to the Cloudflare CDN (cdn.specht-labs.de) hit connection
   # resets (~220ms, HTTP keepalive churn); the app transparently retries / falls back to
-  # direct Backblaze B2, so page-serving availability stays 100% (see grafana/slos —
+  # direct Backblaze B2, so page-serving availability stays 100% (see apps/grafana-operator/cluster/specht-labs/slos —
   # Static Pages Proxy Availability). Also covers unauthenticated bot 4xx (/api/upload 403,
   # 404s). Graph noise only; real user impact is owned by the proxy SLOs + health alerts.
   # Follow-up (low priority, out of repo): expose IdleConnTimeout in the staticpages proxy

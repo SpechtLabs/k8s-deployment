@@ -2,21 +2,25 @@
 
 Service Level Objectives for SpechtLabs and homelab services, managed as code.
 
-Grafana Cloud SLOs are **not** Kubernetes resources — the grafana-operator has no
-SLO CRD (it ships `GrafanaAlertRuleGroup`, `GrafanaContactPoint`, … but no `SLO`
-kind) — so these are synced with `gcx` against the Grafana Cloud SLO API.
+Each file is a `GrafanaManifest` wrapping a Grafana Cloud SLO
+(`slo.ext.grafana.app/v1alpha1`, kind `SLO`). The grafana-operator on the
+specht-labs cluster applies them through Grafana's app-platform API, like the
+rule groups, contact point and notification policy next door: Argo CD syncs this
+directory on merge to `main`. Nothing is pushed by hand. An SLO created or
+edited in the UI or with `gcx` is overwritten (or, if it has no file here, left
+unmanaged): add or change it here.
 
 This is the **SLO half** of a hybrid model:
 
 - **SLOs (here)** — error-budget objects with the native SLO UI and auto-generated
-  burn alerts, synced via `gcx slo definitions push`.
+  burn alerts, applied by the grafana-operator.
 - **Health targets** — instantaneous binary checks (synthetic down, no pods,
   under-replicated, immediate 5xx), delivered the operator-native way as a
   `GrafanaAlertRuleGroup` in
-  `apps/grafana-operator/cluster/specht-labs/grafanaalertrules-static-pages.yaml`
+  `../grafanaalertrules-static-pages.yaml`
   (ArgoCD-applied). They are **not** duplicated here.
 
-See [`../../docs/static-pages-slos.md`](../../docs/static-pages-slos.md) for which
+See [`docs/static-pages-slos.md`](../../../../../docs/static-pages-slos.md) for which
 signal is an SLO vs. a health target and why.
 
 ## Files
@@ -72,27 +76,15 @@ stalled. SLO ids must be ≤ 21 characters.
 slow burn `severity: warning` (one push); routing is
 `apps/grafana-operator/cluster/specht-labs/grafananotificationpolicy.yaml`.
 
-## Sync
+## Changing an SLO
+
+Edit or add the file here (and list a new one in `kustomization.yaml`), merge to
+`main`, and Argo CD plus the operator do the rest. Check the result with:
 
 ```bash
-# Preview
-gcx slo definitions push grafana/slos/*.yaml --dry-run
-
-# Apply
-gcx slo definitions push grafana/slos/*.yaml
-
-# Inspect live status + error budget
-gcx slo definitions status
+kush exec specht-labs-admin@specht-labs -n grafana-operator -- kubectl get grafanamanifests
+gcx slo definitions status        # read-only: SLI and error budget
 ```
 
-Pushing an SLO auto-generates its fast-burn / slow-burn alert rules in Grafana.
-
-## CI (optional)
-
-To make this true GitOps, run the push from CI on merge to `main` (the runner
-needs a Grafana Cloud token with SLO write access exported as the usual `gcx`
-auth env vars):
-
-```yaml
-- run: gcx slo definitions push grafana/slos/*.yaml
-```
+The operator keeps the SLO's `metadata.name` as its UUID, so existing SLOs are
+updated in place and keep their history.

@@ -1,7 +1,7 @@
 # Static Pages — SLOs & health targets
 
 Research notes and rationale behind the Static Pages SLOs in
-[`../grafana/slos/`](../grafana/slos/) and the
+[`../apps/grafana-operator/cluster/specht-labs/slos/`](../apps/grafana-operator/cluster/specht-labs/slos/) and the
 [`Static Pages / Overview`](../components/grafana-dashboards/static-pages/static-pages.json)
 dashboard. Every number here is taken from live telemetry (Grafana Cloud
 `grafanacloud-prom`, `service_name="static-pages"`), not assumed.
@@ -124,7 +124,7 @@ So delivery is hybrid, split by what each tool can own:
 | Dashboard | grafana-operator `GrafanaDashboard` + `configMapRef` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafanadashboards-static-pages.yaml` (JSON in `bases/grafana-dashboards/static-pages/`) |
 | **Health targets** | grafana-operator `GrafanaAlertRuleGroup` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafanaalertrules-static-pages.yaml` |
 | Folder ("Applications") | grafana-operator `GrafanaFolder` (ArgoCD) | `overlays/specht-labs/grafana-operator/grafana-applications-folder.yaml` |
-| **SLOs** (error budgets) | Grafana Cloud SLO plugin via `gcx slo definitions push` | `grafana/slos/` |
+| **SLOs** (error budgets) | Grafana Cloud SLO plugin, as GrafanaManifests the grafana-operator applies | `apps/grafana-operator/cluster/specht-labs/slos/` |
 
 Everything except the SLO objects is operator-native and ArgoCD-applied in the
 v2 overlay. The SLOs stay in the SLO plugin (for the error-budget UI and reporting)
@@ -144,7 +144,7 @@ self-hosted-Grafana cluster.
 | `sp-proxy-5xx` | 5xx ratio `> 2%` for 10m | warning |
 
 The SLO **burn-rate** alerts are intentionally not in this group — the SLO plugin
-generates its own fast/slow-burn alerts from the definitions in `grafana/slos/`.
+generates its own fast/slow-burn alerts from the definitions in `apps/grafana-operator/cluster/specht-labs/slos/`.
 
 ## 6. Open follow-ups
 

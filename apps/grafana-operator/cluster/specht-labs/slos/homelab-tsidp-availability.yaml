@@ -1,0 +1,52 @@
+# SLO hltsidpavail: Homelab — tsidp availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaManifest
+metadata:
+  name: slo-hltsidpavail
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  template:
+    apiVersion: slo.ext.grafana.app/v1alpha1
+    kind: SLO
+    metadata:
+      name: hltsidpavail
+    spec:
+      name: Homelab — tsidp availability
+      description: >-
+        Share of probes for which tsidp served its OIDC discovery document (https://idp.sphinx-map.ts.net/.well-known/openid-configuration
+        with an issuer): sign-in for Buckle and every tsidp client. 99.9%: everything else's sign-in depends
+        on it.
+      destinationDatasource:
+        uid: mimir-homelab
+      query:
+        type: freeform
+        freeform:
+          query: avg_over_time(probe_success{job="blackbox", service="tsidp"}[$__rate_interval])
+      objectives:
+      - value: 0.999
+        window: 28d
+      labels:
+      - key: service
+        value: tsidp
+      - key: site
+        value: homelab
+      alerting:
+        labels:
+        - key: service
+          value: tsidp
+        fastBurn:
+          labels:
+          - key: severity
+            value: critical
+          annotations:
+          - key: summary
+            value: Homelab — tsidp availability is burning its error budget fast.
+        slowBurn:
+          labels:
+          - key: severity
+            value: warning
+          annotations:
+          - key: summary
+            value: Homelab — tsidp availability is burning its error budget slowly.

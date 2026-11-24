@@ -27,8 +27,10 @@ resources:
   - grafanadashboards-static-pages.yaml
   - grafanadashboards-home-assistant.yaml
   - grafanadashboards-ceph.yaml
-  # First-party app health targets (instantaneous checks). SLO burn alerts are
-  # owned by the Grafana Cloud SLO plugin (gcx), not here. See grafana/slos/.
+  # Every SLO (error budgets, with the SLO plugin's own burn alerts), as
+  # GrafanaManifests the operator applies: edit them there, never with gcx.
+  - slos
+  # First-party app health targets (instantaneous checks).
   - grafanaalertrules-static-pages.yaml
   # Ceph cluster and ceph-csi health (homelab Mimir tenant).
   - grafanaalertrules-ceph.yaml
