@@ -191,6 +191,16 @@ mimir:
         replication_factor: 3
     distributor:
       remote_timeout: null
+    # Read path. Since 2026-11-24 Grafana Cloud evaluates ~300 SLO/alert rule
+    # queries a minute (was 18), all at the top of the minute. With the default
+    # 16 shards per query leg each became 48-64 sub-queries for 2 x 8 querier
+    # workers: queries of 1-50 series sat up to 9s in the scheduler queue (p99
+    # 8.8s) while the queriers idled at ~0.25 cores. No query here is big enough
+    # to gain from sharding; off, and twice the workers.
+    querier:
+      max_concurrent: 16
+    limits:
+      query_sharding_total_shards: 0
     # Classic architecture: no Kafka ingest-storage (see kafka.enabled: false above).
     ingest_storage:
       enabled: false
