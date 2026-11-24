@@ -22,4 +22,4 @@ resources:
 # the chart's image tag.
 images:
   - name: ghcr.io/spechtlabs/backstage
-    newTag: 1.6.0
+    newTag: 1.7.0

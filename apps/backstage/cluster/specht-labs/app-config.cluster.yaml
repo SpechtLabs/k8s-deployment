@@ -166,3 +166,13 @@ catalog:
             minutes: 30
           timeout:
             minutes: 3
+
+# Tailnet policy from the catalog, in shadow mode: keep one pull request open
+# with the rendered grants in a private sandbox repo (the GitHub App is
+# installed on SpechtLabs). Later: cedi/homelab, once the App is installed
+# there and the policy Action merges the generated fragment.
+tailnetPolicy:
+  publish:
+    repo: SpechtLabs/tailnet-policy-sandbox
+    path: tailscale/generated.hujson
+    branch: backstage/tailnet-policy
