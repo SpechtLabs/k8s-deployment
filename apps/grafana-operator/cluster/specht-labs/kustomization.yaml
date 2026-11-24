@@ -32,6 +32,8 @@ resources:
   - grafanaalertrules-static-pages.yaml
   # Ceph cluster and ceph-csi health (homelab Mimir tenant).
   - grafanaalertrules-ceph.yaml
+  # Time sync: timepi (GPS/PPS, ntpsec, PTP grandmaster) and every host's chrony/ptp4l.
+  - grafanaalertrules-time-sync.yaml
   # Self-hosted LGTM datasources (one per backend × tenant), reached over PDC.
   # gcx cannot create datasources, so they are operator-pushed here like dashboards.
   - grafanadatasources.yaml

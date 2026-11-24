@@ -1,0 +1,355 @@
+# Time sync for the homelab: timepi (GPS + PPS -> ntpsec, PTP grandmaster) and
+# every host's chrony/ptp4l (cedi/homelab modules ptp-server, time-sync), as
+# Grafana-managed rules on the homelab Mimir tenant, in Infrastructure.
+# Metrics: time-metrics (ntpsec_*, gpsd_*) on timepi, time-client-metrics
+# (chrony_*, ptp4l_*) on the clients. Every query was checked against
+# mimir-homelab. GPS reception is alerted on here instead of gating Buckle
+# rollouts (timepi's gps-pps-selected check is informational since 2026-11-24).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: time-sync
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  name: time-sync
+  interval: 1m
+  rules:
+  - uid: time-timepi-pps-lost
+    title: timepi — GPS PPS lost
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: time-sync
+      category: health
+    annotations:
+      summary: "timepi has run without GPS PPS for 30m"
+      description: "ntpsec on timepi hasn't selected the GPS PPS for 30m: the receiver has no fix (antenna sky view). timepi serves network time (PTB, pool) meanwhile, ~1 ms instead of ~1 µs, and announces PTP clockClass 52. `ntpq -pn` and `gpspipe -w -n 10` on timepi; the Stratum 1 dashboard shows satellites and SNR."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ntpsec_peer_selection{instance="timepi:9100",peer="PPS"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 5.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: time-timepi-unsynced
+    title: timepi — not synchronised
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: time-sync
+      category: health
+    annotations:
+      summary: "timepi's ntpsec is unsynchronised"
+      description: "ntpsec on timepi has had no usable source (stratum 16) for 5m: neither GPS PPS nor PTB/pool servers. The LAN's NTP and PTP clients follow a free-running clock. `ntpq -pn` on timepi."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ntpsec_stratum{instance="timepi:9100"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 15
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: time-timepi-metrics-missing
+    title: timepi — time metrics missing
+    condition: B
+    for: 15m
+    noDataState: Alerting
+    execErrState: Error
+    labels:
+      severity: warning
+      service: time-sync
+      category: health
+    annotations:
+      summary: "No ntpsec metrics from timepi for 15m"
+      description: "timepi's time-metrics timer or its Alloy hasn't delivered ntpsec metrics for 15m, so the other timepi alerts can't fire. `systemctl status time-metrics.timer alloy` on timepi."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'count(ntpsec_stratum{instance="timepi:9100"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: time-host-offset
+    title: Host clock off by more than 1 ms
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: time-sync
+      category: health
+    annotations:
+      summary: "{{ $labels.instance }} is more than 1 ms off"
+      description: "chrony on {{ $labels.instance }} has been more than 1 ms off its source for 15m (normally ns to µs). `chronyc tracking` and `chronyc sources` there."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (abs(chrony_tracking_system_offset_seconds))'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.001
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: time-host-unsynced
+    title: Host clock unsynchronised
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: time-sync
+      category: health
+    annotations:
+      summary: "chrony on {{ $labels.instance }} is unsynchronised"
+      description: "chrony on {{ $labels.instance }} has reported a leap status other than normal (not synchronised) for 10m. `chronyc tracking` there."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'min by (instance) (chrony_tracking_leap_normal)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: time-ptp-no-master
+    title: PTP client lost the grandmaster
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: time-sync
+      category: health
+    annotations:
+      summary: "ptp4l on {{ $labels.instance }} isn't following timepi"
+      description: "ptp4l on {{ $labels.instance }} hasn't been in SLAVE state for 10m; chrony falls back to NTP from timepi (~µs instead of ~ns). `pmc -u -b 0 'GET PORT_DATA_SET'` there, and ptp4l on timepi."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'min by (instance) (ptp4l_port_slave)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
