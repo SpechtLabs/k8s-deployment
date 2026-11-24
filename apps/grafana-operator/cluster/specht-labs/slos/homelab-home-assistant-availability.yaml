@@ -27,8 +27,10 @@ spec:
       - value: 0.995
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: home-assistant
+      - key: team_name
+        value: homelab
       - key: site
         value: homelab
       alerting:

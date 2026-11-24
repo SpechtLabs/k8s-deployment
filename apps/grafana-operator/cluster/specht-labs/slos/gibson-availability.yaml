@@ -36,8 +36,10 @@ spec:
       - value: 0.995
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: gibson
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: app
       - key: sli

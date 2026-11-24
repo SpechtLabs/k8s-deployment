@@ -38,8 +38,10 @@ spec:
       - value: 0.999
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: loki
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: observability
       - key: sli

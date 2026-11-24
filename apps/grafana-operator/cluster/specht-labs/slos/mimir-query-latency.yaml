@@ -35,8 +35,10 @@ spec:
       - value: 0.99
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: mimir
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: observability
       - key: sli

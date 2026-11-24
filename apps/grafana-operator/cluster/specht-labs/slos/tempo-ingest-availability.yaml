@@ -39,8 +39,10 @@ spec:
       - value: 0.995
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: tempo
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: observability
       - key: sli

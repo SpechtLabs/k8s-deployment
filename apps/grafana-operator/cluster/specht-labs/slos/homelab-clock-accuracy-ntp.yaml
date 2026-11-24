@@ -33,8 +33,10 @@ spec:
       - value: 0.995
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: time-sync
+      - key: team_name
+        value: homelab
       - key: site
         value: homelab
       alerting:

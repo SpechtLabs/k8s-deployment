@@ -36,8 +36,10 @@ spec:
       - value: 0.999
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: static-pages
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: proxy
       - key: sli

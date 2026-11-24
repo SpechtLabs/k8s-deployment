@@ -72,6 +72,11 @@ failures. Those are health targets in
 alert when an SLO can't: telemetry missing, SLO recordings stopped, ingest
 stalled. SLO ids must be ≤ 21 characters.
 
+**Labels.** Every SLO carries `service_name` and `team_name` (`specht-labs` or
+`homelab`): the SLO app's overview groups and filters on exactly these keys and
+counts SLOs without them under "Maintenance". The burn alerts keep a plain
+`service` alert label, like the health-target rules.
+
 **Alerting.** Fast burn carries `severity: critical` (pages through Grafana IRM),
 slow burn `severity: warning` (one push); routing is
 `apps/grafana-operator/cluster/specht-labs/grafananotificationpolicy.yaml`.

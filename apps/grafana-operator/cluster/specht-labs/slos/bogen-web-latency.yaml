@@ -35,8 +35,10 @@ spec:
       - value: 0.98
         window: 28d
       labels:
-      - key: service
+      - key: service_name
         value: bogen-web
+      - key: team_name
+        value: specht-labs
       - key: tier
         value: app
       - key: sli
