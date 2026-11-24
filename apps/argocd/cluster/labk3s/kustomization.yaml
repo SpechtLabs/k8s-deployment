@@ -4,6 +4,7 @@ namespace: argocd
 
 resources:
   - ../../base/
+  - argocd-api-tailnet.yaml
 
 generators:
   - ./secret-generator.yaml
@@ -37,10 +38,9 @@ patches:
         path: "/spec/tls/0/hosts/0"
         value: lab-argocd
 
-      - op: add
-        path: "/metadata/annotations/tailscale.com~1funnel"
-        value: true
-
+      # Tailnet only, no Funnel. (Funnel was asked for here, but the proxy's
+      # tag:homelab has no funnel attribute in the tailnet policy, so it was
+      # never public.)
       - op: add
         path: "/metadata/annotations/tailscale.com~1tags"
         value: "tag:homelab"
@@ -77,6 +77,14 @@ patches:
       - op: replace
         path: "/data/url"
         value: https://lab-argocd.sphinx-map.ts.net
+
+      # Backstage's ArgoCD plugin (on specht-labs): an API-key-only account
+      # (no UI login). Read access comes from rbac policy.default
+      # (role:readonly); its token is in k8s-deployment
+      # apps/backstage/cluster/specht-labs/argocd.secret.yaml.
+      - op: add
+        path: "/data/accounts.backstage"
+        value: apiKey
 
   - target:
       kind: ConfigMap

@@ -1,0 +1,27 @@
+# The ArgoCD API as a plain TCP device on the tailnet (lab-argocd-api), for
+# Backstage on specht-labs: its egress proxy (tag:backstage) may reach
+# tag:lab-argocd on tcp:443 and nothing else (tailnet policy in cedi/homelab).
+#
+# Why not the lab-argocd ingress: Tailscale's ingress terminates TLS and only
+# answers to its own name, which the egress proxy can't present without
+# cluster DNS rewiring on specht-labs. Here argocd-server terminates TLS
+# itself (self-signed; Backstage's proxy skips verification, inside
+# WireGuard).
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server-tailnet
+  annotations:
+    tailscale.com/hostname: lab-argocd-api
+    tailscale.com/tags: tag:lab-argocd
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    app.kubernetes.io/instance: argocd
+    app.kubernetes.io/name: argocd-server
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8080
+      protocol: TCP
