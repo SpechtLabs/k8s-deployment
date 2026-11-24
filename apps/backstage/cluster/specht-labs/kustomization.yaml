@@ -15,8 +15,9 @@ configMapGenerator:
       # The chart mounts it by this exact name.
       disableNameSuffixHash: true
 
-# backstage-auth (tsidp OIDC client, session secret) and backstage-db-s3
-# (backup bucket keys).
+# backstage-auth (tsidp OIDC client, session secret), backstage-db-s3 (backup
+# bucket keys), backstage-argocd (the ArgoCD plugin's API token) and
+# backstage-github (the GitHub App).
 generators:
   - ./secret-generator.yaml
 

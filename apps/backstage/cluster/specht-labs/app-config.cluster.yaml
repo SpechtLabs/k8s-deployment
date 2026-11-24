@@ -50,3 +50,52 @@ kubernetes:
         - name: specht-labs
           url: https://kubernetes.default.svc
           authProvider: serviceAccount
+
+# The ArgoCD plugin (Roadie) calls ArgoCD through this proxy endpoint, as the
+# read-only `backstage` account (token: argocd.secret.yaml). Only signed-in
+# Backstage users can use the proxy.
+proxy:
+  endpoints:
+    '/argocd/api':
+      # In-cluster: argocd.k8s.specht-labs.de resolves to the tailnet load
+      # balancer, which pods can't reach.
+      target: https://argocd-server.argocd.svc.cluster.local/api/v1/
+      changeOrigin: true
+      # argocd-server terminates TLS itself with the certificate for
+      # argocd.k8s.specht-labs.de, which doesn't match the Service name.
+      # The hop never leaves the cluster.
+      secure: false
+      headers:
+        Cookie: ${ARGOCD_AUTH_TOKEN}
+
+argocd:
+  # Links from the cards to the ArgoCD UI.
+  baseUrl: https://argocd.k8s.specht-labs.de
+
+# GitHub, as the spechtlabs-backstage GitHub App (installed on the SpechtLabs
+# org, all repos; credentials: github.secret.yaml). Replaces app-config.yaml's
+# token-based entry for local development.
+integrations:
+  github:
+    - host: github.com
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_APP_CLIENT_ID}
+          clientSecret: ${GITHUB_APP_CLIENT_SECRET}
+          privateKey: ${GITHUB_APP_PRIVATE_KEY}
+          allowedInstallationOwners: [SpechtLabs]
+
+# Discovery: every SpechtLabs repo's catalog-info.yaml on its default branch.
+# Merges with the image's file locations (catalog/org.yaml and Backstage's
+# own catalog-info.yaml).
+catalog:
+  providers:
+    github:
+      spechtlabs:
+        organization: SpechtLabs
+        catalogPath: /catalog-info.yaml
+        schedule:
+          frequency:
+            minutes: 30
+          timeout:
+            minutes: 3

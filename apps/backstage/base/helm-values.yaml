@@ -24,14 +24,21 @@ backstage:
     - --config
     - app-config.production.yaml
 
-  # Each cluster overlay provides these two:
-  #   ConfigMap backstage-app-config-cluster: URLs, auth (app-config.cluster.yaml)
-  #   Secret backstage-auth: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET
+  # Each cluster overlay provides these:
+  #   ConfigMap backstage-app-config-cluster: URLs, auth, plugins
+  #     (app-config.cluster.yaml)
+  #   Secret backstage-auth: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET,
+  #     AUTH_SESSION_SECRET
+  #   Secret backstage-argocd: ARGOCD_AUTH_TOKEN
+  #   Secret backstage-github: GITHUB_APP_ID, GITHUB_APP_CLIENT_ID,
+  #     GITHUB_APP_CLIENT_SECRET, GITHUB_APP_PRIVATE_KEY
   extraAppConfig:
     - filename: app-config.cluster.yaml
       configMapRef: backstage-app-config-cluster
   extraEnvVarsSecrets:
     - backstage-auth
+    - backstage-argocd
+    - backstage-github
 
   extraEnvVars:
     # CNPG's generated credentials for the backstage-db Cluster.
