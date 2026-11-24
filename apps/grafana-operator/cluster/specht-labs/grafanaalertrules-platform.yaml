@@ -89,7 +89,7 @@ spec:
       service: slo
       category: health
     annotations:
-      summary: One or more SLOs have stopped recording into mimir-spechtlabs
+      summary: 'SLO {{ $labels.grafana_slo_uuid }} has stopped recording into mimir-spechtlabs'
       description: 'An SLO that wrote grafana_slo_info in the last day no longer does, so its burn alerts
         are stuck in NoData and won''t fire. Check the recording rules in folder "Grafana SLO" (rule health/lastError).
         Seen 2026-11-24: Mimir rejected the writes with err-mimir-max-series-per-user. Also fires for
@@ -105,8 +105,10 @@ spec:
           type: prometheus
           uid: mimir-spechtlabs
         editorMode: code
-        expr: (count(last_over_time(grafana_slo_info[1d])) or vector(0)) - (count(grafana_slo_info) or
-          vector(0))
+        # Per SLO, not per series: a change to an SLO's labels starts a new
+        # grafana_slo_info series and must not look like a stopped recording.
+        expr: count by (grafana_slo_uuid) (last_over_time(grafana_slo_info[1d])) unless on (grafana_slo_uuid)
+          count by (grafana_slo_uuid) (grafana_slo_info)
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -281,17 +283,23 @@ spec:
           uid: mimir-spechtlabs
         editorMode: code
         expr: |-
+          # Per pod incarnation (uid) and only pods that still exist: a StatefulSet
+          # pod keeps its name across a delete, and a deleted pod's samples stay
+          # in the 6h window.
           (
-            sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
-            * on (namespace, pod, container) group_left (reason)
-            max by (namespace, pod, container, reason) (kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1)
+            (
+              sum by (namespace, pod, uid, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+              * on (uid, container) group_left (reason)
+              max by (uid, container, reason) (kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1)
+            )
+            or
+            (
+              sum by (namespace, pod, uid, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+              unless on (uid, container)
+              kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1
+            )
           )
-          or
-          (
-            sum by (namespace, pod, container) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
-            unless on (namespace, pod, container)
-            kube_pod_container_status_last_terminated_reason{cluster="specht-labs"} == 1
-          )
+          and on (uid, container) kube_pod_container_info{cluster="specht-labs"}
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
