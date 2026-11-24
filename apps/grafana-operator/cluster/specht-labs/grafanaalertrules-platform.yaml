@@ -1,0 +1,549 @@
+# specht-labs PLATFORM HEALTH TARGETS: what the SLOs in grafana/slos/ cannot see.
+# An SLO is a ratio of events, so it goes quiet (NoData, which never alerts) exactly
+# when things are worst: the cluster's telemetry stops arriving, a backend is
+# so dead it gets no traffic, or the SLO plugin can no longer write its recordings.
+# These rules catch that, plus the stateful failures with no event stream at all
+# (pods crash-looping, nodes NotReady, certificates not renewing, disks filling,
+# ArgoCD apps degraded). Grafana-managed rules on the spechtlabs Mimir tenant over
+# PDC, in Kubernetes Platform; every query was checked against mimir-spechtlabs on
+# 2026-11-24. Routing: grafananotificationpolicy.yaml (critical pages via IRM).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: specht-labs-platform
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: kubernetes-platform
+  name: specht-labs-platform
+  interval: 1m
+  rules:
+  - uid: pf-telemetry-absent
+    title: specht-labs — telemetry missing
+    condition: B
+    for: 10m
+    noDataState: Alerting
+    execErrState: Alerting
+    labels:
+      severity: critical
+      service: specht-labs
+      category: health
+    annotations:
+      summary: No telemetry from the specht-labs cluster is reaching Grafana
+      description: 'No kubelet scrape from specht-labs has arrived in mimir-spechtlabs for 10m, or Grafana
+        Cloud can''t query it over PDC. Every SLO and health rule on this cluster is blind meanwhile.
+        Likely: Alloy (monitoring ns) down, Mimir''s write path down, the grafana-pdc-agent tunnel down,
+        or the cluster itself. Fires on NoData and on query errors on purpose.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: sum(up{job="integrations/kubernetes/kubelet", cluster="specht-labs"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-slo-recording-stopped
+    title: SLO recordings stopped
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: slo
+      category: health
+    annotations:
+      summary: One or more SLOs have stopped recording into mimir-spechtlabs
+      description: 'An SLO that wrote grafana_slo_info in the last day no longer does, so its burn alerts
+        are stuck in NoData and won''t fire. Check the recording rules in folder "Grafana SLO" (rule health/lastError).
+        Seen 2026-11-24: Mimir rejected the writes with err-mimir-max-series-per-user. Also fires for
+        up to a day after an SLO is deleted on purpose.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: (count(last_over_time(grafana_slo_info[1d])) or vector(0)) - (count(grafana_slo_info) or
+          vector(0))
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 86400
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-loki-ingest-stalled
+    title: Loki — no logs accepted
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: loki
+      category: health
+    annotations:
+      summary: Loki hasn't accepted a log push for 15m
+      description: 'loki-distributor answered no push with 2xx for 15m (normally ≈10/s). The Loki ingestion
+        SLO can''t see this: with no pushes at all there are no failed ones. Distributor/gateway down,
+        or every writer stopped. Measured by Beyla, so a broken Beyla fires this too.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: (sum(rate(http_server_request_duration_seconds_count{k8s_deployment_name="loki-distributor",
+          http_route="/loki/api/v1/push", http_response_status_code=~"2.."}[10m])) or vector(0))
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.01
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-tempo-ingest-stalled
+    title: Tempo — no traces accepted
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: tempo
+      category: health
+    annotations:
+      summary: Tempo hasn't accepted a trace push for 15m
+      description: tempo-distributor answered no OTLP/HTTP push with 2xx for 15m (normally ≈0.4/s). The
+        Tempo ingestion SLO can't see this. Distributor down, or every writer stopped. Measured by Beyla,
+        so a broken Beyla fires this too.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: (sum(rate(http_server_request_duration_seconds_count{k8s_deployment_name="tempo-distributor",
+          http_route="/v1/traces", http_response_status_code=~"2.."}[10m])) or vector(0))
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.01
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-pod-restarting
+    title: Pod restarting repeatedly
+    condition: B
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: kubernetes
+      category: health
+    annotations:
+      summary: '{{ $labels.namespace }}/{{ $labels.pod }} restarted more than 3 times in 6h'
+      description: A container in this pod keeps restarting (OOMKilled, failing probes, crashing). kube-state-metrics'
+        waiting_reason isn't collected here, so this counts restarts instead of CrashLoopBackOff. `kubectl
+        -n <ns> describe pod <pod>` for the last state.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total{cluster="specht-labs"}[6h]))
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 3
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-node-not-ready
+    title: Node NotReady
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: kubernetes
+      category: health
+    annotations:
+      summary: Node {{ $labels.node }} has been NotReady for 10m
+      description: The kubelet on this node isn't reporting Ready; its pods are being evicted or are unreachable.
+        On a fresh CAPH node this is usually Cilium (agent-not-ready); check `kubectl get machines -A`
+        and the node's conditions.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: kube_node_status_condition{cluster="specht-labs", condition="Ready", status="true"}
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-cert-not-renewing
+    title: Certificate not renewing
+    condition: B
+    for: 1h
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: cert-manager
+      category: health
+    annotations:
+      summary: Certificate {{ $labels.namespace }}/{{ $labels.name }} expires in under 14 days
+      description: cert-manager renews 30 days before expiry, so under 14 days left means renewal has
+        been failing for two weeks. `kubectl -n <ns> describe certificate <name>` and the cert-manager
+        logs (ACME challenge / Cloudflare token).
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: min by (namespace, name) ((certmanager_certificate_expiration_timestamp_seconds{cluster="specht-labs"}
+          - time()) / 86400)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 14
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-pvc-filling
+    title: Volume almost full
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: kubernetes
+      category: health
+    annotations:
+      summary: PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} has under 10% free
+      description: Mostly the LGTM ingesters' WAL/head volumes (90%+ free on 2026-11-24). A full ingester
+        volume stops ingestion for that zone. Grow the PVC (hcloud-csi supports expansion) or find what
+        filled it.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: min by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{cluster="specht-labs"}
+          / kubelet_volume_stats_capacity_bytes{cluster="specht-labs"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: pf-argocd-app-unhealthy
+    title: ArgoCD app unhealthy
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: argocd
+      category: health
+    annotations:
+      summary: ArgoCD app {{ $labels.name }} is {{ $labels.health_status }}
+      description: The app's resources have been Degraded/Missing/Unknown for 30m (all 26 apps Healthy
+        on 2026-11-24). Open it in ArgoCD for the failing resource.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-spechtlabs
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-spechtlabs
+        editorMode: code
+        expr: max by (name, health_status) (argocd_app_info{health_status=~"Degraded|Missing|Unknown"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B

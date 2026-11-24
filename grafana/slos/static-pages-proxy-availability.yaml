@@ -42,10 +42,16 @@ spec:
       - key: service
         value: static-pages
     fastBurn:
+      labels:
+        - key: severity
+          value: critical
       annotations:
         - key: summary
           value: Static Pages availability error budget is burning fast (5xx spike).
     slowBurn:
+      labels:
+        - key: severity
+          value: warning
       annotations:
         - key: summary
           value: Static Pages availability error budget is burning slowly.

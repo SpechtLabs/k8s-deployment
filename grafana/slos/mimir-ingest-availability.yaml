@@ -1,0 +1,56 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: mimiringestavail
+spec:
+  name: "Mimir — Ingestion availability"
+  description: >-
+    Share of pushes to mimir-distributor (/api/v1/push) accepted with a 2xx, per Beyla's
+    http_server_request_duration_seconds on the distributor. Every writer counts: the
+    in-cluster Alloy (spechtlabs tenant) and the homelab/hass tenants through the
+    gateway. Any non-2xx is data a writer had to drop or retry, 4xx included: the
+    distributors answer tenant limits with 4xx (Mimir 400 err-mimir-max-series-per-user,
+    Loki/Tempo 429 rate limited), and those are capacity failures, not bad clients.
+    Baseline 2026-11-23: 1.6% of pushes rejected with 400 (series limit, see
+    apps/mimir/base/helm-values.yaml runtimeConfig) — a real loss this SLO is meant to
+    surface, not a level to target.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="mimir-distributor", http_route="/api/v1/push", http_response_status_code=~"2.."}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="mimir-distributor", http_route="/api/v1/push"}
+      groupByLabels: []
+  objectives:
+    - value: 0.999
+      window: 28d
+  labels:
+    - key: service
+      value: mimir
+    - key: tier
+      value: observability
+    - key: sli
+      value: availability
+  alerting:
+    labels:
+      - key: service
+        value: mimir
+    fastBurn:
+      labels:
+        - key: severity
+          value: critical
+      annotations:
+        - key: summary
+          value: "Mimir is rejecting pushes fast: telemetry is being lost now."
+    slowBurn:
+      labels:
+        - key: severity
+          value: warning
+      annotations:
+        - key: summary
+          value: "Mimir is rejecting a share of pushes over hours."

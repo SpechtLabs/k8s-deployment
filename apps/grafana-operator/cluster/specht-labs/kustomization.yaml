@@ -34,6 +34,9 @@ resources:
   - grafanaalertrules-ceph.yaml
   # Time sync: timepi (GPS/PPS, ntpsec, PTP grandmaster) and every host's chrony/ptp4l.
   - grafanaalertrules-time-sync.yaml
+  # specht-labs platform health: what the SLOs can't see (telemetry missing, SLO
+  # recordings stopped, ingest stalled, restarts, nodes, certs, volumes, ArgoCD).
+  - grafanaalertrules-platform.yaml
   # Where alerts go: Grafana IRM (contact point) and the notification policy tree.
   - grafanacontactpoints.yaml
   - grafananotificationpolicy.yaml

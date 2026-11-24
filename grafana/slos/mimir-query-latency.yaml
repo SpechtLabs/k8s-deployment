@@ -1,0 +1,50 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: mimirquerylatency
+spec:
+  name: "Mimir — Query latency"
+  description: >-
+    Share of instant/range queries the mimir-query-frontend answered within 2.5s.
+    Grafana Cloud evaluates alert and SLO rules through these over PDC; slow answers
+    delay or fail alert evaluation. Baseline 2026-11-23: 99.56% < 2.5s.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_bucket{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range", le="2.5"}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range"}
+      groupByLabels: []
+  objectives:
+    - value: 0.99
+      window: 28d
+  labels:
+    - key: service
+      value: mimir
+    - key: tier
+      value: observability
+    - key: sli
+      value: latency
+  alerting:
+    labels:
+      - key: service
+        value: mimir
+    fastBurn:
+      labels:
+        - key: severity
+          value: critical
+      annotations:
+        - key: summary
+          value: "Mimir queries are slower than 2.5s for many requests."
+    slowBurn:
+      labels:
+        - key: severity
+          value: warning
+      annotations:
+        - key: summary
+          value: "Mimir queries are getting slower than 2.5s over hours."

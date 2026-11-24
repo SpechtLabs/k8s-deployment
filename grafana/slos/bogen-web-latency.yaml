@@ -1,0 +1,51 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: bogenweblatency
+spec:
+  name: "Bogen Web — Latency"
+  description: >-
+    Share of requests to Bogen Web that Envoy Gateway got an upstream response for
+    within 1s, per envoy_cluster_upstream_rq_time (ms) on route
+    httproute/bogen-web/bogen-web/rule/0. Baseline (2026-11-23): 99.25% < 1s, 99.9% <
+    2.5s. 98% < 1s spends about a third of the budget in normal operation.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name="httproute/bogen-web/bogen-web/rule/0", le="1000.0"}
+      totalMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_time_count{envoy_cluster_name="httproute/bogen-web/bogen-web/rule/0"}
+      groupByLabels: []
+  objectives:
+    - value: 0.98
+      window: 28d
+  labels:
+    - key: service
+      value: bogen-web
+    - key: tier
+      value: app
+    - key: sli
+      value: latency
+  alerting:
+    labels:
+      - key: service
+        value: bogen-web
+    fastBurn:
+      labels:
+        - key: severity
+          value: critical
+      annotations:
+        - key: summary
+          value: "Bogen Web responses are slower than 1s for many requests."
+    slowBurn:
+      labels:
+        - key: severity
+          value: warning
+      annotations:
+        - key: summary
+          value: "Bogen Web is getting slower than 1s over hours."

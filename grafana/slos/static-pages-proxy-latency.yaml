@@ -42,10 +42,16 @@ spec:
       - key: service
         value: static-pages
     fastBurn:
+      labels:
+        - key: severity
+          value: critical
       annotations:
         - key: summary
           value: Static Pages latency error budget is burning fast (requests slower than 1s).
     slowBurn:
+      labels:
+        - key: severity
+          value: warning
       annotations:
         - key: summary
           value: Static Pages latency error budget is burning slowly.
