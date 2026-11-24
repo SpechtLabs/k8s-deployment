@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudnative-pg
+  namespace: argocd
+  # No finalizer: deleting this Application must not cascade-delete the CRDs,
+  # which would take every Postgres Cluster (and its PVCs) with them.
+spec:
+  project: default
+  destination:
+    namespace: cnpg-system
+    server: https://kubernetes.default.svc
+  source:
+    path: apps/cloudnative-pg/cluster/specht-labs
+    repoURL: https://github.com/SpechtLabs/k8s-deployment.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The CNPG CRDs are too large for client-side apply's
+      # last-applied-configuration annotation.
+      - ServerSideApply=true

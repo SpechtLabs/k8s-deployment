@@ -6,6 +6,7 @@ resources:
   - ../../base/
   - bogen-web-certificate.yaml
   - tunnel-hornberg-certificate.yaml
+  - backstage-certificate.yaml
   - tailscale-envoyproxy.yaml
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml

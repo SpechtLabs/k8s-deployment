@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: backstage
+
+# The app image is built from github.com/SpechtLabs/backstage. Backstage is a
+# framework, not a product: plugins are compiled in, so there is no upstream
+# image to run.
+helmCharts:
+  - name: backstage
+    repo: https://backstage.github.io/charts
+    version: 2.11.0
+    releaseName: backstage
+    namespace: backstage
+    valuesFile: helm-values.yaml
+
+resources:
+  - postgres-cluster.yaml

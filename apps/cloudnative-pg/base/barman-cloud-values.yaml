@@ -1,0 +1,7 @@
+# Resource policy: requests + a memory limit, no CPU limit.
+resources:
+  requests:
+    cpu: 10m
+    memory: 48Mi
+  limits:
+    memory: 192Mi

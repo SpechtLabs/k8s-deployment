@@ -1,0 +1,12 @@
+# Bump this when app-config.cluster.yaml changes, so the pod restarts and
+# reads the new file. (A hash suffix on the ConfigMap would do it for us, but
+# the chart mounts the ConfigMap by a fixed name.)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage
+spec:
+  template:
+    metadata:
+      annotations:
+        checksum/app-config-cluster: "1"

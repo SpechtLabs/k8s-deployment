@@ -1,0 +1,105 @@
+# Chart: https://github.com/backstage/charts/tree/main/charts/backstage
+# Cluster-specific settings (URLs, auth, image tag) live in the overlay's values.
+
+backstage:
+  replicas: 1
+  revisionHistoryLimit: 3
+  # Plugins run their database migrations on startup: never two pods at once.
+  strategy:
+    type: Recreate
+
+  image:
+    registry: ghcr.io
+    repository: spechtlabs/backstage
+    tag: latest
+    pullPolicy: Always
+
+  # The chart only passes --config for its own ConfigMaps, and Backstage reads
+  # no default files once any --config is given. Load the image's files first.
+  args:
+    - --config
+    - app-config.yaml
+    - --config
+    - app-config.production.yaml
+
+  # Each cluster overlay provides these two:
+  #   ConfigMap backstage-app-config-cluster: URLs, auth (app-config.cluster.yaml)
+  #   Secret backstage-auth: AUTH_OIDC_CLIENT_ID, AUTH_OIDC_CLIENT_SECRET
+  extraAppConfig:
+    - filename: app-config.cluster.yaml
+      configMapRef: backstage-app-config-cluster
+  extraEnvVarsSecrets:
+    - backstage-auth
+
+  extraEnvVars:
+    # CNPG's generated credentials for the backstage-db Cluster.
+    - name: POSTGRES_HOST
+      valueFrom:
+        secretKeyRef:
+          name: backstage-db-app
+          key: host
+    - name: POSTGRES_PORT
+      valueFrom:
+        secretKeyRef:
+          name: backstage-db-app
+          key: port
+    - name: POSTGRES_USER
+      valueFrom:
+        secretKeyRef:
+          name: backstage-db-app
+          key: user
+    - name: POSTGRES_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: backstage-db-app
+          key: password
+    - name: POSTGRES_DB
+      valueFrom:
+        secretKeyRef:
+          name: backstage-db-app
+          key: dbname
+    # Replaces the image's NODE_OPTIONS, so it repeats --no-node-snapshot
+    # (the scaffolder's isolated-vm needs it on Node 20+). The heap cap keeps
+    # V8 below the memory limit, so Node collects garbage before the kernel
+    # OOM-kills the pod.
+    - name: NODE_OPTIONS
+      value: --no-node-snapshot --max-old-space-size=768
+
+  # Resource policy: requests + a memory limit, no CPU limit.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000 # node, in the node:*-slim base image
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  # A cold start (migrations, first catalog load) takes well over the
+  # default probe budget.
+  startupProbe:
+    httpGet:
+      path: /.backstage/health/v1/liveness
+      port: 7007
+      scheme: HTTP
+    periodSeconds: 5
+    failureThreshold: 60
+
+  # The database settings (pg, schema per plugin, POSTGRES_* env) ship in the
+  # image's app-config.production.yaml.
+
+# The database is a CNPG Cluster (postgres-cluster.yaml), not the chart's
+# Bitnami subchart.
+postgresql:
+  enabled: false

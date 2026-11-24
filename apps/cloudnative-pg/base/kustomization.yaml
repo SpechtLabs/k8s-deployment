@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cnpg-system
+
+# CloudNativePG operator plus the Barman Cloud plugin, which takes base backups
+# and archives WAL to S3. The plugin replaces the operator's built-in
+# barmanObjectStore (deprecated since CNPG 1.26) and must run in the operator's
+# namespace. It needs cert-manager for its mTLS certificates.
+helmCharts:
+  - name: cloudnative-pg
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.29.2
+    releaseName: cnpg
+    namespace: cnpg-system
+    valuesFile: helm-values.yaml
+  - name: plugin-barman-cloud
+    repo: https://cloudnative-pg.github.io/charts
+    version: 0.9.0
+    releaseName: barman-cloud
+    namespace: cnpg-system
+    valuesFile: barman-cloud-values.yaml

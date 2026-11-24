@@ -1,0 +1,39 @@
+app:
+  title: SpechtLabs Backstage
+  baseUrl: https://backstage.k8s.specht-labs.de
+
+organization:
+  name: SpechtLabs
+
+backend:
+  baseUrl: https://backstage.k8s.specht-labs.de
+  cors:
+    origin: https://backstage.k8s.specht-labs.de
+
+auth:
+  environment: production
+  # The oidc provider keeps the login's state and nonce in an express session,
+  # which the auth backend only enables when this is set ("authentication
+  # requires session support" otherwise).
+  session:
+    secret: ${AUTH_SESSION_SECRET}
+  providers:
+    # tsidp (Tailscale's OIDC IdP), public through Funnel, so no tailnet
+    # egress is needed from the cluster. The client is registered in tsidp
+    # with redirect URI
+    #   https://backstage.k8s.specht-labs.de/api/auth/oidc/handler/frame
+    oidc:
+      production:
+        metadataUrl: https://idp.sphinx-map.ts.net/.well-known/openid-configuration
+        clientId: ${AUTH_OIDC_CLIENT_ID}
+        clientSecret: ${AUTH_OIDC_CLIENT_SECRET}
+        scope: openid profile email
+        # Backstage's default is prompt=none, which IdPs without a consent
+        # screen may reject.
+        prompt: auto
+        signIn:
+          resolvers:
+            # Matches the token's email claim against a User entity's
+            # spec.profile.email. tsidp's email is the tailnet login name,
+            # so the User entity must carry that exact value.
+            - resolver: emailMatchingUserEntityProfileEmail

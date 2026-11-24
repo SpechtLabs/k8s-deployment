@@ -1,0 +1,51 @@
+# Base backups and WAL for backstage-db, to Hetzner Object Storage.
+# Bucket specht-labs-backstage-db must exist; keys in backstage-db-s3.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: backstage-db-backup
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://specht-labs-backstage-db/
+    endpointURL: https://fsn1.your-objectstorage.com
+    s3Credentials:
+      accessKeyId:
+        name: backstage-db-s3
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: backstage-db-s3
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
+  # The plugin's sidecar in the Postgres pod. Resource policy: requests + a
+  # memory limit, no CPU limit.
+  instanceSidecarConfiguration:
+    env:
+      # Hetzner's S3 rejects the newer checksum headers of recent AWS SDKs.
+      - name: AWS_REQUEST_CHECKSUM_CALCULATION
+        value: when_required
+      - name: AWS_RESPONSE_CHECKSUM_VALIDATION
+        value: when_required
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: backstage-db-daily
+spec:
+  # Six fields: seconds first. 03:00 every day.
+  schedule: "0 0 3 * * *"
+  backupOwnerReference: self
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  cluster:
+    name: backstage-db

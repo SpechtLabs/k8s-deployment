@@ -1,0 +1,39 @@
+# Backstage's database. Most of it is a cache of the catalog, which Backstage
+# rebuilds from catalog-info.yaml files in git. Losing it costs starred
+# entities and scaffolder history, so one instance (no replica) is enough.
+# Backups and WAL archiving to S3 are added in the cluster overlay.
+#
+# CNPG creates the Secret backstage-db-app (host, port, dbname, user, password),
+# which the Backstage Deployment reads.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: backstage-db
+spec:
+  instances: 1
+  # Pinned: a new major is an in-place upgrade CNPG runs when this changes,
+  # never something an operator upgrade should pick for us.
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.7-standard-trixie
+
+  bootstrap:
+    initdb:
+      database: backstage
+      owner: backstage
+
+  storage:
+    # Hetzner volumes are 10 GiB minimum.
+    size: 10Gi
+    storageClass: hcloud-volumes
+
+  postgresql:
+    parameters:
+      shared_buffers: 64MB
+      max_connections: "100"
+
+  # Resource policy: requests + a memory limit, no CPU limit.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      memory: 512Mi

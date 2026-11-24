@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: backstage
+
+resources:
+  - ../../base
+  - httproute.yaml
+  - postgres-backup.yaml
+
+configMapGenerator:
+  - name: backstage-app-config-cluster
+    files:
+      - app-config.cluster.yaml
+    options:
+      # The chart mounts it by this exact name.
+      disableNameSuffixHash: true
+
+# backstage-auth (tsidp OIDC client, session secret) and backstage-db-s3
+# (backup bucket keys).
+generators:
+  - ./secret-generator.yaml
+
+patches:
+  # Archive WAL and take base backups through the Barman Cloud plugin.
+  - target:
+      group: postgresql.cnpg.io
+      kind: Cluster
+      name: backstage-db
+    patch: |-
+      - op: add
+        path: /spec/plugins
+        value:
+          - name: barman-cloud.cloudnative-pg.io
+            isWALArchiver: true
+            parameters:
+              barmanObjectName: backstage-db-backup
+  # The chart's Deployment does not restart when the overlay's ConfigMap
+  # changes (its checksum only covers backstage.appConfig).
+  - target:
+      kind: Deployment
+      name: backstage
+    path: config-checksum.patch.yaml

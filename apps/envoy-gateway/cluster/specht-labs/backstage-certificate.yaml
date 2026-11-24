@@ -1,0 +1,16 @@
+# Backstage on the private tailnet Gateway. The Gateway terminates TLS (Envoy
+# reloads the renewed cert by itself), unlike ArgoCD's passthrough. DNS-01,
+# as the host only resolves to the tailnet load balancer.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: backstage-tls
+  namespace: envoy-gateway-system
+spec:
+  secretName: backstage-tls
+  dnsNames:
+    - backstage.k8s.specht-labs.de
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io

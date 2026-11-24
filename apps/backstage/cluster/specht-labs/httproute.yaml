@@ -1,0 +1,28 @@
+# Tailnet only: attaches to the private `tailnet` Gateway's backstage listener,
+# which terminates TLS for backstage.k8s.specht-labs.de (cert backstage-tls in
+# envoy-gateway-system). *.k8s.specht-labs.de resolves to the tailnet load
+# balancer, so the app is unreachable off the tailnet; sign-in is tsidp on top.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: backstage
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: tailnet
+      namespace: envoy-gateway-system
+      sectionName: backstage
+  hostnames:
+    - backstage.k8s.specht-labs.de
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: backstage
+          port: 7007
+          weight: 1

@@ -1,5 +1,10 @@
 # Private tailnet Gateway. App overlays can attach HTTPRoute or TLSRoute resources
 # here when they should only be reachable through Tailscale.
+#
+# :443 carries two kinds of listener, told apart by SNI: HTTPS listeners for
+# exact hostnames where the Gateway terminates TLS, and the catch-all `tls`
+# passthrough for apps that terminate their own (ArgoCD). Envoy Gateway
+# allows HTTPS and TLS on one port; the more specific hostname wins.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -25,3 +30,22 @@ spec:
             kind: TLSRoute
         namespaces:
           from: All
+    - name: backstage
+      protocol: HTTPS
+      port: 443
+      hostname: backstage.k8s.specht-labs.de
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: backstage-tls
+      allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: HTTPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: backstage
