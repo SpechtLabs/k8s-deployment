@@ -13,8 +13,10 @@ spec:
     Objective derived from the post-fix steady state (≈100% since 2026-06-12,
     commit 70e6a25); the 99.9% target leaves a tight budget that would surface a
     recurrence of that incident quickly.
+  # The service's metrics are in the self-hosted Mimir: the SLO plugin's
+  # recording rules read and write there, so the SLI is computed next to them.
   destinationDatasource:
-    uid: grafanacloud-prom
+    uid: mimir-spechtlabs
   query:
     type: ratio
     ratio:

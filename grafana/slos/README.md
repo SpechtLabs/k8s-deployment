@@ -1,6 +1,6 @@
 # Grafana SLO definitions
 
-Service Level Objectives for SpechtLabs services, managed as code.
+Service Level Objectives for SpechtLabs and homelab services, managed as code.
 
 Grafana Cloud SLOs are **not** Kubernetes resources — the grafana-operator has no
 SLO CRD (it ships `GrafanaAlertRuleGroup`, `GrafanaContactPoint`, … but no `SLO`
@@ -25,9 +25,28 @@ signal is an SLO vs. a health target and why.
 |------|-----|-----------|
 | `static-pages-proxy-availability.yaml` | Page-serving availability (non-5xx ratio) | 99.9% / 28d |
 | `static-pages-proxy-latency.yaml` | Page-serving latency (<1s ratio) | 95% / 28d |
+| `homelab-buckle-availability.yaml` | Buckle UI/API answers `/readyz` | 99.5% / 28d |
+| `homelab-tsidp-availability.yaml` | tsidp serves its OIDC discovery | 99.9% / 28d |
+| `homelab-home-assistant-availability.yaml` | Home Assistant answers | 99.5% / 28d |
+| `homelab-labk3s-api-availability.yaml` | labk3s API server answers (401: k3s has no anonymous auth) | 99.5% / 28d |
+| `homelab-nas-dsm-availability.yaml` | Synology DSM answers | 99.5% / 28d |
+| `homelab-jellyfin-availability.yaml` | Jellyfin `/health` through svc:stream | 99.5% / 28d |
+| `homelab-ceph-availability.yaml` | Ceph not HEALTH_ERR and every PG active | 99.9% / 28d |
+| `homelab-clock-accuracy-ptp.yaml` | PTP clients within 10 µs of their source | 99.5% / 28d |
+| `homelab-clock-accuracy-ntp.yaml` | NTP clients within 100 µs of their source | 99.5% / 28d |
+| `homelab-timepi-stratum1.yaml` | timepi on GPS PPS (stratum 1) | 80% / 28d (antenna-bound; never pages) |
 
-The rationale, the data the targets are derived from, and the SLO-vs-health-target
-trade-off analysis live in [`../../docs/static-pages-slos.md`](../../docs/static-pages-slos.md).
+**Data sources.** Each SLO's `destinationDatasource` is the self-hosted Mimir
+tenant its metrics live in (`mimir-homelab`, `mimir-spechtlabs`): the SLO plugin
+evaluates its recording rules there and writes the SLI next to the raw metrics.
+(`sourceDatasourceUid` from the SLO API docs is ignored by this stack.) The
+homelab availability SLIs are `probe_success{job="blackbox", service}` from
+Alloy's black-box exporter on isa, every 30 s (cedi/homelab,
+`vars/group-o11y-collector.yaml`).
+
+**Alerting.** Fast burn carries `severity: critical` (pages through Grafana IRM),
+slow burn `severity: warning` (one push); routing is
+`apps/grafana-operator/cluster/specht-labs/grafananotificationpolicy.yaml`.
 
 ## Sync
 

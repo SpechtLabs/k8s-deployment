@@ -1,0 +1,41 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: hlhassavail
+spec:
+  name: Homelab — Home Assistant availability
+  description: >-
+    Share of probes for which Home Assistant's web UI/API at http://hass.sphinx-map.ts.net:8123/ answered 2xx.
+  destinationDatasource:
+    uid: mimir-homelab
+  query:
+    type: freeform
+    freeform:
+      query: >-
+        avg_over_time(probe_success{job="blackbox", service="home-assistant"}[$__rate_interval])
+  objectives:
+    - value: 0.995
+      window: 28d
+  labels:
+    - key: service
+      value: home-assistant
+    - key: site
+      value: homelab
+  alerting:
+    labels:
+      - key: service
+        value: home-assistant
+    fastBurn:
+      labels:
+        - key: severity
+          value: critical
+      annotations:
+        - key: summary
+          value: Homelab — Home Assistant availability is burning its error budget fast.
+    slowBurn:
+      labels:
+        - key: severity
+          value: warning
+      annotations:
+        - key: summary
+          value: Homelab — Home Assistant availability is burning its error budget slowly.

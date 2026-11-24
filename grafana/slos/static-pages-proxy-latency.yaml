@@ -13,8 +13,10 @@ spec:
     p99 ≈ 2.25s. The 95% target sits just below the observed baseline, so normal
     operation passes while a latency regression (e.g. slow-origin / cold-read
     fan-out on the 404 fallback path) burns budget.
+  # The service's metrics are in the self-hosted Mimir: the SLO plugin's
+  # recording rules read and write there, so the SLI is computed next to them.
   destinationDatasource:
-    uid: grafanacloud-prom
+    uid: mimir-spechtlabs
   query:
     type: ratio
     ratio:

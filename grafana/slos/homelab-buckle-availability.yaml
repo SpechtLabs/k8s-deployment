@@ -1,0 +1,41 @@
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
+metadata:
+  name: hlbuckleavail
+spec:
+  name: Homelab — Buckle availability
+  description: >-
+    Share of 30 s black-box probes (Alloy on isa) for which Buckle's UI/API answered https://buckle.sphinx-map.ts.net/readyz with 2xx: the fleet's control plane (rollouts, actions, sign-in). Agents keep running without it, so 99.5%.
+  destinationDatasource:
+    uid: mimir-homelab
+  query:
+    type: freeform
+    freeform:
+      query: >-
+        avg_over_time(probe_success{job="blackbox", service="buckle"}[$__rate_interval])
+  objectives:
+    - value: 0.995
+      window: 28d
+  labels:
+    - key: service
+      value: buckle
+    - key: site
+      value: homelab
+  alerting:
+    labels:
+      - key: service
+        value: buckle
+    fastBurn:
+      labels:
+        - key: severity
+          value: critical
+      annotations:
+        - key: summary
+          value: Homelab — Buckle availability is burning its error budget fast.
+    slowBurn:
+      labels:
+        - key: severity
+          value: warning
+      annotations:
+        - key: summary
+          value: Homelab — Buckle availability is burning its error budget slowly.
