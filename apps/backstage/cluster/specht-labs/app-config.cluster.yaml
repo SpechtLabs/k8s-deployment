@@ -27,7 +27,6 @@ auth:
         metadataUrl: https://idp.sphinx-map.ts.net/.well-known/openid-configuration
         clientId: ${AUTH_OIDC_CLIENT_ID}
         clientSecret: ${AUTH_OIDC_CLIENT_SECRET}
-        scope: openid profile email
         # Backstage's default is prompt=none, which IdPs without a consent
         # screen may reject.
         prompt: auto
