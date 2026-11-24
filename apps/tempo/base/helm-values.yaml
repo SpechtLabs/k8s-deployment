@@ -54,10 +54,25 @@ traces:
     grpc:
       enabled: true
 
+# gRPC message cap for every component (default 4 MiB). The distributor forwards
+# each OTLP request to the ingesters as one gRPC push; once the spechtlabs tenant
+# went from ~240 to ~1,200+ spans/s (2026-11-24: Grafana Cloud's SLO recording
+# rules raised Mimir queries 17x, and Beyla traces every internal call they fan
+# out into), those pushes exceeded 4 MiB and the ingesters refused them
+# ("received message after decompression larger than max 4194304"): the
+# distributor answered the writer with 429.
+server:
+  grpc_server_max_recv_msg_size: 16777216
+  grpc_server_max_send_msg_size: 16777216
+
 # Enable metrics-generator processors for all tenants; without this no
 # service-graph / span RED metrics are produced.
 overrides:
   defaults:
+    # Live (not yet flushed) traces per tenant per ingester. Default 10000; the
+    # span surge above discarded spans as live_traces_exceeded.
+    ingestion:
+      max_traces_per_user: 50000
     metrics_generator:
       processors:
         - service-graphs
@@ -89,13 +104,16 @@ ingester:
       - ReadWriteOnce
   # Heaviest component (in-memory trace blocks + WAL). Capped so a flush burst
   # OOM-kills THIS pod, never the node. 768Mi was below what WAL replay +
-  # block completion needs: all 3 ingesters OOM-looped for 141 days.
+  # block completion needs: all 3 ingesters OOM-looped for 141 days. 2Gi was
+  # too: completing a 500 MB block (max_block_bytes) peaks past it, ~70 OOM
+  # kills per ingester in the week to 2026-11-24 (median use ~350Mi). cx33
+  # nodes (7.5 GiB, ~3-4 GiB used) have room for the spike.
   resources:
     requests:
       cpu: 100m
       memory: 512Mi
     limits:
-      memory: 2Gi
+      memory: 4Gi
 
 # Stateless read/write-path components run 2 replicas spread across regions (soft,
 # topologyKey=region) so a full region loss leaves one serving. The chart consumes
@@ -109,23 +127,27 @@ distributor:
       labelSelector:
         matchLabels:
           {{- include "tempo.selectorLabels" (dict "ctx" . "component" "distributor") | nindent 6 }}
+  # 384Mi OOM-killed both replicas once pushes grew (16 MiB gRPC messages are
+  # buffered per in-flight request); median use ~170Mi.
   resources:
     requests:
       cpu: 50m
-      memory: 128Mi
+      memory: 192Mi
     limits:
-      memory: 384Mi
+      memory: 1Gi
 
 compactor:
   replicas: 1
   # Compaction buffers rows from every input block: merging 4 fresh spechtlabs
-  # blocks (~640k traces, ~180MB parquet) OOM-killed it at 512Mi.
+  # blocks (~640k traces, ~180MB parquet) OOM-killed it at 512Mi. Peaked at
+  # 1.84Gi of 2Gi on 2026-11-24 before span volume rose ~5x; 3Gi for the
+  # bigger merges.
   resources:
     requests:
       cpu: 50m
       memory: 256Mi
     limits:
-      memory: 2Gi
+      memory: 3Gi
 
 querier:
   replicas: 2
