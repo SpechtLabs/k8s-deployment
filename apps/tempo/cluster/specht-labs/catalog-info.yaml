@@ -41,6 +41,12 @@ metadata:
   name: tempo-otlp
   title: Tempo OTLP traces
   description: OTLP trace ingestion on tempo-distributor (gRPC :4317, HTTP :4318 /v1/traces). The tenant is the X-Scope-OrgID header.
+  annotations:
+    # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
+    # renders Tailscale grants from these (shadow mode for now).
+    # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
+    specht-labs.de/tailnet-dst: tag:o11y-endpoint
+    specht-labs.de/tailnet-ports: tcp:80
   tags: [observability, traces, otlp]
   links:
     - url: https://opentelemetry.io/docs/specs/otlp/

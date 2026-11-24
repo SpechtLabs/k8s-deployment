@@ -41,6 +41,12 @@ metadata:
   name: loki-push
   title: Loki push
   description: Log ingestion at loki-gateway /loki/api/v1/push (snappy-compressed PushRequest protobuf, or JSON). The tenant is the X-Scope-OrgID header.
+  annotations:
+    # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
+    # renders Tailscale grants from these (shadow mode for now).
+    # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
+    specht-labs.de/tailnet-dst: tag:o11y-endpoint
+    specht-labs.de/tailnet-ports: tcp:80
   tags: [observability, logs, protobuf]
   links:
     - url: https://grafana.com/docs/loki/latest/reference/loki-http-api/#ingest-logs

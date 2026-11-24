@@ -15,6 +15,8 @@ metadata:
     argocd/app-name: backstage
     backstage.io/kubernetes-namespace: backstage
     backstage.io/kubernetes-label-selector: app.kubernetes.io/name=backstage
+    # Its tailnet identity: the lab-argocd egress proxy's tag.
+    specht-labs.de/tailnet-src: tag:backstage
   tags: [developer-portal]
   links:
     - url: https://backstage.k8s.specht-labs.de
@@ -36,6 +38,7 @@ spec:
   consumesApis:
     - api:argocd-api
     - api:tsidp-oidc
+    - api:argocd-labk3s-api
   dependsOn:
     - resource:specht-labs
     - resource:backstage-db

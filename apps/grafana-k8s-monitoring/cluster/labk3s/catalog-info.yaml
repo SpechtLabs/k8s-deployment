@@ -10,6 +10,8 @@ metadata:
     # specht-labs, where the same selectors would match the wrong pods.
     argocd/app-name: grafana-k8s-monitoring
     argocd/proxy-url: /argocd/labk3s
+    # Its tailnet identity: the lab-lgtm-egress proxy's tag.
+    specht-labs.de/tailnet-src: tag:o11y-agent
   title: Grafana k8s-monitoring (labk3s)
   description: Alloy on labk3s. Ships metrics, logs and traces as the homelab tenant to the specht-labs LGTM stack, over tailnet egress to k8s-load-balancer.sphinx-map.ts.net.
   tags: [observability]

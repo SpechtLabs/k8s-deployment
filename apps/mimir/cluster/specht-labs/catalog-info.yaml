@@ -41,6 +41,12 @@ metadata:
   name: mimir-remote-write
   title: Mimir remote write
   description: Prometheus remote write 1.0 (snappy-compressed protobuf over HTTP POST) at mimir-gateway /api/v1/push. The tenant is the X-Scope-OrgID header, set per route on the tailnet Gateway.
+  annotations:
+    # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
+    # renders Tailscale grants from these (shadow mode for now).
+    # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
+    specht-labs.de/tailnet-dst: tag:o11y-endpoint
+    specht-labs.de/tailnet-ports: tcp:80
   tags: [observability, metrics, protobuf]
   links:
     - url: https://prometheus.io/docs/specs/prw/remote_write_spec/
