@@ -1,67 +1,58 @@
-# SLO tempoingestavail: Tempo — Ingestion availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO tempoingestavail: Tempo — Ingestion availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-tempoingestavail
+  name: tempoingestavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: tempoingestavail
-    spec:
-      name: Tempo — Ingestion availability
-      description: >-
-        Share of pushes to tempo-distributor (/v1/traces) accepted with a 2xx, per Beyla's http_server_request_duration_seconds
-        on the distributor. Every writer counts: the in-cluster Alloy (spechtlabs tenant) and the homelab/hass
-        tenants through the gateway. Any non-2xx is data a writer had to drop or retry, 4xx included:
-        the distributors answer tenant limits with 4xx (Mimir 400 err-mimir-max-series-per-user, Loki/Tempo
-        429 rate limited), and those are capacity failures, not bad clients. ≈37k pushes/day; 0.8% answered
-        429 (rate limited) on 2026-11-23 while the zone-b/c ingesters were restarting. 99.5% while that
-        is unresolved; tighten once it is.
-      destinationDatasource:
-        uid: mimir-spechtlabs
-      query:
-        type: ratio
-        ratio:
-          successMetric:
-            prometheusMetric: >-
-              http_server_request_duration_seconds_count{k8s_deployment_name="tempo-distributor", http_route="/v1/traces",
-              http_response_status_code=~"2.."}
-          totalMetric:
-            prometheusMetric: >-
-              http_server_request_duration_seconds_count{k8s_deployment_name="tempo-distributor", http_route="/v1/traces"}
-          groupByLabels: []
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Tempo — Ingestion availability
+  description: >-
+    Share of pushes to tempo-distributor (/v1/traces) accepted with a 2xx, per Beyla's http_server_request_duration_seconds
+    on the distributor. Every writer counts: the in-cluster Alloy (spechtlabs tenant) and the homelab/hass
+    tenants through the gateway. Any non-2xx is data a writer had to drop or retry, 4xx included: the
+    distributors answer tenant limits with 4xx (Mimir 400 err-mimir-max-series-per-user, Loki/Tempo 429
+    rate limited), and those are capacity failures, not bad clients. ≈37k pushes/day; 0.8% answered 429
+    (rate limited) on 2026-11-23 while the zone-b/c ingesters were restarting. 99.5% while that is unresolved;
+    tighten once it is.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="tempo-distributor", http_route="/v1/traces",
+          http_response_status_code=~"2.."}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="tempo-distributor", http_route="/v1/traces"}
+      groupByLabels: []
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: tempo
+  - key: team_name
+    value: specht-labs
+  - key: tier
+    value: observability
+  - key: sli
+    value: availability
+  alerting:
+    labels:
+    - key: service
+      value: tempo
+    fastBurn:
       labels:
-      - key: service_name
-        value: tempo
-      - key: team_name
-        value: specht-labs
-      - key: tier
-        value: observability
-      - key: sli
-        value: availability
-      alerting:
-        labels:
-        - key: service
-          value: tempo
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: 'Tempo is rejecting pushes fast: telemetry is being lost now.'
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Tempo is rejecting a share of pushes over hours.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: 'Tempo is rejecting pushes fast: telemetry is being lost now.'
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Tempo is rejecting a share of pushes over hours.

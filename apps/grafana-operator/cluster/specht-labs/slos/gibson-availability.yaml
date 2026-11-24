@@ -1,64 +1,55 @@
-# SLO gibsonavail: Gibson (SSH) — Availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO gibsonavail: Gibson (SSH) — Availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-gibsonavail
+  name: gibsonavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: gibsonavail
-    spec:
-      name: Gibson (SSH) — Availability
-      description: >-
-        Share of TCP connections Envoy Gateway forwarded to gibson's SSH backend successfully: 1 − (connect
-        failures + connections refused for lack of a healthy endpoint) / attempts, on TCPRoute gibson.
-        ≈35k connections/day (mostly internet SSH scanners, which still prove the path works); 0 connect
-        failures in the day to 2026-11-24.
-      destinationDatasource:
-        uid: mimir-spechtlabs
-      query:
-        type: freeform
-        freeform:
-          query: |-
-            1 - (
-              (sum(rate(envoy_cluster_upstream_cx_connect_fail{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
-              + (sum(rate(envoy_cluster_upstream_cx_none_healthy{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
-            ) / (
-              sum(rate(envoy_cluster_upstream_cx_total{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval]))
-              + (sum(rate(envoy_cluster_upstream_cx_none_healthy{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
-            )
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Gibson (SSH) — Availability
+  description: >-
+    Share of TCP connections Envoy Gateway forwarded to gibson's SSH backend successfully: 1 − (connect
+    failures + connections refused for lack of a healthy endpoint) / attempts, on TCPRoute gibson. ≈35k
+    connections/day (mostly internet SSH scanners, which still prove the path works); 0 connect failures
+    in the day to 2026-11-24.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: freeform
+    freeform:
+      query: |-
+        1 - (
+          (sum(rate(envoy_cluster_upstream_cx_connect_fail{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
+          + (sum(rate(envoy_cluster_upstream_cx_none_healthy{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
+        ) / (
+          sum(rate(envoy_cluster_upstream_cx_total{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval]))
+          + (sum(rate(envoy_cluster_upstream_cx_none_healthy{envoy_cluster_name="tcproute/gibson/gibson/rule/-1"}[$__rate_interval])) or vector(0))
+        )
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: gibson
+  - key: team_name
+    value: specht-labs
+  - key: tier
+    value: app
+  - key: sli
+    value: availability
+  alerting:
+    labels:
+    - key: service
+      value: gibson
+    fastBurn:
       labels:
-      - key: service_name
-        value: gibson
-      - key: team_name
-        value: specht-labs
-      - key: tier
-        value: app
-      - key: sli
-        value: availability
-      alerting:
-        labels:
-        - key: service
-          value: gibson
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: Gibson SSH connections are failing fast (backend down or refusing).
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Gibson SSH connections are failing a small share over hours.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: Gibson SSH connections are failing fast (backend down or refusing).
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Gibson SSH connections are failing a small share over hours.

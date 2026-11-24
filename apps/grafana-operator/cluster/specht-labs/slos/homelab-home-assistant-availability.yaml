@@ -1,53 +1,44 @@
-# SLO hlhassavail: Homelab — Home Assistant availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO hlhassavail: Homelab — Home Assistant availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-hlhassavail
+  name: hlhassavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: hlhassavail
-    spec:
-      name: Homelab — Home Assistant availability
-      description: >-
-        Share of probes for which Home Assistant's web UI/API at http://hass.sphinx-map.ts.net:8123/ answered
-        2xx.
-      destinationDatasource:
-        uid: mimir-homelab
-      query:
-        type: freeform
-        freeform:
-          query: avg_over_time(probe_success{job="blackbox", service="home-assistant"}[$__rate_interval])
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Homelab — Home Assistant availability
+  description: >-
+    Share of probes for which Home Assistant's web UI/API at http://hass.sphinx-map.ts.net:8123/ answered
+    2xx.
+  destinationDatasource:
+    uid: mimir-homelab
+  query:
+    type: freeform
+    freeform:
+      query: avg_over_time(probe_success{job="blackbox", service="home-assistant"}[$__rate_interval])
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: home-assistant
+  - key: team_name
+    value: homelab
+  - key: site
+    value: homelab
+  alerting:
+    labels:
+    - key: service
+      value: home-assistant
+    fastBurn:
       labels:
-      - key: service_name
-        value: home-assistant
-      - key: team_name
-        value: homelab
-      - key: site
-        value: homelab
-      alerting:
-        labels:
-        - key: service
-          value: home-assistant
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: Homelab — Home Assistant availability is burning its error budget fast.
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Homelab — Home Assistant availability is burning its error budget slowly.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: Homelab — Home Assistant availability is burning its error budget fast.
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Homelab — Home Assistant availability is burning its error budget slowly.

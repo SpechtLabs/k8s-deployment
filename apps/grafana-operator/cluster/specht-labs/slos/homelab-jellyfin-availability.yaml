@@ -1,53 +1,44 @@
-# SLO hljellyfinavail: Homelab — Jellyfin availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO hljellyfinavail: Homelab — Jellyfin availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-hljellyfinavail
+  name: hljellyfinavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: hljellyfinavail
-    spec:
-      name: Homelab — Jellyfin availability
-      description: >-
-        Share of probes for which Jellyfin answered /health with 2xx through its Tailscale Service (https://stream.sphinx-map.ts.net),
-        the path its users take.
-      destinationDatasource:
-        uid: mimir-homelab
-      query:
-        type: freeform
-        freeform:
-          query: avg_over_time(probe_success{job="blackbox", service="jellyfin"}[$__rate_interval])
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Homelab — Jellyfin availability
+  description: >-
+    Share of probes for which Jellyfin answered /health with 2xx through its Tailscale Service (https://stream.sphinx-map.ts.net),
+    the path its users take.
+  destinationDatasource:
+    uid: mimir-homelab
+  query:
+    type: freeform
+    freeform:
+      query: avg_over_time(probe_success{job="blackbox", service="jellyfin"}[$__rate_interval])
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: jellyfin
+  - key: team_name
+    value: homelab
+  - key: site
+    value: homelab
+  alerting:
+    labels:
+    - key: service
+      value: jellyfin
+    fastBurn:
       labels:
-      - key: service_name
-        value: jellyfin
-      - key: team_name
-        value: homelab
-      - key: site
-        value: homelab
-      alerting:
-        labels:
-        - key: service
-          value: jellyfin
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: Homelab — Jellyfin availability is burning its error budget fast.
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Homelab — Jellyfin availability is burning its error budget slowly.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: Homelab — Jellyfin availability is burning its error budget fast.
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Homelab — Jellyfin availability is burning its error budget slowly.

@@ -1,27 +1,33 @@
-# Every Grafana Cloud SLO, as GrafanaManifests (slo.ext.grafana.app/v1alpha1 SLO):
-# the operator creates and updates them; edit here, never in the UI or with gcx.
+# Every Grafana Cloud SLO, as plain SLO definitions (slo.ext.grafana.app/v1alpha1).
+# grafana-operator can't apply SLOs (Grafana serves no API group for them), so
+# the PostSync Job slo-sync applies this ConfigMap to the SLO plugin's API after
+# every Argo CD sync. Edit here, never in the UI or with gcx.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - bogen-web-availability.yaml
-  - bogen-web-latency.yaml
-  - gibson-availability.yaml
-  - homelab-buckle-availability.yaml
-  - homelab-ceph-availability.yaml
-  - homelab-clock-accuracy-ntp.yaml
-  - homelab-clock-accuracy-ptp.yaml
-  - homelab-home-assistant-availability.yaml
-  - homelab-jellyfin-availability.yaml
-  - homelab-labk3s-api-availability.yaml
-  - homelab-nas-dsm-availability.yaml
-  - homelab-timepi-stratum1.yaml
-  - homelab-tsidp-availability.yaml
-  - loki-ingest-availability.yaml
-  - mimir-ingest-availability.yaml
-  - mimir-query-availability.yaml
-  - mimir-query-latency.yaml
-  - static-pages-proxy-availability.yaml
-  - static-pages-proxy-latency.yaml
-  - tempo-ingest-availability.yaml
-  - tunnel-hornberg-availability.yaml
-  - tunnel-hornberg-latency.yaml
+  - slo-sync-job.yaml
+configMapGenerator:
+  - name: grafana-slos
+    files:
+      - bogen-web-availability.yaml
+      - bogen-web-latency.yaml
+      - gibson-availability.yaml
+      - homelab-buckle-availability.yaml
+      - homelab-ceph-availability.yaml
+      - homelab-clock-accuracy-ntp.yaml
+      - homelab-clock-accuracy-ptp.yaml
+      - homelab-home-assistant-availability.yaml
+      - homelab-jellyfin-availability.yaml
+      - homelab-labk3s-api-availability.yaml
+      - homelab-nas-dsm-availability.yaml
+      - homelab-timepi-stratum1.yaml
+      - homelab-tsidp-availability.yaml
+      - loki-ingest-availability.yaml
+      - mimir-ingest-availability.yaml
+      - mimir-query-availability.yaml
+      - mimir-query-latency.yaml
+      - static-pages-proxy-availability.yaml
+      - static-pages-proxy-latency.yaml
+      - tempo-ingest-availability.yaml
+      - tunnel-hornberg-availability.yaml
+      - tunnel-hornberg-latency.yaml

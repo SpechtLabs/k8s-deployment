@@ -1,64 +1,55 @@
-# SLO mimirqueryavail: Mimir — Query availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO mimirqueryavail: Mimir — Query availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-mimirqueryavail
+  name: mimirqueryavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: mimirqueryavail
-    spec:
-      name: Mimir — Query availability
-      description: >-
-        Share of instant/range queries the mimir-query-frontend answered without a 5xx or 499. Nearly
-        all of them are Grafana Cloud evaluating alert rules and SLO recording rules over PDC, so this
-        is the read path every alert depends on. 499 counts as bad: it is Grafana giving up on a query
-        that took too long. ≈27k queries/day; 4.7 × 499 and no 5xx on 2026-11-23.
-      destinationDatasource:
-        uid: mimir-spechtlabs
-      query:
-        type: ratio
-        ratio:
-          successMetric:
-            prometheusMetric: >-
-              http_server_request_duration_seconds_count{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range",
-              http_response_status_code!~"5..|499"}
-          totalMetric:
-            prometheusMetric: >-
-              http_server_request_duration_seconds_count{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range"}
-          groupByLabels: []
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Mimir — Query availability
+  description: >-
+    Share of instant/range queries the mimir-query-frontend answered without a 5xx or 499. Nearly all
+    of them are Grafana Cloud evaluating alert rules and SLO recording rules over PDC, so this is the
+    read path every alert depends on. 499 counts as bad: it is Grafana giving up on a query that took
+    too long. ≈27k queries/day; 4.7 × 499 and no 5xx on 2026-11-23.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range",
+          http_response_status_code!~"5..|499"}
+      totalMetric:
+        prometheusMetric: >-
+          http_server_request_duration_seconds_count{k8s_deployment_name="mimir-query-frontend", http_route=~"/prometheus/api/v1/query|/prometheus/api/v1/query_range"}
+      groupByLabels: []
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: mimir
+  - key: team_name
+    value: specht-labs
+  - key: tier
+    value: observability
+  - key: sli
+    value: availability
+  alerting:
+    labels:
+    - key: service
+      value: mimir
+    fastBurn:
       labels:
-      - key: service_name
-        value: mimir
-      - key: team_name
-        value: specht-labs
-      - key: tier
-        value: observability
-      - key: sli
-        value: availability
-      alerting:
-        labels:
-        - key: service
-          value: mimir
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: 'Mimir queries are failing fast: alert and SLO evaluation is impaired.'
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Mimir queries are failing a small share over hours.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: 'Mimir queries are failing fast: alert and SLO evaluation is impaired.'
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Mimir queries are failing a small share over hours.

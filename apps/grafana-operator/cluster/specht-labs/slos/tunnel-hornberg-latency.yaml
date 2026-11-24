@@ -1,64 +1,55 @@
-# SLO tunnelhblatency: Tunnel Hornberg — Latency. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO tunnelhblatency: Tunnel Hornberg — Latency. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-tunnelhblatency
+  name: tunnelhblatency
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: tunnelhblatency
-    spec:
-      name: Tunnel Hornberg — Latency
-      description: >-
-        Share of requests to Tunnel Hornberg that Envoy Gateway got an upstream response for within 2.5s,
-        per envoy_cluster_upstream_rq_time (ms) on route httproute/tunnel-hornberg/tunnel-hornberg/rule/0.
-        Baseline (2026-11-23): 97.4% < 1s, 99.3% < 2.5s, so the threshold is 2.5s; 98% spends about a
-        third of the budget normally.
-      destinationDatasource:
-        uid: mimir-spechtlabs
-      query:
-        type: ratio
-        ratio:
-          successMetric:
-            prometheusMetric: >-
-              envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0",
-              le="2500.0"}
-          totalMetric:
-            prometheusMetric: >-
-              envoy_cluster_upstream_rq_time_count{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0"}
-          groupByLabels: []
-      objectives:
-      - value: 0.98
-        window: 28d
+  name: Tunnel Hornberg — Latency
+  description: >-
+    Share of requests to Tunnel Hornberg that Envoy Gateway got an upstream response for within 2.5s,
+    per envoy_cluster_upstream_rq_time (ms) on route httproute/tunnel-hornberg/tunnel-hornberg/rule/0.
+    Baseline (2026-11-23): 97.4% < 1s, 99.3% < 2.5s, so the threshold is 2.5s; 98% spends about a third
+    of the budget normally.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0",
+          le="2500.0"}
+      totalMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_time_count{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0"}
+      groupByLabels: []
+  objectives:
+  - value: 0.98
+    window: 28d
+  labels:
+  - key: service_name
+    value: tunnel-hornberg
+  - key: team_name
+    value: specht-labs
+  - key: tier
+    value: app
+  - key: sli
+    value: latency
+  alerting:
+    labels:
+    - key: service
+      value: tunnel-hornberg
+    fastBurn:
       labels:
-      - key: service_name
-        value: tunnel-hornberg
-      - key: team_name
-        value: specht-labs
-      - key: tier
-        value: app
-      - key: sli
-        value: latency
-      alerting:
-        labels:
-        - key: service
-          value: tunnel-hornberg
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: Tunnel Hornberg responses are slower than 2.5s for many requests.
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Tunnel Hornberg is getting slower than 2.5s over hours.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: Tunnel Hornberg responses are slower than 2.5s for many requests.
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Tunnel Hornberg is getting slower than 2.5s over hours.

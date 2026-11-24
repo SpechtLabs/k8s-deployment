@@ -1,0 +1,70 @@
+# slo-sync: applies the SLO definitions in this directory (ConfigMap
+# grafana-slos) to Grafana Cloud's SLO plugin API after every Argo CD sync of
+# grafana-operator, with the operator's own Grafana Cloud token.
+#
+# Each SLO is created or updated under its metadata.name as UUID and labelled
+# managed_by=k8s-deployment; an SLO carrying that label but no longer in this
+# directory is deleted. SLOs without the label (made in the UI) are left alone.
+# The Job fails, and the sync shows it, if any SLO is refused.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: slo-sync
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 604800
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: slo-sync
+          image: alpine:3.22
+          env:
+            - name: GRAFANA_URL
+              value: https://spechtlabs.grafana.net
+            - name: GRAFANA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-cloud-sa
+                  key: token
+          command: [/bin/sh, -c]
+          args:
+            - |
+              set -eu
+              apk add --no-cache curl jq python3 py3-yaml >/dev/null
+              api="$GRAFANA_URL/api/plugins/grafana-slo-app/resources/v1/slo"
+              call() { curl -sS -o /tmp/body -w '%{http_code}' -H "Authorization: Bearer $GRAFANA_TOKEN" -H 'Content-Type: application/json' "$@"; }
+              failed=0 want=" "
+              for f in /slos/*.yaml; do
+                uuid=$(python3 -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["metadata"]["name"])' "$f")
+                python3 -c 'import sys, yaml, json; d = yaml.safe_load(open(sys.argv[1])); print(json.dumps(dict(d["spec"], uuid=d["metadata"]["name"])))' "$f" |
+                  jq '.labels = ([(.labels // [])[] | select(.key != "managed_by")] + [{"key": "managed_by", "value": "k8s-deployment"}])' > /tmp/slo.json
+                if [ "$(call "$api/$uuid")" = 200 ]; then code=$(call -X PUT -d @/tmp/slo.json "$api/$uuid"); verb=updated
+                else code=$(call -X POST -d @/tmp/slo.json "$api"); verb=created; fi
+                case "$code" in
+                  2*) echo "$verb $uuid" ;;
+                  *) echo "FAILED $uuid: HTTP $code $(head -c 300 /tmp/body)"; failed=1 ;;
+                esac
+                want="$want$uuid "
+              done
+              if [ "$(call "$api")" = 200 ]; then
+                for uuid in $(jq -r '.slos[] | select(any(.labels[]?; .key == "managed_by" and .value == "k8s-deployment")) | .uuid' /tmp/body); do
+                  case "$want" in *" $uuid "*) ;; *) echo "deleted $uuid: HTTP $(call -X DELETE "$api/$uuid")" ;; esac
+                done
+              else
+                echo "could not list SLOs; nothing pruned"; failed=1
+              fi
+              exit $failed
+          volumeMounts:
+            - name: slos
+              mountPath: /slos
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { memory: 128Mi }
+      volumes:
+        - name: slos
+          configMap:
+            name: grafana-slos

@@ -1,65 +1,56 @@
-# SLO tunnelhbavail: Tunnel Hornberg — Availability. Applied by grafana-operator (grafana/slos (cedi, 2026-11-24)).
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaManifest
+# SLO tunnelhbavail: Tunnel Hornberg — Availability. Applied to Grafana Cloud by slo-sync (slo-sync-job.yaml).
+apiVersion: slo.ext.grafana.app/v1alpha1
+kind: SLO
 metadata:
-  name: slo-tunnelhbavail
+  name: tunnelhbavail
 spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  template:
-    apiVersion: slo.ext.grafana.app/v1alpha1
-    kind: SLO
-    metadata:
-      name: tunnelhbavail
-    spec:
-      name: Tunnel Hornberg — Availability
-      description: >-
-        Share of requests to Tunnel Hornberg that Envoy Gateway answered without a 5xx, per envoy_cluster_upstream_rq_xx
-        on route httproute/tunnel-hornberg/tunnel-hornberg/rule/0. Envoy charges a 503 here too when the
-        route has no healthy endpoint (pods down), so this catches a dead backend as well as one that
-        errors. 4xx (404s from scanners, auth) are served responses, not failures. Measured at the gateway,
-        so kubelet probes don't dilute it. ≈1.6–1.9k requests/day, 0 5xx in the 3 days to 2026-11-24.
-      destinationDatasource:
-        uid: mimir-spechtlabs
-      query:
-        type: ratio
-        ratio:
-          successMetric:
-            prometheusMetric: >-
-              envoy_cluster_upstream_rq_xx{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0",
-              envoy_response_code_class!="5"}
-          totalMetric:
-            prometheusMetric: >-
-              envoy_cluster_upstream_rq_xx{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0"}
-          groupByLabels: []
-      objectives:
-      - value: 0.995
-        window: 28d
+  name: Tunnel Hornberg — Availability
+  description: >-
+    Share of requests to Tunnel Hornberg that Envoy Gateway answered without a 5xx, per envoy_cluster_upstream_rq_xx
+    on route httproute/tunnel-hornberg/tunnel-hornberg/rule/0. Envoy charges a 503 here too when the route
+    has no healthy endpoint (pods down), so this catches a dead backend as well as one that errors. 4xx
+    (404s from scanners, auth) are served responses, not failures. Measured at the gateway, so kubelet
+    probes don't dilute it. ≈1.6–1.9k requests/day, 0 5xx in the 3 days to 2026-11-24.
+  destinationDatasource:
+    uid: mimir-spechtlabs
+  query:
+    type: ratio
+    ratio:
+      successMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_xx{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0",
+          envoy_response_code_class!="5"}
+      totalMetric:
+        prometheusMetric: >-
+          envoy_cluster_upstream_rq_xx{envoy_cluster_name="httproute/tunnel-hornberg/tunnel-hornberg/rule/0"}
+      groupByLabels: []
+  objectives:
+  - value: 0.995
+    window: 28d
+  labels:
+  - key: service_name
+    value: tunnel-hornberg
+  - key: team_name
+    value: specht-labs
+  - key: tier
+    value: app
+  - key: sli
+    value: availability
+  alerting:
+    labels:
+    - key: service
+      value: tunnel-hornberg
+    fastBurn:
       labels:
-      - key: service_name
-        value: tunnel-hornberg
-      - key: team_name
-        value: specht-labs
-      - key: tier
-        value: app
-      - key: sli
-        value: availability
-      alerting:
-        labels:
-        - key: service
-          value: tunnel-hornberg
-        fastBurn:
-          labels:
-          - key: severity
-            value: critical
-          annotations:
-          - key: summary
-            value: Tunnel Hornberg is failing requests fast (5xx / no healthy upstream at the gateway).
-        slowBurn:
-          labels:
-          - key: severity
-            value: warning
-          annotations:
-          - key: summary
-            value: Tunnel Hornberg is failing a small share of requests over hours.
+      - key: severity
+        value: critical
+      annotations:
+      - key: summary
+        value: Tunnel Hornberg is failing requests fast (5xx / no healthy upstream at the gateway).
+    slowBurn:
+      labels:
+      - key: severity
+        value: warning
+      annotations:
+      - key: summary
+        value: Tunnel Hornberg is failing a small share of requests over hours.
