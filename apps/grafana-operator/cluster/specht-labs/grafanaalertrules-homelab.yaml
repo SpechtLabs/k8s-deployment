@@ -1,0 +1,128 @@
+# Homelab platform health targets that no SLO covers: the Buckle server's
+# nightly database backup (cedi/homelab modules/buckle-server, metric from the
+# server host's node_exporter textfile). Grafana-managed rules on the homelab
+# Mimir tenant, in Infrastructure.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: homelab-platform
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  name: homelab-platform
+  interval: 5m
+  rules:
+  - uid: buckle-backup-stale
+    title: Buckle — database backup on the NAS is stale
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: buckle
+      category: backup
+    annotations:
+      summary: "The Buckle database's last NAS backup is more than 26 h old"
+      description: "buckle-backup on the server host (isa) hasn't copied the database to the NAS for over 26 h. `systemctl status buckle-backup` and `journalctl -u buckle-backup` there; a missing NFS mount still leaves the local copy in /var/backups/buckle."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'time() - max(buckle_backup_last_success_timestamp_seconds{target="nas"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 93600
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: buckle-backup-missing
+    title: Buckle — no database backup on the NAS recorded
+    condition: B
+    for: 26h
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: buckle
+      category: backup
+    annotations:
+      summary: "No NAS backup of the Buckle database has been recorded for 26 h"
+      description: "The server host exports no buckle_backup_last_success_timestamp_seconds for the NAS: the backup has never reached it, or its timer or metrics stopped. `systemctl list-timers buckle-backup.timer` on isa."
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'absent(buckle_backup_last_success_timestamp_seconds{target="nas"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
