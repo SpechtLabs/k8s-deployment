@@ -5170,7 +5170,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(abs(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}))",
+          "expr": "max(abs(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}))",
           "legendFormat": "__auto",
           "refId": "A",
           "range": false,
@@ -5246,7 +5246,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference=\"PTP\"}) or vector(0)",
+          "expr": "count(chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference=\"PTP\"}) or vector(0)",
           "legendFormat": "__auto",
           "refId": "A",
           "range": false,
@@ -5314,7 +5314,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference!=\"PTP\"}) or vector(0)",
+          "expr": "count(chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference!=\"PTP\"}) or vector(0)",
           "legendFormat": "__auto",
           "refId": "A",
           "range": false,
@@ -5382,7 +5382,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1e9 * max(abs(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}) and on(instance) chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference=\"PTP\"})",
+          "expr": "1e9 * max(abs(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}) and on(instance) chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference=\"PTP\"})",
           "legendFormat": "worst PTP host",
           "refId": "A",
           "range": true,
@@ -5393,7 +5393,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1e9 * quantile(0.5, abs(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}) and on(instance) chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference=\"PTP\"})",
+          "expr": "1e9 * quantile(0.5, abs(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}) and on(instance) chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference=\"PTP\"})",
           "legendFormat": "median PTP host",
           "refId": "B",
           "range": true,
@@ -5404,7 +5404,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1e9 * max(abs(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}) and on(instance) chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference!=\"PTP\"})",
+          "expr": "1e9 * max(abs(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}) and on(instance) chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference!=\"PTP\"})",
           "legendFormat": "worst NTP host",
           "refId": "C",
           "range": true,
@@ -5415,7 +5415,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1e9 * quantile(0.5, abs(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}) and on(instance) chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference!=\"PTP\"})",
+          "expr": "1e9 * quantile(0.5, abs(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}) and on(instance) chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference!=\"PTP\"})",
           "legendFormat": "median NTP host",
           "refId": "D",
           "range": true,
@@ -5599,7 +5599,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(chrony_tracking_rms_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(chrony_tracking_rms_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": false,
@@ -5678,7 +5678,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(ptp4l_master_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(ptp4l_master_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": true,
@@ -5767,7 +5767,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(ptp4l_mean_path_delay_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(ptp4l_mean_path_delay_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": true,
@@ -5856,7 +5856,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(max by (instance) ((chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference=\"PTP\"} * 2) or (chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"} * 1)), \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(max by (instance) ((chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference=\"PTP\"} * 2) or (chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\"} * 1)), \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "{{host}}",
           "refId": "A",
           "range": true,
@@ -5945,7 +5945,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(max by (instance) ((chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\", reference=\"PTP\"} * 2) or (chrony_tracking_info{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"} * 1)), \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(max by (instance) ((chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\", reference=\"PTP\"} * 2) or (chrony_tracking_info{instance=~\".+:9100\", instance!=\"timepi:9100\"} * 1)), \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "A",
           "range": false,
@@ -5957,7 +5957,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(chrony_tracking_system_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(chrony_tracking_system_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "B",
           "range": false,
@@ -5969,7 +5969,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(chrony_tracking_rms_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(chrony_tracking_rms_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "C",
           "range": false,
@@ -5981,7 +5981,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(chrony_tracking_frequency_ppm{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(chrony_tracking_frequency_ppm{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "D",
           "range": false,
@@ -5993,7 +5993,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(chrony_tracking_update_interval_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(chrony_tracking_update_interval_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "E",
           "range": false,
@@ -6005,7 +6005,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(ptp4l_master_offset_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(ptp4l_master_offset_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "F",
           "range": false,
@@ -6017,7 +6017,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "label_replace(ptp4l_mean_path_delay_seconds{instance=~\"(blade-pi|clusterpi-|storagepi-|jumphost|nuc).*:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
+          "expr": "label_replace(ptp4l_mean_path_delay_seconds{instance=~\".+:9100\", instance!=\"timepi:9100\"}, \"host\", \"$1\", \"instance\", \"([^:]+)(:.*)?\")",
           "legendFormat": "__auto",
           "refId": "G",
           "range": false,
