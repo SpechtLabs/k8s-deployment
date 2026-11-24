@@ -156,6 +156,14 @@ catalog:
         - allow: [User, Group]
     - type: url
       target: https://github.com/cedi/homelab/blob/main/catalog-info.yaml
+    # TailscaleGrant entities (capability grants for the tailnet policy) come
+    # from this one file, next to the policy, and from nowhere else. Catalog
+    # rules match an entity's origin location, so the kind is allowed for
+    # this location only; homelab's own Location doesn't list the file.
+    - type: url
+      target: https://github.com/cedi/homelab/blob/main/tailscale/grants.yaml
+      rules:
+        - allow: [TailscaleGrant]
   providers:
     github:
       spechtlabs:
