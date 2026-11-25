@@ -14,7 +14,6 @@ certchecker:
     - dns: short.cedi.dev
     - dns: ccl.pw
     - dns: dash.ccl.pw
-    - dns: hole.elbschloss.xyz
     - dns: kienzler.io
     - dns: hass.elbschloss.xyz
     - dns: nas.elbschloss.xyz
