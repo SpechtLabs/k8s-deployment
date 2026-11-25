@@ -145,7 +145,7 @@ integrations:
 # else, Backstage's own entities included, comes from here.
 catalog:
   # cedi/homelab is outside the SpechtLabs org, so discovery doesn't see it;
-  # its catalog (System homelab, labk3s, the tailnet, tsidp, Ceph, the NAS)
+  # its catalog (Domain homelab and its systems: elbschloss, labk3s, ceph, ...)
   # is registered here. This array replaces the image's catalog.locations
   # (app-config.production.yaml) rather than merging with it, so the image's
   # org.yaml entry is repeated.

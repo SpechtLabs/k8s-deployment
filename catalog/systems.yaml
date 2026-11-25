@@ -1,15 +1,37 @@
-# Backstage catalog: the Systems. Each cluster is one System. The functional
-# groupings (networking, observability, ...) are tags, because a Component
-# belongs to exactly one System. System homelab, and the home infrastructure
-# the labk3s apps depend on (resource:labk3s, resource:tailnet,
-# resource:ceph-rbd-k3s, component:tsidp, api:tsidp-oidc, api:nas-nfs), are
-# defined in cedi/homelab.
+# Backstage catalog: the specht-labs and third-party Domains and their
+# Systems. A System is a set of Components and Resources with one job; the
+# others reach it through its APIs. specht-labs is the cluster on Hetzner and
+# what Argo CD deploys to it; observability is the LGTM stack on it plus every
+# collector and agent that ships into it, on either cluster or at home. The
+# homelab Domain and its systems (elbschloss, tailnet, fleet, timekeeping,
+# ceph, labk3s, compute-blades, jitsi, schiltach) are defined in cedi/homelab
+# (catalog/systems.yaml); the labk3s apps here (-labk3s) are part of labk3s.
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: specht-labs
+  title: Specht Labs
+  description: The production platform on Hetzner Cloud, deployed from this repo, and the observability stack both sites ship into.
+spec:
+  type: site
+  owner: group:spechtlabs
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: third-party
+  title: Third-party services
+  description: Services run by others that the clusters and the homelab depend on.
+spec:
+  type: third-party
+  owner: group:spechtlabs
+---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: specht-labs
   title: Specht Labs
-  description: The specht-labs cluster on Hetzner Cloud and everything Argo CD deploys to it from argo-apps/specht-labs.
+  description: The specht-labs cluster on Hetzner Cloud and the platform and sites Argo CD deploys to it from argo-apps/specht-labs. The LGTM stack on it is the observability system.
   links:
     - url: https://argocd.k8s.specht-labs.de
       title: Argo CD
@@ -18,7 +40,29 @@ metadata:
       title: argo-apps/specht-labs
       icon: github
 spec:
+  type: kubernetes-cluster
   owner: group:spechtlabs
+  domain: specht-labs
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: observability
+  title: Observability
+  description: >-
+    Loki, Mimir, Tempo and Pyroscope on specht-labs with their buckets, the
+    Grafana operator and cert-checker, and what ships telemetry into them:
+    grafana-k8s-monitoring on both clusters, and Alloy, the o11y collector and
+    the exporters at home (cedi/homelab). Offers push and query APIs per
+    signal; tenants per site (homelab, hass, hass-schiltach, spechtlabs).
+  links:
+    - url: https://spechtlabs.grafana.net
+      title: Grafana
+      icon: dashboard
+spec:
+  type: platform
+  owner: group:spechtlabs
+  domain: specht-labs
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
@@ -28,3 +72,4 @@ metadata:
   description: Third-party services the clusters depend on. Modelled as Components so they can provide the APIs our components consume.
 spec:
   owner: group:spechtlabs
+  domain: third-party

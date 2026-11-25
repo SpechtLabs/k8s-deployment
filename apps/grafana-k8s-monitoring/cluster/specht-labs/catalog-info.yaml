@@ -29,7 +29,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   providesApis:
     - api:alloy-otlp
   consumesApis:
@@ -59,6 +59,6 @@ spec:
   type: grpc
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   definition:
     $text: https://raw.githubusercontent.com/open-telemetry/opentelemetry-proto/v1.5.0/opentelemetry/proto/collector/trace/v1/trace_service.proto

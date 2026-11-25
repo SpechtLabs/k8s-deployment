@@ -24,7 +24,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: homelab
+  system: labk3s
   consumesApis:
     - api:tailscale-api
   dependsOn:

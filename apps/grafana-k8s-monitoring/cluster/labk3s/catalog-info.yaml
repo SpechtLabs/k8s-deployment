@@ -29,7 +29,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: homelab
+  system: observability
   consumesApis:
     - api:mimir-remote-write
     - api:loki-push

@@ -19,7 +19,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: homelab
+  system: labk3s
   providesApis:
     - api:tka-labk3s-api
   dependsOn:
@@ -37,6 +37,6 @@ spec:
   type: openapi
   lifecycle: production
   owner: group:spechtlabs
-  system: homelab
+  system: labk3s
   definition:
     $text: https://raw.githubusercontent.com/SpechtLabs/tka/v0.3.1/pkg/swagger/swagger.yaml

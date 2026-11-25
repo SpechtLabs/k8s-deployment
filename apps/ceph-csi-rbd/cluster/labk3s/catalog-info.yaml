@@ -24,8 +24,11 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: homelab
+  system: labk3s
+  # The ceph system's RBD API (cedi/homelab), pool k3s as client.k3s; the
+  # pool itself is internal to that system.
+  consumesApis:
+    - api:ceph-rbd
   dependsOn:
     - resource:labk3s
-    - resource:ceph-rbd-k3s
     - resource:tailnet

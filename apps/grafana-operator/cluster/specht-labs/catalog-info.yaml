@@ -22,7 +22,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   consumesApis:
     - api:grafana-http-api
   dependsOn:

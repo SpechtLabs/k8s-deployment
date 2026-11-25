@@ -24,7 +24,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   providesApis:
     - api:pyroscope-push
     - api:pyroscope-query
@@ -48,7 +48,7 @@ spec:
   type: grpc
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   definition:
     $text: https://raw.githubusercontent.com/grafana/pyroscope/v2.4.4/api/push/v1/push.proto
 ---
@@ -67,7 +67,7 @@ spec:
   type: grpc
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   definition:
     $text: https://raw.githubusercontent.com/grafana/pyroscope/v2.4.4/api/querier/v1/querier.proto
 ---
@@ -81,6 +81,6 @@ metadata:
 spec:
   type: s3-bucket
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   dependsOn:
     - component:hetzner-cloud

@@ -19,6 +19,6 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   dependsOn:
     - resource:specht-labs

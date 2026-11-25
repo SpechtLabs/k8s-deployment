@@ -26,7 +26,7 @@ spec:
   type: service
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   providesApis:
     - api:loki-push
     - api:loki-query
@@ -56,7 +56,7 @@ spec:
   type: grpc
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   definition:
     $text: https://raw.githubusercontent.com/grafana/loki/v3.6.11/pkg/push/push.proto
 ---
@@ -75,7 +75,7 @@ spec:
   type: openapi
   lifecycle: production
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   # Hand-written: Loki publishes no OpenAPI document.
   definition:
     $text: ../../../../catalog/apis/loki-query.openapi.yaml
@@ -90,6 +90,6 @@ metadata:
 spec:
   type: s3-bucket
   owner: group:spechtlabs
-  system: specht-labs
+  system: observability
   dependsOn:
     - component:hetzner-cloud
