@@ -64,8 +64,10 @@ metadata:
     # A only, pinned to svc:argocd's VIP: the status also carries the MagicDNS
     # hostname, which external-dns would publish as a conflicting CNAME. This
     # explicit record overrides *.k8s.specht-labs.de for the name.
-    external-dns.alpha.kubernetes.io/hostname: argocd.k8s.specht-labs.de
-    external-dns.alpha.kubernetes.io/target: "100.93.249.30"
+    # external-dns v0.24 reads only the external-dns.kubernetes.io/ prefix
+    # (the legacy .alpha. one needs --enable-legacy-annotation-prefix).
+    external-dns.kubernetes.io/hostname: argocd.k8s.specht-labs.de
+    external-dns.kubernetes.io/target: "100.93.249.30"
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
@@ -94,8 +96,10 @@ metadata:
     # A only, pinned to svc:backstage's VIP: the status also carries the MagicDNS
     # hostname, which external-dns would publish as a conflicting CNAME. This
     # explicit record overrides *.k8s.specht-labs.de for the name.
-    external-dns.alpha.kubernetes.io/hostname: backstage.k8s.specht-labs.de
-    external-dns.alpha.kubernetes.io/target: "100.93.117.9"
+    # external-dns v0.24 reads only the external-dns.kubernetes.io/ prefix
+    # (the legacy .alpha. one needs --enable-legacy-annotation-prefix).
+    external-dns.kubernetes.io/hostname: backstage.k8s.specht-labs.de
+    external-dns.kubernetes.io/target: "100.93.117.9"
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
