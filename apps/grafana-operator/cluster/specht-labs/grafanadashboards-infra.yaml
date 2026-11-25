@@ -97,19 +97,6 @@ spec:
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
-  name: adguard-home
-spec:
-  instanceSelector:
-    matchLabels:
-      dashboards: grafana-cloud
-  folderRef: applications
-  configMapRef:
-    name: adguardhome-exporter-json
-    key: adguardhome_exporter.json
----
-apiVersion: grafana.integreatly.org/v1beta1
-kind: GrafanaDashboard
-metadata:
   name: cert-checker
 spec:
   instanceSelector:

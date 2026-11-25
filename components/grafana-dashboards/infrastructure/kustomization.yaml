@@ -37,11 +37,6 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - synology-dashboard.json
-  - name: adguardhome-exporter-json
-    options:
-      disableNameSuffixHash: true
-    files:
-      - adguardhome_exporter.json
   - name: cert-checker-json
     options:
       disableNameSuffixHash: true

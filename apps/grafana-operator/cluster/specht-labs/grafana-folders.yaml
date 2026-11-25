@@ -7,7 +7,7 @@
 # Layout:
 #   Applications              — what runs on the platform: first-party apps
 #                               (static-pages, Home Assistant) and appliances
-#                               (AdGuard, Synology, cert-checker)
+#                               (Synology, cert-checker)
 #   Infrastructure            — time server, node-exporter, tailscale
 #     └─ Providers            — where compute comes from: Hetzner Cloud, the Pi
 #                               fleet, the compute blades
