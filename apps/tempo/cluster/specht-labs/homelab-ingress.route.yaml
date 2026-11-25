@@ -18,6 +18,9 @@ spec:
       sectionName: http
   hostnames:
     - k8s-load-balancer.sphinx-map.ts.net
+    # svc:lgtm, the Tailscale Service replacing the k8s-load-balancer device
+    # (envoy-gateway tailnet-services.yaml); labk3s moves its egress here.
+    - lgtm.sphinx-map.ts.net
   rules:
     - matches:
         - path:

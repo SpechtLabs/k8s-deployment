@@ -1,0 +1,64 @@
+# The HA proxies behind the tailnet Gateway's Tailscale Services (svc:lgtm,
+# svc:argocd, svc:backstage). Each Service in
+# ../../../envoy-gateway/cluster/specht-labs/tailnet-services.yaml with the
+# tailscale.com/proxy-group: tailnet-ingress annotation becomes a Tailscale
+# Service that both replicas advertise; the operator creates the Service through
+# the API (its OAuth client needs General/Services write) and DNATs the
+# Service's VIP to the Kubernetes Service's ClusterIP.
+#
+# The VIPs belong to the Tailscale Services, not to these devices: replicas can
+# be restarted, rescheduled or re-created without changing an address. Device
+# tags are set only when a replica first joins (tags can't change afterwards),
+# so tag:specht-labs-ingress must be in the policy before this syncs. It is the
+# only autoApprover of the three Services (cedi/homelab tailscale/policy.hujson),
+# owned by group:admins and tag:k8s-operator. Grants name the Services; the
+# devices' own tag is in none.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: tailnet-ingress
+spec:
+  type: ingress
+  replicas: 2
+  hostnamePrefix: specht-labs-ingress
+  tags:
+    - tag:specht-labs-ingress
+  proxyClass: tailnet-ingress
+---
+# The homelab ProxyClass's bounds plus a node spread, so one node going away
+# doesn't take both replicas with it.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: tailnet-ingress
+spec:
+  statefulSet:
+    pod:
+      labels:
+        app.kubernetes.io/name: tailnet-ingress
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: tailnet-ingress
+      tailscaleContainer:
+        resources:
+          requests:
+            cpu: 150m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+---
+# Node drains (cluster-api rollouts) take the replicas one at a time.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tailnet-ingress
+  namespace: tailscale
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tailnet-ingress

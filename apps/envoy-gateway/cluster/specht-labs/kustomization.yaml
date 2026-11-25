@@ -10,6 +10,7 @@ resources:
   - tailscale-envoyproxy.yaml
   - tailscale-gatewayclass.yaml
   - tailscale-gateway.yaml
+  - tailnet-services.yaml
   - metrics-monitors.yaml
   - proxy-protocol.yaml
 

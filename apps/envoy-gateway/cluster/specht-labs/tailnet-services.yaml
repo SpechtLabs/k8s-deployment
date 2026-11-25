@@ -1,0 +1,103 @@
+# The tailnet Gateway's Envoy pods as Tailscale Services, served by the
+# tailnet-ingress ProxyGroup (../../../tailscale/cluster/specht-labs/
+# tailnet-ingress.proxygroup.yaml). The operator names each Tailscale Service
+# svc:<tailscale.com/hostname> and gives it a VIP that outlives any proxy.
+#
+#   svc:lgtm       tcp:80   Loki/Mimir/Tempo/Pyroscope push and query, Host- or
+#                           path-routed (*.k8s.specht-labs.de, lgtm.<tailnet>)
+#   svc:argocd     tcp:443  argocd.k8s.specht-labs.de (TLS passthrough)
+#   svc:backstage  tcp:443  backstage.k8s.specht-labs.de (HTTPS)
+#
+# One Kubernetes Service per Tailscale Service: the proxies DNAT a VIP to one
+# ClusterIP, and kube-proxy only forwards the ports listed, so each VIP offers
+# just its ports and the policy grants each one separately.
+#
+# Envoy Gateway owns the pods and its own Service (tailscale-envoyproxy.yaml),
+# so these select its pods by its labels and target its container ports: it
+# listens on port+10000 for ports below 1024 (80 -> 10080, 443 -> 10443).
+# Check both after an Envoy Gateway upgrade.
+#
+# Don't delete or rename these Services, or change tailscale.com/hostname or
+# tailscale.com/proxy-group: the operator deletes the Tailscale Service with
+# them, and a re-created one gets a new VIP, which the DNS records pin.
+#
+# tailscale.com/tags here tags the Tailscale Service, not the proxies (those
+# carry the ProxyGroup's tags). tag:k8s is the operator's default and is in no
+# grant: access goes by svc: name only.
+#
+# The cluster is IPv4-only, so the proxies map only the VIP's IPv4 address
+# (the IPv6 one goes nowhere): DNS for these is A records only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: tailnet-lgtm
+  namespace: envoy-gateway-system
+  annotations:
+    tailscale.com/proxy-group: tailnet-ingress
+    tailscale.com/hostname: lgtm
+    tailscale.com/tags: tag:k8s
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: tailnet
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 10080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tailnet-argocd
+  namespace: envoy-gateway-system
+  annotations:
+    tailscale.com/proxy-group: tailnet-ingress
+    tailscale.com/hostname: argocd
+    tailscale.com/tags: tag:k8s
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: tailnet
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 10443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tailnet-backstage
+  namespace: envoy-gateway-system
+  annotations:
+    tailscale.com/proxy-group: tailnet-ingress
+    tailscale.com/hostname: backstage
+    tailscale.com/tags: tag:k8s
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/component: proxy
+    app.kubernetes.io/managed-by: envoy-gateway
+    app.kubernetes.io/name: envoy
+    gateway.envoyproxy.io/owning-gateway-name: tailnet
+    gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway-system
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 10443

@@ -4,6 +4,7 @@ namespace: tailscale
 
 resources:
   - ../../base
+  - tailnet-ingress.proxygroup.yaml
 
 generators:
   - ./secret-generator.yaml
