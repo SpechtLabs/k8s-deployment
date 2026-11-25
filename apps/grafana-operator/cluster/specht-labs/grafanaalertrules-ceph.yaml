@@ -5,6 +5,11 @@
 # what needs a human for a 3-node, size-3 cluster. Every query was checked
 # against mimir-homelab; routing by labels service (ceph, ceph-csi) and
 # severity in Grafana's notification policies.
+#
+# Rules about a daemon, OSD, mon or health check fire once per instance and
+# carry its `hostname`, so a notification says what broke and where (2026-11-25:
+# "one OSD is down" didn't say which). They link to the Ceph - Status dashboard
+# (hack/gen-ceph-status-dashboard.py) and the runbook in cedi/homelab.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
@@ -28,8 +33,10 @@ spec:
       service: ceph
       category: health
     annotations:
-      summary: Ceph reports HEALTH_ERR
-      description: The homelab Ceph cluster (storagepi-ceph1..3) has been in HEALTH_ERR for 5m. `ceph health detail` on a Ceph host (sudo cephadm shell) says why.
+      summary: 'Ceph HEALTH_ERR: {{ $labels.name }}'
+      description: 'Health check {{ $labels.name }} has been at HEALTH_ERR for 5m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -41,7 +48,7 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: max(ceph_health_status{cluster="homelab-ceph"})
+        expr: max by (name) (ceph_health_detail{cluster="homelab-ceph", severity="HEALTH_ERR"})
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -63,7 +70,7 @@ spec:
           evaluator:
             type: gt
             params:
-            - 1.5
+            - 0.5
           operator:
             type: and
           query:
@@ -84,8 +91,10 @@ spec:
       service: ceph
       category: health
     annotations:
-      summary: Ceph has been in HEALTH_WARN for 30m
-      description: Persistent warning on the homelab Ceph cluster. `ceph health detail` says which check; deliberate ones are muted from cedi/homelab (ceph_health_mutes).
+      summary: 'Ceph HEALTH_WARN for 30m: {{ $labels.name }}'
+      description: 'Health check {{ $labels.name }} has warned for 30m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host. Deliberate warnings are muted in cedi/homelab (ceph_health_mutes) and left out here by name.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -97,7 +106,9 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: max(ceph_health_status{cluster="homelab-ceph"})
+        # The mgr exports muted checks as active too: keep this list in step with
+        # ceph_health_mutes in cedi/homelab vars/group-ceph.yaml.
+        expr: max by (name) (ceph_health_detail{cluster="homelab-ceph", severity="HEALTH_WARN", name!~"AUTH_INSECURE_CLIENT_KEY_TYPE|AUTH_INSECURE_KEYS_ALLOWED|AUTH_INSECURE_KEYS_CREATABLE"})
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -142,6 +153,8 @@ spec:
     annotations:
       summary: No metrics from the Ceph cluster
       description: 'No active mgr has reported ceph_health_status for 10m: every mgr is down, the prometheus module is off, or Alloy on the storage Pis can''t write.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -196,8 +209,10 @@ spec:
       service: ceph
       category: health
     annotations:
-      summary: A Ceph OSD is down
-      description: At least one OSD has been down for 5m. With 3 replicas and min_size 2 the cluster still serves I/O with one down; two down blocks writes.
+      summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is down'
+      description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been down for 5m. With 3 replicas and min_size 2 the cluster still serves I/O with one OSD down; two down block writes. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -209,7 +224,7 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: count(ceph_osd_up{cluster="homelab-ceph"} == 0) or vector(0)
+        expr: max by (ceph_daemon) (ceph_osd_up{cluster="homelab-ceph"}) * on(ceph_daemon) group_left(hostname) max by (ceph_daemon, hostname) (ceph_osd_metadata{cluster="homelab-ceph"})
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -229,9 +244,9 @@ spec:
         conditions:
         - type: query
           evaluator:
-            type: gt
+            type: lt
             params:
-            - 0
+            - 1
           operator:
             type: and
           query:
@@ -253,7 +268,9 @@ spec:
       category: health
     annotations:
       summary: Ceph placement groups are inactive
-      description: 'Some PGs have not been active for 10m: the data in them can''t be read or written (fewer than min_size OSDs, or stuck peering).'
+      description: 'Some PGs have not been active for 10m: the data in them can''t be read or written (fewer than min_size OSDs, or stuck peering). The Ceph - Status dashboard shows which OSDs and hosts are down.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -308,8 +325,10 @@ spec:
       service: ceph
       category: health
     annotations:
-      summary: A Ceph monitor is out of quorum
-      description: Fewer than 3 mons in quorum for 5m. The cluster keeps working with 2; losing a second stops it.
+      summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is out of quorum'
+      description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been out of quorum for 5m. The cluster keeps working with 2 of 3 mons; losing a second stops it. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -321,7 +340,7 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: sum(ceph_mon_quorum_status{cluster="homelab-ceph"})
+        expr: max by (ceph_daemon) (ceph_mon_quorum_status{cluster="homelab-ceph"}) * on(ceph_daemon) group_left(hostname) max by (ceph_daemon, hostname) (ceph_mon_metadata{cluster="homelab-ceph"})
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -343,7 +362,7 @@ spec:
           evaluator:
             type: lt
             params:
-            - 3
+            - 1
           operator:
             type: and
           query:
@@ -364,8 +383,10 @@ spec:
       service: ceph
       category: health
     annotations:
-      summary: A Ceph OSD is over 75% full
+      summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is over 75% full'
       description: Ceph's nearfull is 85% and it stops writes at 95%; every PG lives on all three OSDs, so they fill together. Free space or add capacity.
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -377,7 +398,7 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: max(ceph_osd_stat_bytes_used{cluster="homelab-ceph"} / ceph_osd_stat_bytes{cluster="homelab-ceph"})
+        expr: max by (ceph_daemon) (ceph_osd_stat_bytes_used{cluster="homelab-ceph"} / ceph_osd_stat_bytes{cluster="homelab-ceph"}) * on(ceph_daemon) group_left(hostname) max by (ceph_daemon, hostname) (ceph_osd_metadata{cluster="homelab-ceph"})
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -408,6 +429,53 @@ spec:
           reducer:
             type: last
             params: []
+        refId: B
+  - uid: ceph-daemon-down
+    title: Ceph — daemon not running
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ceph
+      category: health
+    annotations:
+      summary: 'Ceph {{ $labels.daemon_name }} on {{ $labels.hostname }} is not running'
+      description: 'cephadm has reported {{ $labels.daemon_name }} ({{ $labels.service_type }}) on {{ $labels.hostname }} as not running for 10m (status {{ $values.A.Value }}: 0 stopped, -1 error, 2 starting, -2 unknown). Several daemons on one host at once: the host or its Docker. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.daemon_name }}`; restart with `sudo cephadm shell -- ceph orch daemon restart {{ $labels.daemon_name }}`.'
+      __dashboardUid__: ceph-status
+      runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        # cephadm's inventory (`ceph orch ps`), refreshed every few minutes:
+        # every daemon it deployed, mons and OSDs included, and the ones the
+        # other rules don't watch (mgr standbys, RGW, crash, ceph-exporter).
+        expr: max by (hostname, daemon_name, service_type) (ceph_cephadm_daemon_status{cluster="homelab-ceph"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: math
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: $A != 1
         refId: B
   - uid: csi-provisioner-down
     title: Ceph CSI — no provisioner
