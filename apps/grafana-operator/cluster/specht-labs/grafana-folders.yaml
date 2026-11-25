@@ -5,12 +5,20 @@
 # rules reference these by folderRef.
 #
 # Layout:
-#   Infrastructure          — cloud / hardware (hcloud servers)
-#     └─ Ceph               — homelab Ceph cluster (ceph-mixin, nested)
-#     └─ Raspberry Pi       — the Pi fleet and the compute blades (nested)
-#   Kubernetes Platform     — cluster add-ons (argocd, cert-manager)
-#     └─ Envoy Gateway      — ingress / networking (nested)
-#   Applications            — first-party apps (static-pages)
+#   Applications              — what runs on the platform: first-party apps
+#                               (static-pages, Home Assistant) and appliances
+#                               (AdGuard, Synology, cert-checker)
+#   Infrastructure            — time server, node-exporter, tailscale
+#     └─ Providers            — where compute comes from: Hetzner Cloud, the Pi
+#                               fleet, the compute blades
+#     └─ Ceph                 — homelab Ceph cluster (ceph-mixin)
+#     └─ Kubernetes Platform  — cluster add-ons (argocd, cert-manager)
+#         └─ Envoy Gateway    — ingress / networking
+#
+# Never delete a GrafanaFolder here to rename or move it: the operator's finalizer
+# deletes the folder in Grafana, and with it every dashboard and alert rule still
+# inside. Change title / parentFolderRef on the existing resource instead (the
+# operator moves and renames in place); spec.uid cannot be added afterwards.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaFolder
 metadata:
@@ -33,6 +41,7 @@ spec:
   # was the "Kubernetes Infra Apps" folder — renamed in place via its existing uid.
   uid: afomtf2umwo3ka
   title: "Kubernetes Platform"
+  parentFolderRef: infrastructure
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaFolder
@@ -73,6 +82,9 @@ spec:
   title: "Ceph"
   parentFolderRef: infrastructure
 ---
+# Providers: Hetzner Cloud, the Raspberry Pi fleet, the compute blades. This was the
+# "Raspberry Pi" folder; the resource keeps its old name because replacing it
+# would make the operator delete the folder and everything in it.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaFolder
 metadata:
@@ -81,5 +93,5 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana-cloud
-  title: "Raspberry Pi"
+  title: "Providers"
   parentFolderRef: infrastructure

@@ -1,6 +1,6 @@
 {
   "uid": "stratum1",
-  "title": "Stratum 1 · timepi",
+  "title": "Time Server",
   "description": "GPS-disciplined NTP/PTP time server timepi: ntpsec, gpsd, kernel PPS, ptp4l/phc2sys, the fleet that syncs from it, and the hardware under the clock.",
   "tags": [
     "time",

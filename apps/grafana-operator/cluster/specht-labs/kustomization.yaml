@@ -19,7 +19,7 @@ resources:
   - ../../../../components/grafana-dashboards/home-assistant
   - ../../../../components/grafana-dashboards/ceph
   - grafana.yaml
-  # Folder hierarchy (Infrastructure › Ceph / Kubernetes Platform › Envoy Gateway / Applications).
+  # Folder hierarchy (Applications / Infrastructure › Providers, Ceph, Kubernetes Platform › Envoy Gateway).
   - grafana-folders.yaml
   - grafanadashboards.yaml
   - grafanadashboards-envoy.yaml
