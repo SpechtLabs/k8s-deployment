@@ -9,7 +9,9 @@
 # Rules about a daemon, OSD, mon or health check fire once per instance and
 # carry its `hostname`, so a notification says what broke and where (2026-11-25:
 # "one OSD is down" didn't say which). They link to the Ceph - Status dashboard
-# (hack/gen-ceph-status-dashboard.py) and the runbook in cedi/homelab.
+# (hack/gen-ceph-status-dashboard.py; Grafana wants __panelId__ with
+# __dashboardUid__, the generator numbers panels in order) and the runbook in
+# cedi/homelab.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
@@ -36,6 +38,7 @@ spec:
       summary: 'Ceph HEALTH_ERR: {{ $labels.name }}'
       description: 'Health check {{ $labels.name }} has been at HEALTH_ERR for 5m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host.'
       __dashboardUid__: ceph-status
+      __panelId__: '9'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -94,6 +97,7 @@ spec:
       summary: 'Ceph HEALTH_WARN for 30m: {{ $labels.name }}'
       description: 'Health check {{ $labels.name }} has warned for 30m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host. Deliberate warnings are muted in cedi/homelab (ceph_health_mutes) and left out here by name.'
       __dashboardUid__: ceph-status
+      __panelId__: '9'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -154,6 +158,7 @@ spec:
       summary: No metrics from the Ceph cluster
       description: 'No active mgr has reported ceph_health_status for 10m: every mgr is down, the prometheus module is off, or Alloy on the storage Pis can''t write.'
       __dashboardUid__: ceph-status
+      __panelId__: '18'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -212,6 +217,7 @@ spec:
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is down'
       description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been down for 5m. With 3 replicas and min_size 2 the cluster still serves I/O with one OSD down; two down block writes. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
       __dashboardUid__: ceph-status
+      __panelId__: '11'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -270,6 +276,7 @@ spec:
       summary: Ceph placement groups are inactive
       description: 'Some PGs have not been active for 10m: the data in them can''t be read or written (fewer than min_size OSDs, or stuck peering). The Ceph - Status dashboard shows which OSDs and hosts are down.'
       __dashboardUid__: ceph-status
+      __panelId__: '8'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -328,6 +335,7 @@ spec:
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is out of quorum'
       description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been out of quorum for 5m. The cluster keeps working with 2 of 3 mons; losing a second stops it. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
       __dashboardUid__: ceph-status
+      __panelId__: '12'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -386,6 +394,7 @@ spec:
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is over 75% full'
       description: Ceph's nearfull is 85% and it stops writes at 95%; every PG lives on all three OSDs, so they fill together. Free space or add capacity.
       __dashboardUid__: ceph-status
+      __panelId__: '11'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
@@ -444,6 +453,7 @@ spec:
       summary: 'Ceph {{ $labels.daemon_name }} on {{ $labels.hostname }} is not running'
       description: 'cephadm has reported {{ $labels.daemon_name }} ({{ $labels.service_type }}) on {{ $labels.hostname }} as not running for 10m (status {{ $values.A.Value }}: 0 stopped, -1 error, 2 starting, -2 unknown). Several daemons on one host at once: the host or its Docker. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.daemon_name }}`; restart with `sudo cephadm shell -- ceph orch daemon restart {{ $labels.daemon_name }}`.'
       __dashboardUid__: ceph-status
+      __panelId__: '10'
       runbook_url: https://github.com/cedi/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A

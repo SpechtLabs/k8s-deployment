@@ -9,7 +9,8 @@ daemons run, whether its OSD is up and its mon in quorum, and whether its
 exporters are scraped; then the active health checks, every daemon, OSD and
 mon by name, and state timelines to see when something stopped. The ceph-health
 alerts (apps/grafana-operator/cluster/specht-labs/grafanaalertrules-ceph.yaml)
-link here.
+link here, to panels by id: ids are numbered in the order below, so moving a
+panel means updating the rules' __panelId__.
 
 Data: the active mgr's prometheus module (job ceph_mgr) and ceph-exporter on
 each storage Pi, written to the homelab Mimir tenant by Alloy
