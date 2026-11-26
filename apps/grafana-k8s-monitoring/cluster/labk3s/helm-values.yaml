@@ -1,6 +1,6 @@
 # labk3s telemetry -> self-hosted LGTM on specht-labs (no Grafana Cloud).
-# All three destinations point at the one v2 tailnet device
-# (k8s-load-balancer.sphinx-map.ts.net, reached via the lab-lgtm-egress proxy);
+# All three destinations point at svc:lgtm, the v2 tailnet gateway's Tailscale
+# Service (lgtm.sphinx-map.ts.net, reached via the lab-lgtm-egress proxy);
 # the v2 envoy gateway path-routes each and injects X-Scope-OrgID: homelab, so no
 # tenant/auth config is needed agent-side. Plain HTTP is fine — the tailnet is
 # WireGuard-encrypted.
@@ -14,7 +14,7 @@ global:
 destinations:
   selfhosted-mimir:
     type: prometheus
-    url: http://k8s-load-balancer.sphinx-map.ts.net/api/v1/push
+    url: http://lgtm.sphinx-map.ts.net/api/v1/push
     metricProcessingRules: |
       write_relabel_config {
         regex = "container_id|image_id"
@@ -22,10 +22,10 @@ destinations:
       }
   selfhosted-loki:
     type: loki
-    url: http://k8s-load-balancer.sphinx-map.ts.net/loki/api/v1/push
+    url: http://lgtm.sphinx-map.ts.net/loki/api/v1/push
   selfhosted-tempo:
     type: otlp
-    url: http://k8s-load-balancer.sphinx-map.ts.net
+    url: http://lgtm.sphinx-map.ts.net
     protocol: http
     metrics:
       enabled: false
