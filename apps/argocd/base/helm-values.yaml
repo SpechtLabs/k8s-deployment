@@ -52,6 +52,22 @@ dex:
       drop:
         - ALL
 
+  # Dex gives up for good if idp is unreachable when it starts ("failed to
+  # open all connectors"), while argocd-dex's rundex wrapper keeps the container
+  # running with nothing listening (labk3s, 2026-11-26 00:10). Probing its
+  # health port (metrics, 5558) makes kubelet restart it until idp answers.
+  # The startupProbe leaves room for the connector's 30 s discovery timeout.
+  startupProbe:
+    enabled: true
+    httpPath: /healthz/live
+    httpPort: metrics
+    periodSeconds: 10
+    failureThreshold: 12 # 2 min to come up
+  livenessProbe:
+    enabled: true
+    httpPath: /healthz/live
+    httpPort: metrics
+
   metrics:
     enabled: true
     serviceMonitor:
