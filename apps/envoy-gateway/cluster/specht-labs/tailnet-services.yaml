@@ -36,6 +36,16 @@ metadata:
     tailscale.com/proxy-group: tailnet-ingress
     tailscale.com/hostname: lgtm
     tailscale.com/tags: tag:k8s
+    # A only, pinned to svc:lgtm's VIP (the status also carries the MagicDNS
+    # hostname, which external-dns would publish as a conflicting CNAME).
+    # Every LGTM hostname is listed explicitly: explicit names override the
+    # wildcard, and they answer AAAA with NODATA instead of the wildcard's AAAA
+    # to the old k8s-load-balancer device. The *.k8s.specht-labs.de A record
+    # itself has no edns- ownership TXT (it predates external-dns owning it), so
+    # external-dns leaves it alone; it is listed for when it is adopted.
+    # A new tenant hostname needs adding here.
+    external-dns.kubernetes.io/hostname: "*.k8s.specht-labs.de,homelab-loki.k8s.specht-labs.de,homelab-mimir.k8s.specht-labs.de,homelab-tempo.k8s.specht-labs.de,homelab-pyroscope.k8s.specht-labs.de,hass-loki.k8s.specht-labs.de,hass-mimir.k8s.specht-labs.de,hass-tempo.k8s.specht-labs.de,hass-pyroscope.k8s.specht-labs.de,hass-schiltach-loki.k8s.specht-labs.de,hass-schiltach-mimir.k8s.specht-labs.de,hass-schiltach-tempo.k8s.specht-labs.de,hass-schiltach-pyroscope.k8s.specht-labs.de,spechtlabs-loki.k8s.specht-labs.de,spechtlabs-mimir.k8s.specht-labs.de,spechtlabs-tempo.k8s.specht-labs.de,spechtlabs-pyroscope.k8s.specht-labs.de"
+    external-dns.kubernetes.io/target: "100.102.186.94"
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
