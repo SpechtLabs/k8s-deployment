@@ -141,8 +141,8 @@ integrations:
           allowedInstallationOwners: [SpechtLabs, cedi]
 
 # Discovery: every SpechtLabs repo's catalog-info.yaml on its default branch.
-# Merges with the image's file location for catalog/org.yaml; everything
-# else, Backstage's own entities included, comes from here.
+# Everything in the catalog, Backstage's own entities included, comes from
+# here and from GitHub discovery.
 catalog:
   # cedi/homelab is outside the SpechtLabs org, so discovery doesn't see it;
   # its catalog (Domain homelab and its systems: elbschloss, labk3s, ceph, ...)
@@ -150,8 +150,10 @@ catalog:
   # (app-config.production.yaml) rather than merging with it, so the image's
   # org.yaml entry is repeated.
   locations:
-    - type: file
-      target: ./catalog/org.yaml
+    # Users and groups, in the private SpechtLabs/backstage_resources: the
+    # only location that may define them.
+    - type: url
+      target: https://github.com/SpechtLabs/backstage_resources/blob/main/catalog/org.yaml
       rules:
         - allow: [User, Group]
     - type: url
