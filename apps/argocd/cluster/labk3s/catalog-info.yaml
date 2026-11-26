@@ -11,9 +11,11 @@ metadata:
     argocd/app-name: argocd
     argocd/proxy-url: /argocd/labk3s
   title: Argo CD (labk3s)
-  description: Syncs every app in argo-apps/labk3s to the labk3s cluster. Reachable as lab-argocd on the tailnet, and publicly through Tailscale Funnel.
+  description: Syncs every app in argo-apps/labk3s to the labk3s cluster. Its UI is the Tailscale Service svc:lab-argocd (https://lab-argocd.sphinx-map.ts.net, tailnet only), its API svc:labk3s-argocd-api, both on the labk3s tailnet-ingress ProxyGroup.
   tags: [gitops]
   links:
+    - url: https://lab-argocd.sphinx-map.ts.net
+      title: Argo CD UI (labk3s)
     - url: https://argo-cd.readthedocs.io
       title: Argo CD docs
       icon: docs
