@@ -43,7 +43,7 @@ metadata:
   description: Prometheus remote write 1.0 (snappy-compressed protobuf over HTTP POST) at mimir-gateway /api/v1/push. The tenant is the X-Scope-OrgID header, set per route on the tailnet Gateway.
   annotations:
     # Where tailnet consumers reach it; Backstage renders the tailnet policy's
-    # grants from these (cedi/homelab tailscale/policy/).
+    # grants from these (SpechtLabs/homelab tailscale/policy/).
     # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
     specht-labs.de/tailnet-dst: svc:lgtm
     specht-labs.de/tailnet-ports: tcp:80

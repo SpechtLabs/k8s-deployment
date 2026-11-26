@@ -13,7 +13,7 @@
 #              databases, Gateways, DNS zones, the ClusterIssuer, the tailnet
 #   API        an interface of one specific Component instance, with its spec
 #              pinned to the deployed version where upstream publishes one
-#   System     one per cluster (Specht Labs here, Homelab in cedi/homelab),
+#   System     one per cluster (Specht Labs here, Homelab in SpechtLabs/homelab),
 #              plus External services
 # Functional groupings (networking, observability, ...) are tags.
 apiVersion: backstage.io/v1alpha1

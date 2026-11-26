@@ -59,7 +59,7 @@ metadata:
   annotations:
     # From the tailnet through the Tailscale Service svc:backstage: for
     # admins. Backstage renders the tailnet policy's grants from these
-    # (cedi/homelab tailscale/policy/).
+    # (SpechtLabs/homelab tailscale/policy/).
     specht-labs.de/tailnet-dst: svc:backstage
     specht-labs.de/tailnet-ports: tcp:443
     specht-labs.de/tailnet-allow: group:admins

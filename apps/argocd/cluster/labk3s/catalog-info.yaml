@@ -47,7 +47,7 @@ metadata:
   description: Argo CD's REST API on labk3s.
   annotations:
     # Where tailnet consumers reach it; Backstage renders the tailnet policy's
-    # grants from these (cedi/homelab tailscale/policy/).
+    # grants from these (SpechtLabs/homelab tailscale/policy/).
     # svc:labk3s-argocd-api is argocd-server-tailnet-svc, on the
     # tailnet-ingress ProxyGroup.
     specht-labs.de/tailnet-dst: svc:labk3s-argocd-api
@@ -74,7 +74,7 @@ metadata:
   annotations:
     # Admins and SREs reach it through the Tailscale Service svc:lab-argocd
     # (Ingress argocd-server on the tailnet-ingress ProxyGroup). Backstage
-    # renders the tailnet policy's grants from these (cedi/homelab
+    # renders the tailnet policy's grants from these (SpechtLabs/homelab
     # tailscale/policy/).
     specht-labs.de/tailnet-dst: svc:lab-argocd
     specht-labs.de/tailnet-ports: tcp:443

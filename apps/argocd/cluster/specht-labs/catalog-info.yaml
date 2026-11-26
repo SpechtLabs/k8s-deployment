@@ -47,7 +47,7 @@ metadata:
   annotations:
     # The UI and API at argocd.k8s.specht-labs.de, from the tailnet through
     # the Tailscale Service svc:argocd: for admins. Backstage renders the
-    # tailnet policy's grants from these (cedi/homelab tailscale/policy/).
+    # tailnet policy's grants from these (SpechtLabs/homelab tailscale/policy/).
     specht-labs.de/tailnet-dst: svc:argocd
     specht-labs.de/tailnet-ports: tcp:443
     specht-labs.de/tailnet-allow: group:admins

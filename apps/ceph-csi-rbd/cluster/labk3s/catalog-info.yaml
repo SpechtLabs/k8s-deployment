@@ -11,7 +11,7 @@ metadata:
     argocd/app-name: ceph-csi-rbd
     argocd/proxy-url: /argocd/labk3s
     # The tag its traffic comes from on the tailnet: the labk3s nodes', as
-    # Ceph clients (cedi/homelab tailscale/policy.hujson).
+    # Ceph clients (SpechtLabs/homelab tailscale/policy.hujson).
     specht-labs.de/tailnet-src: tag:ceph-client
   title: Ceph CSI (RBD)
   description: RBD volumes for labk3s from the storagepi Ceph cluster's k3s pool, reaching the monitors over the tailnet.
@@ -28,7 +28,7 @@ spec:
   lifecycle: production
   owner: group:spechtlabs
   system: labk3s
-  # The ceph system's RBD API (cedi/homelab), pool k3s as client.k3s; the
+  # The ceph system's RBD API (SpechtLabs/homelab), pool k3s as client.k3s; the
   # pool itself is internal to that system.
   consumesApis:
     - api:ceph-rbd

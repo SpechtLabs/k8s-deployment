@@ -43,7 +43,7 @@ metadata:
   description: Log ingestion at loki-gateway /loki/api/v1/push (snappy-compressed PushRequest protobuf, or JSON). The tenant is the X-Scope-OrgID header.
   annotations:
     # Where tailnet consumers reach it; Backstage renders the tailnet policy's
-    # grants from these (cedi/homelab tailscale/policy/).
+    # grants from these (SpechtLabs/homelab tailscale/policy/).
     # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
     specht-labs.de/tailnet-dst: svc:lgtm
     specht-labs.de/tailnet-ports: tcp:80

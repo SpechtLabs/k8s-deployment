@@ -4,7 +4,7 @@
 # what Argo CD deploys to it; observability is the LGTM stack on it plus every
 # collector and agent that ships into it, on either cluster or at home. The
 # homelab Domain and its systems (elbschloss, tailnet, fleet, timekeeping,
-# ceph, labk3s, compute-blades, jitsi, schiltach) are defined in cedi/homelab
+# ceph, labk3s, compute-blades, jitsi, schiltach) are defined in SpechtLabs/homelab
 # (catalog/systems.yaml); the labk3s apps here (-labk3s) are part of labk3s.
 apiVersion: backstage.io/v1alpha1
 kind: Domain
@@ -53,7 +53,7 @@ metadata:
     Loki, Mimir, Tempo and Pyroscope on specht-labs with their buckets, the
     Grafana operator and cert-checker, and what ships telemetry into them:
     grafana-k8s-monitoring on both clusters, and Alloy, the o11y collector and
-    the exporters at home (cedi/homelab). Offers push and query APIs per
+    the exporters at home (SpechtLabs/homelab). Offers push and query APIs per
     signal; tenants per site (homelab, hass, hass-schiltach, spechtlabs).
   links:
     - url: https://spechtlabs.grafana.net

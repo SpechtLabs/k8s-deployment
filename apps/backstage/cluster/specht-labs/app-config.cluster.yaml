@@ -136,19 +136,16 @@ integrations:
           clientId: ${GITHUB_APP_CLIENT_ID}
           clientSecret: ${GITHUB_APP_CLIENT_SECRET}
           privateKey: ${GITHUB_APP_PRIVATE_KEY}
-          # cedi: for cedi/homelab only (the App is installed on that one
-          # repo there). See catalog.locations below.
-          allowedInstallationOwners: [SpechtLabs, cedi]
+          allowedInstallationOwners: [SpechtLabs]
 
 # Discovery: every SpechtLabs repo's catalog-info.yaml on its default branch.
 # Everything in the catalog, Backstage's own entities included, comes from
 # here and from GitHub discovery.
 catalog:
-  # cedi/homelab is outside the SpechtLabs org, so discovery doesn't see it;
-  # its catalog (Domain homelab and its systems: elbschloss, labk3s, ceph, ...)
-  # is registered here. This array replaces the image's catalog.locations
-  # (app-config.production.yaml) rather than merging with it, so the image's
-  # org.yaml entry is repeated.
+  # SpechtLabs/homelab's catalog (Domain homelab and its systems) comes
+  # through discovery like every other SpechtLabs repo. This array replaces
+  # the image's catalog.locations (app-config.production.yaml) rather than
+  # merging with it, so the image's org.yaml entry is repeated.
   locations:
     # Users and groups, in the private SpechtLabs/backstage_resources: the
     # only location that may define them.
@@ -156,14 +153,12 @@ catalog:
       target: https://github.com/SpechtLabs/backstage_resources/blob/main/catalog/org.yaml
       rules:
         - allow: [User, Group]
-    - type: url
-      target: https://github.com/cedi/homelab/blob/main/catalog-info.yaml
     # The tailnet policy as kind: Tailscale entities comes from this one
     # directory, next to policy.hujson, and from nowhere else. Catalog rules
     # match an entity's origin location, so the kind is allowed for this
     # location only; homelab's own Location doesn't list the directory.
     - type: url
-      target: https://github.com/cedi/homelab/blob/main/tailscale/policy/*.yaml
+      target: https://github.com/SpechtLabs/homelab/blob/main/tailscale/policy/*.yaml
       rules:
         - allow: [Tailscale]
   providers:
@@ -178,10 +173,10 @@ catalog:
             minutes: 3
 
 # Tailscale: where a policy's file goes (pull request or push) is its
-# entity's spec.publish (cedi/homelab tailscale/policy/policy.yaml); these
+# entity's spec.publish (SpechtLabs/homelab tailscale/policy/policy.yaml); these
 # are the only repositories Backstage may write it to. Today the private
 # sandbox (the GitHub App is installed on SpechtLabs): nothing is applied to
-# the tailnet, cedi/homelab's policy.hujson is.
+# the tailnet, SpechtLabs/homelab's policy.hujson is.
 tailscale:
   allowedRepos:
     - SpechtLabs/tailnet-policy-sandbox
