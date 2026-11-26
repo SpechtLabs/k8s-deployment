@@ -38,12 +38,14 @@ patches:
         path: "/spec/tls/0/hosts/0"
         value: lab-argocd
 
-      # Tailnet only, no Funnel. (Funnel was asked for here, but the proxy's
-      # tag:homelab has no funnel attribute in the tailnet policy, so it was
-      # never public.)
+      # Tailnet only, no Funnel. tag:k3s is the labk3s operator's tag for the
+      # proxies it creates (cedi/homelab tailscale/policy.hujson); it has no
+      # funnel attribute. The operator applies tags only when it creates the
+      # proxy: after changing them, delete the Ingress and let Argo CD
+      # re-create it.
       - op: add
         path: "/metadata/annotations/tailscale.com~1tags"
-        value: "tag:homelab"
+        value: "tag:k3s"
 
       # The Tailscale ingress terminates TLS itself; with this annotation
       # cert-manager's ingress-shim kept requesting an LE cert for the bare
