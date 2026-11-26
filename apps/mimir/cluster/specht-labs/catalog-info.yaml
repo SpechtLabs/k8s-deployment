@@ -45,7 +45,7 @@ metadata:
     # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
     # renders Tailscale grants from these (shadow mode for now).
     # From the tailnet it's on the tailnet Gateway's plain-HTTP listener.
-    specht-labs.de/tailnet-dst: tag:o11y-endpoint
+    specht-labs.de/tailnet-dst: svc:lgtm
     specht-labs.de/tailnet-ports: tcp:80
   tags: [observability, metrics, protobuf]
   links:

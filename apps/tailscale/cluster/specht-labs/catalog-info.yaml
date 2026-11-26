@@ -5,7 +5,7 @@ kind: Component
 metadata:
   name: tailscale
   title: Tailscale operator (specht-labs)
-  description: Joins specht-labs to the tailnet. Runs the proxies behind the tailnet Gateway's load balancer and the egress Services.
+  description: Joins specht-labs to the tailnet. Runs the tailnet-ingress ProxyGroup behind the tailnet Gateway's Tailscale Services and the egress Services.
   annotations:
     argocd/app-name: tailscale
     backstage.io/kubernetes-namespace: tailscale

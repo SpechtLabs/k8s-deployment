@@ -52,7 +52,7 @@ kind: Resource
 metadata:
   name: tailnet-gateway
   title: tailnet Gateway
-  description: The tailnet-only Gateway (*.k8s.specht-labs.de and k8s-load-balancer.sphinx-map.ts.net), behind a Tailscale load balancer.
+  description: The tailnet-only Gateway (*.k8s.specht-labs.de), behind the Tailscale Services svc:lgtm, svc:argocd and svc:backstage.
   annotations:
     argocd/app-name: envoy-gateway
     backstage.io/kubernetes-namespace: envoy-gateway-system

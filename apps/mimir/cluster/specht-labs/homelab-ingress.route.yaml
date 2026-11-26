@@ -1,6 +1,6 @@
-# Cross-cluster ingestion for the homelab tenant via the tailnet gateway's own
-# device hostname (k8s-load-balancer.sphinx-map.ts.net). Other clusters (labk3s)
-# can't route tailnet IPs directly, so they egress to this one device and rely on
+# Cross-cluster ingestion for the homelab tenant via svc:lgtm, the tailnet
+# gateway's Tailscale Service (lgtm.sphinx-map.ts.net). Other clusters (labk3s)
+# can't route tailnet IPs directly, so they egress to this one Service and rely on
 # PATH routing here instead of per-tenant Host routing. The /api/v1/push prefix
 # is Mimir's remote-write endpoint; X-Scope-OrgID is injected so the agent needs
 # no tenant config. Coexists with the host-based homelab-mimir route above.
@@ -17,9 +17,6 @@ spec:
       namespace: envoy-gateway-system
       sectionName: http
   hostnames:
-    - k8s-load-balancer.sphinx-map.ts.net
-    # svc:lgtm, the Tailscale Service replacing the k8s-load-balancer device
-    # (envoy-gateway tailnet-services.yaml); labk3s moves its egress here.
     - lgtm.sphinx-map.ts.net
   rules:
     - matches:

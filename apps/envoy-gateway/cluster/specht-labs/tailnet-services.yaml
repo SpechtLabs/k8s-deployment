@@ -39,8 +39,8 @@ metadata:
     # A only, pinned to svc:lgtm's VIP (the status also carries the MagicDNS
     # hostname, which external-dns would publish as a conflicting CNAME).
     # Every LGTM hostname is listed explicitly: explicit names override the
-    # wildcard, and they answer AAAA with NODATA instead of the wildcard's AAAA
-    # to the old k8s-load-balancer device. The *.k8s.specht-labs.de A record
+    # wildcard, and they answer AAAA with NODATA instead of the wildcard's stale
+    # AAAA (the removed k8s-load-balancer device). The *.k8s.specht-labs.de A record
     # itself has no edns- ownership TXT (it predates external-dns owning it), so
     # external-dns leaves it alone; it is listed for when it is adopted.
     # A new tenant hostname needs adding here.
