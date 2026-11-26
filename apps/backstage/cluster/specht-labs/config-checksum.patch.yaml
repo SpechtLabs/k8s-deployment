@@ -9,4 +9,4 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/app-config-cluster: "11"
+        checksum/app-config-cluster: "12"

@@ -175,12 +175,11 @@ catalog:
           timeout:
             minutes: 3
 
-# Tailscale: keep one pull request open with the rendered policy file in a
-# private sandbox repo (the GitHub App is installed on SpechtLabs); nothing is
-# applied to the tailnet. cedi/homelab's policy.hujson is what gets applied.
+# Tailscale: where a policy's file goes (pull request or push) is its
+# entity's spec.publish (cedi/homelab tailscale/policy/policy.yaml); these
+# are the only repositories Backstage may write it to. Today the private
+# sandbox (the GitHub App is installed on SpechtLabs): nothing is applied to
+# the tailnet, cedi/homelab's policy.hujson is.
 tailscale:
-  publish:
-    - policy: tailscale:sphinx-map
-      repo: SpechtLabs/tailnet-policy-sandbox
-      path: tailscale/policy.hujson
-      branch: backstage/tailnet-policy
+  allowedRepos:
+    - SpechtLabs/tailnet-policy-sandbox

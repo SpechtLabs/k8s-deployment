@@ -35,6 +35,8 @@ spec:
   lifecycle: production
   owner: group:spechtlabs
   system: specht-labs
+  providesApis:
+    - api:backstage-web
   consumesApis:
     - api:argocd-api
     - api:tsidp-oidc
@@ -47,6 +49,28 @@ spec:
     - component:github
     # The Grafana cards.
     - component:grafana-cloud
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: backstage-web
+  title: Backstage web UI and API
+  description: Backstage at backstage.k8s.specht-labs.de, tailnet only; sign-in through tsidp.
+  annotations:
+    # From the tailnet through the Tailscale Service svc:backstage: for
+    # admins. Backstage renders the tailnet policy's grants from these
+    # (cedi/homelab tailscale/policy/).
+    specht-labs.de/tailnet-dst: svc:backstage
+    specht-labs.de/tailnet-ports: tcp:443
+    specht-labs.de/tailnet-allow: group:admins
+spec:
+  type: http
+  lifecycle: production
+  owner: group:spechtlabs
+  system: specht-labs
+  definition: |
+    https://backstage.k8s.specht-labs.de (svc:backstage, tcp:443): the
+    portal and its /api/* backend. Sign-in through tsidp.
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Resource

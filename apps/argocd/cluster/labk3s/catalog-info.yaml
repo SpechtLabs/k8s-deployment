@@ -31,6 +31,7 @@ spec:
   system: labk3s
   providesApis:
     - api:argocd-labk3s-api
+    - api:argocd-labk3s-web
   consumesApis:
     - api:tsidp-oidc
   dependsOn:
@@ -45,8 +46,8 @@ metadata:
   title: Argo CD API (labk3s)
   description: Argo CD's REST API on labk3s.
   annotations:
-    # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
-    # renders Tailscale grants from these (shadow mode for now).
+    # Where tailnet consumers reach it; Backstage renders the tailnet policy's
+    # grants from these (cedi/homelab tailscale/policy/).
     # svc:labk3s-argocd-api is argocd-server-tailnet-svc, on the
     # tailnet-ingress ProxyGroup.
     specht-labs.de/tailnet-dst: svc:labk3s-argocd-api
@@ -61,5 +62,29 @@ spec:
   lifecycle: production
   owner: group:spechtlabs
   system: labk3s
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: argocd-labk3s-web
+  title: Argo CD UI (labk3s)
+  description: The labk3s Argo CD's web UI, https://lab-argocd.sphinx-map.ts.net; sign-in through tsidp.
+  annotations:
+    # Admins and SREs reach it through the Tailscale Service svc:lab-argocd
+    # (Ingress argocd-server on the tailnet-ingress ProxyGroup). Backstage
+    # renders the tailnet policy's grants from these (cedi/homelab
+    # tailscale/policy/).
+    specht-labs.de/tailnet-dst: svc:lab-argocd
+    specht-labs.de/tailnet-ports: tcp:443
+    specht-labs.de/tailnet-allow: group:admins, group:sre
+  tags: [gitops, web]
+spec:
+  type: http
+  lifecycle: production
+  owner: group:spechtlabs
+  system: labk3s
+  definition: |
+    https://lab-argocd.sphinx-map.ts.net (svc:lab-argocd, tcp:443), tailnet
+    only. Sign-in through tsidp: group:sre and group:admins.
   definition:
     $text: https://raw.githubusercontent.com/argoproj/argo-cd/v3.6.2/assets/swagger.json

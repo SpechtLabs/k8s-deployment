@@ -44,6 +44,13 @@ metadata:
   name: argocd-api
   title: Argo CD API (specht-labs)
   description: Argo CD's REST API on specht-labs, behind argocd.k8s.specht-labs.de. Backstage reads it through its /argocd/api proxy.
+  annotations:
+    # The UI and API at argocd.k8s.specht-labs.de, from the tailnet through
+    # the Tailscale Service svc:argocd: for admins. Backstage renders the
+    # tailnet policy's grants from these (cedi/homelab tailscale/policy/).
+    specht-labs.de/tailnet-dst: svc:argocd
+    specht-labs.de/tailnet-ports: tcp:443
+    specht-labs.de/tailnet-allow: group:admins
   tags: [gitops, rest]
   links:
     - url: https://argo-cd.readthedocs.io/en/stable/developer-guide/api-docs/
