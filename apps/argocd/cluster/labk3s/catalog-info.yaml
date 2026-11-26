@@ -62,6 +62,8 @@ spec:
   lifecycle: production
   owner: group:spechtlabs
   system: labk3s
+  definition:
+    $text: https://raw.githubusercontent.com/argoproj/argo-cd/v3.6.2/assets/swagger.json
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -86,5 +88,3 @@ spec:
   definition: |
     https://lab-argocd.sphinx-map.ts.net (svc:lab-argocd, tcp:443), tailnet
     only. Sign-in through tsidp: group:sre and group:admins.
-  definition:
-    $text: https://raw.githubusercontent.com/argoproj/argo-cd/v3.6.2/assets/swagger.json
