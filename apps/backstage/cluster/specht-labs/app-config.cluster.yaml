@@ -156,14 +156,14 @@ catalog:
         - allow: [User, Group]
     - type: url
       target: https://github.com/cedi/homelab/blob/main/catalog-info.yaml
-    # TailscaleGrant entities (capability grants for the tailnet policy) come
-    # from this one file, next to the policy, and from nowhere else. Catalog
-    # rules match an entity's origin location, so the kind is allowed for
-    # this location only; homelab's own Location doesn't list the file.
+    # The tailnet policy as kind: Tailscale entities comes from this one
+    # directory, next to policy.hujson, and from nowhere else. Catalog rules
+    # match an entity's origin location, so the kind is allowed for this
+    # location only; homelab's own Location doesn't list the directory.
     - type: url
-      target: https://github.com/cedi/homelab/blob/main/tailscale/grants.yaml
+      target: https://github.com/cedi/homelab/blob/main/tailscale/policy/*.yaml
       rules:
-        - allow: [TailscaleGrant]
+        - allow: [Tailscale]
   providers:
     github:
       spechtlabs:
@@ -175,12 +175,12 @@ catalog:
           timeout:
             minutes: 3
 
-# Tailnet policy from the catalog, in shadow mode: keep one pull request open
-# with the rendered grants in a private sandbox repo (the GitHub App is
-# installed on SpechtLabs). Later: cedi/homelab, once the App is installed
-# there and the policy Action merges the generated fragment.
-tailnetPolicy:
+# Tailscale: keep one pull request open with the rendered policy file in a
+# private sandbox repo (the GitHub App is installed on SpechtLabs); nothing is
+# applied to the tailnet. cedi/homelab's policy.hujson is what gets applied.
+tailscale:
   publish:
-    repo: SpechtLabs/tailnet-policy-sandbox
-    path: tailscale/generated.hujson
-    branch: backstage/tailnet-policy
+    - policy: tailscale:sphinx-map
+      repo: SpechtLabs/tailnet-policy-sandbox
+      path: tailscale/policy.hujson
+      branch: backstage/tailnet-policy
