@@ -8,7 +8,7 @@
 # Device tags are set only when a replica first joins, so tag:labk3s-ingress
 # must be in the policy before this syncs: owned by group:admins and
 # tag:k3s-operator (this cluster's operator), and the Services' only
-# autoApprover (cedi/homelab tailscale/policy.hujson). Grants name the
+# autoApprover (SpechtLabs/homelab tailscale/policy.hujson). Grants name the
 # Services; the devices' own tag is in none.
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyGroup

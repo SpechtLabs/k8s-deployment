@@ -1,7 +1,7 @@
 {
   "title": "Compute Blade",
   "uid": "compute-blades",
-  "description": "4-blade Raspberry Pi CM4 compute blade cluster: compute-blade-agent (health, thermals, fans, power, events) plus node_exporter (CPU, memory, network). Agent: modules/compute-blade-agent in cedi/homelab.",
+  "description": "4-blade Raspberry Pi CM4 compute blade cluster: compute-blade-agent (health, thermals, fans, power, events) plus node_exporter (CPU, memory, network). Agent: modules/compute-blade-agent in SpechtLabs/homelab.",
   "tags": [
     "homelab",
     "compute-blade"

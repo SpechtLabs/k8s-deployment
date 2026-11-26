@@ -60,7 +60,7 @@ spec:
       dashboards: grafana-cloud
   folderRef: raspberry-pi
   # compute-blade-agent metrics (job blade_exporter, scraped by Alloy on the
-  # blades; cedi/homelab modules/compute-blade-agent). Core panels only.
+  # blades; SpechtLabs/homelab modules/compute-blade-agent). Core panels only.
   configMapRef:
     name: compute-blades-dashboard-json
     key: compute_blades.json
@@ -75,7 +75,7 @@ spec:
       dashboards: grafana-cloud
   folderRef: infrastructure
   # "Time Server": timepi, the GPS/PPS Stratum 1 and PTP grandmaster: ntpsec, gpsd, PPS,
-  # ptp4l/phc2sys (textfile collector, cedi/homelab modules/ptp-server) and
+  # ptp4l/phc2sys (textfile collector, SpechtLabs/homelab modules/ptp-server) and
   # every client's chrony/ptp4l view (modules/time-sync).
   configMapRef:
     name: stratum1-dashboard-json

@@ -1,7 +1,7 @@
 # The ArgoCD API on the tailnet as a Tailscale Service, svc:labk3s-argocd-api
 # (labk3s-argocd-api.<tailnet>), for Backstage on specht-labs: its egress proxy
 # (tag:backstage) may reach svc:labk3s-argocd-api on tcp:443 and nothing else
-# (tailnet policy in cedi/homelab). Served by the tailnet-ingress ProxyGroup
+# (tailnet policy in SpechtLabs/homelab). Served by the tailnet-ingress ProxyGroup
 # (../../../tailscale/cluster/labk3s/tailnet-ingress.proxygroup.yaml); its VIP
 # outlives the proxies. It replaced the lab-argocd-api device.
 #

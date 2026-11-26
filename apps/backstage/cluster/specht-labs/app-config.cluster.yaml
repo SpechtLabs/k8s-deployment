@@ -174,9 +174,10 @@ catalog:
 
 # Tailscale: where a policy's file goes (pull request or push) is its
 # entity's spec.publish (SpechtLabs/homelab tailscale/policy/policy.yaml); these
-# are the only repositories Backstage may write it to. Today the private
-# sandbox (the GitHub App is installed on SpechtLabs): nothing is applied to
-# the tailnet, SpechtLabs/homelab's policy.hujson is.
+# are the only repositories Backstage may write it to, through the GitHub App
+# installed on SpechtLabs. SpechtLabs/homelab: a pull request on the branch
+# backstage/tailnet-policy, whose tailscale workflow tests the policy and
+# applies it once merged.
 tailscale:
   allowedRepos:
-    - SpechtLabs/tailnet-policy-sandbox
+    - SpechtLabs/homelab

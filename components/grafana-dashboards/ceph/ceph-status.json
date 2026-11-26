@@ -795,7 +795,7 @@
       "id": 9,
       "type": "table",
       "title": "Active health checks",
-      "description": "What `ceph health detail` reports. The AUTH_INSECURE_* checks are muted on purpose (client.k3s's AES-128 key, cedi/homelab ceph_health_mutes). For the PGs or daemons a check is about: `sudo cephadm shell -- ceph health detail` on any storage Pi.",
+      "description": "What `ceph health detail` reports. The AUTH_INSECURE_* checks are muted on purpose (client.k3s's AES-128 key, SpechtLabs/homelab ceph_health_mutes). For the PGs or daemons a check is about: `sudo cephadm shell -- ceph health detail` on any storage Pi.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"

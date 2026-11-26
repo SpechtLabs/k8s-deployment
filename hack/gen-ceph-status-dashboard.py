@@ -14,7 +14,7 @@ panel means updating the rules' __panelId__.
 
 Data: the active mgr's prometheus module (job ceph_mgr) and ceph-exporter on
 each storage Pi, written to the homelab Mimir tenant by Alloy
-(cedi/homelab, vars/group-ceph.yaml). ceph_cephadm_daemon_status comes from
+(SpechtLabs/homelab, vars/group-ceph.yaml). ceph_cephadm_daemon_status comes from
 cephadm's inventory, which it refreshes every few minutes; ceph_osd_up and
 ceph_mon_quorum_status are the cluster's own view and change at once.
 """
@@ -22,7 +22,7 @@ import json
 
 DS = {"type": "prometheus", "uid": "${datasource}"}
 C = 'cluster="$cluster"'
-# Muted on purpose (cedi/homelab vars/group-ceph.yaml, ceph_health_mutes): the
+# Muted on purpose (SpechtLabs/homelab vars/group-ceph.yaml, ceph_health_mutes): the
 # mgr still exports them as active, so they are shown as "muted".
 MUTED = "AUTH_INSECURE_CLIENT_KEY_TYPE|AUTH_INSECURE_KEYS_ALLOWED|AUTH_INSECURE_KEYS_CREATABLE"
 
@@ -203,7 +203,7 @@ panels.append(table(
         "muted": {"text": "muted", "color": "transparent", "index": 2}}}])],
     [{"displayName": "Severity", "desc": False}],
     desc="What `ceph health detail` reports. The AUTH_INSECURE_* checks are muted on purpose "
-         "(client.k3s's AES-128 key, cedi/homelab ceph_health_mutes). For the PGs or daemons a "
+         "(client.k3s's AES-128 key, SpechtLabs/homelab ceph_health_mutes). For the PGs or daemons a "
          "check is about: `sudo cephadm shell -- ceph health detail` on any storage Pi.",
 ))
 panels.append(table(

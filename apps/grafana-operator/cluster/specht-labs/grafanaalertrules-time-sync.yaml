@@ -1,5 +1,5 @@
 # Time sync for the homelab: timepi (GPS + PPS -> ntpsec, PTP grandmaster) and
-# every host's chrony/ptp4l (cedi/homelab modules ptp-server, time-sync), as
+# every host's chrony/ptp4l (SpechtLabs/homelab modules ptp-server, time-sync), as
 # Grafana-managed rules on the homelab Mimir tenant, in Infrastructure.
 # Metrics: time-metrics (ntpsec_*, gpsd_*) on timepi, time-client-metrics
 # (chrony_*, ptp4l_*) on the clients. Every query was checked against

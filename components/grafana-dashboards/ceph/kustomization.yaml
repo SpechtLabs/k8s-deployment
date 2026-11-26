@@ -4,7 +4,7 @@ kind: Kustomization
 # The Ceph dashboards (ceph-mixin, monitoring/ceph-mixin/dashboards_out at
 # ceph v20.2.5) as ConfigMaps for the grafana-operator GrafanaDashboards on the
 # Grafana Cloud cluster. Only change: the datasource variable defaults to
-# Mimir (homelab), where the storage Pis' Alloy writes (cedi/homelab,
+# Mimir (homelab), where the storage Pis' Alloy writes (SpechtLabs/homelab,
 # vars/group-ceph.yaml). Left out: CephFS, NVMe-oF, SMB, multisite, hardware.
 configMapGenerator:
   - name: ceph-cluster-json

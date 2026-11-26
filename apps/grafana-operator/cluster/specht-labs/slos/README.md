@@ -55,7 +55,7 @@ tenant its metrics live in (`mimir-homelab`, `mimir-spechtlabs`): the SLO plugin
 evaluates its recording rules there and writes the SLI next to the raw metrics.
 (`sourceDatasourceUid` from the SLO API docs is ignored by this stack.) The
 homelab availability SLIs are `probe_success{job="blackbox", service}` from
-Alloy's black-box exporter on isa, every 30 s (cedi/homelab,
+Alloy's black-box exporter on isa, every 30 s (SpechtLabs/homelab,
 `vars/group-o11y-collector.yaml`).
 
 **specht-labs SLIs.** Apps behind Envoy Gateway are measured at the gateway

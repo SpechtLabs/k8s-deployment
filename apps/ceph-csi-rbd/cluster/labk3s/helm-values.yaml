@@ -1,5 +1,5 @@
 # ceph-csi (RBD) on labk3s, backed by the homelab Ceph cluster on
-# storagepi-ceph1..3 (cephadm, managed by Buckle from cedi/homelab, see
+# storagepi-ceph1..3 (cephadm, managed by Buckle from SpechtLabs/homelab, see
 # modules/ceph and vars/group-ceph.yaml there).
 #
 # Everything goes over the tailnet. The monitors are listed by their tailnet

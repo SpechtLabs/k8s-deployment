@@ -3,7 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: idp.sphinx-map.ts.net
-    # A tsidp relying party (labk3s Argo CD's OIDC calls): cedi/homelab's policy
+    # A tsidp relying party (labk3s Argo CD's OIDC calls): SpechtLabs/homelab's policy
     # grants tag:tsidp-client tcp:443 on idp. The operator applies tags only
     # when it creates the proxy: after changing them, delete this Service and
     # let Argo CD re-create it.

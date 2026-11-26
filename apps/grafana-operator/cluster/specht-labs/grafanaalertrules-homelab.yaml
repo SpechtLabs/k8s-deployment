@@ -1,5 +1,5 @@
 # Homelab platform health targets that no SLO covers: the Buckle server's
-# nightly database backup (cedi/homelab modules/buckle-server, metric from the
+# nightly database backup (SpechtLabs/homelab modules/buckle-server, metric from the
 # server host's node_exporter textfile). Grafana-managed rules on the homelab
 # Mimir tenant, in Infrastructure.
 apiVersion: grafana.integreatly.org/v1beta1
