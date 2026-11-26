@@ -10,6 +10,9 @@ metadata:
     # specht-labs, where the same selectors would match the wrong pods.
     argocd/app-name: ceph-csi-rbd
     argocd/proxy-url: /argocd/labk3s
+    # The tag its traffic comes from on the tailnet: the labk3s nodes', as
+    # Ceph clients (cedi/homelab tailscale/policy.hujson).
+    specht-labs.de/tailnet-src: tag:ceph-client
   title: Ceph CSI (RBD)
   description: RBD volumes for labk3s from the storagepi Ceph cluster's k3s pool, reaching the monitors over the tailnet.
   tags: [storage, ceph]
