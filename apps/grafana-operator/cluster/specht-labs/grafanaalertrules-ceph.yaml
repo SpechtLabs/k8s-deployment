@@ -9,9 +9,11 @@
 # Rules about a daemon, OSD, mon or health check fire once per instance and
 # carry its `hostname`, so a notification says what broke and where (2026-11-25:
 # "one OSD is down" didn't say which). They link to the Ceph - Status dashboard
-# (hack/gen-ceph-status-dashboard.py; Grafana wants __panelId__ with
-# __dashboardUid__, the generator numbers panels in order) and the runbook in
-# SpechtLabs/homelab.
+# (hack/gen-ceph-status-dashboard.py), the ceph-csi rules to Ceph CSI (RBD)
+# (hack/gen-ceph-csi-dashboard.py): Grafana wants __panelId__ with
+# __dashboardUid__, and both generators number panels in order, so moving a
+# panel there means updating the ids here. Each rule's runbook is its section
+# of the ceph TechDocs page "Respond to a Ceph alert".
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
@@ -499,6 +501,8 @@ spec:
       category: health
     annotations:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-no-provisioner
+      __dashboardUid__: ceph-csi-rbd
+      __panelId__: '3'
       summary: No live ceph-csi provisioner on labk3s
       description: 'No provisioner pod reports csi_liveness: new PVCs on ceph-rbd stay Pending, attach/expand stop.'
     data:
@@ -556,6 +560,8 @@ spec:
       category: health
     annotations:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-node-plugin-missing
+      __dashboardUid__: ceph-csi-rbd
+      __panelId__: '2'
       summary: A labk3s node has no live ceph-csi node plugin
       description: Pods with ceph-rbd volumes can't start on that node (no mount/unmount).
     data:
@@ -613,6 +619,8 @@ spec:
       category: health
     annotations:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-volume-operations-failing
+      __dashboardUid__: ceph-csi-rbd
+      __panelId__: '10'
       summary: ceph-csi volume operations are failing
       description: Create/delete/attach/expand calls have returned gRPC errors for 15m. The Ceph CSI (RBD) dashboard shows which method; the provisioner logs say why.
     data:
@@ -670,6 +678,8 @@ spec:
       category: health
     annotations:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-pvc-over-85-full
+      __dashboardUid__: ceph-csi-rbd
+      __panelId__: '15'
       summary: A ceph-rbd PVC is over 85% full
       description: '{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is over 85% full. ceph-rbd volumes can be expanded: raise the PVC''s request.'
     data:

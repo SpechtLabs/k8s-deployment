@@ -1,0 +1,436 @@
+# Compute blades (blade-pi1..4, SpechtLabs/homelab modules/compute-blade-agent):
+# HEALTH TARGETS from the agent's own metrics (job blade_exporter, scraped by
+# Alloy on each blade), as Grafana-managed rules on the homelab Mimir tenant,
+# in Infrastructure > Providers next to the Compute Blade dashboard. Every
+# query was checked against mimir-homelab on 2026-11-27. All warnings: the
+# blades carry nothing the rest of the homelab depends on (they're Buckle's
+# canary), so nothing here pages at night.
+#
+# One alert per blade (by instance). The states mirror what the agent shows on
+# its LEDs (computeblade_state_state); each rule's runbook is its section of
+# the compute-blades TechDocs page "Respond to a blade alert".
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: compute-blades
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: raspberry-pi
+  name: compute-blades
+  interval: 1m
+  rules:
+  - uid: blade-agent-down
+    title: Blade — agent metrics missing
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-agent-down
+      summary: 'No compute-blade-agent metrics from {{ $labels.instance }} for 10m'
+      description: 'Alloy hasn''t scraped compute-blade-agent on {{ $labels.instance }} (:9666) for 10m: the agent is down, Alloy is, or the whole blade is. Without its agent a blade runs its fan at 100% and its LEDs dark. `systemctl status compute-blade-agent alloy` on the blade. Compares with the last day, so a blade gone longer than that drops out of this rule.'
+      __dashboardUid__: compute-blades
+      __panelId__: '2'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (max_over_time(up{job="blade_exporter"}[1d])) unless on (instance) max by (instance) (up{job="blade_exporter"} == 1)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-fan-stall
+    title: Blade — fan stalled
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-fan-stall
+      summary: 'Fan stalled on {{ $labels.instance }}'
+      description: 'compute-blade-agent on {{ $labels.instance }} has reported fan_stall for 5m: the fan is driven at 20% or more but turns slower than 100 RPM. The top LED blinks fast in orange. `bladectl --blade <blade> get status`, then look at the fan unit.'
+      __dashboardUid__: compute-blades
+      __panelId__: '36'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (computeblade_state_state{job="blade_exporter",state="fan_stall"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-fan-unit-misdetected
+    title: Blade — smart fan unit not detected
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-fan-unit-misdetected
+      summary: '{{ $labels.instance }} missed its smart fan unit'
+      description: 'compute-blade-agent on {{ $labels.instance }} runs the standard fan unit driver, or reports a fan speed no fan reaches (above 20,000 RPM; ~800,000 is the known symptom). All four blades have the smart unit: detection failed at startup, and the speed and airflow readings are wrong. `sudo systemctl restart compute-blade-agent` there (0.11.5+).'
+      __dashboardUid__: compute-blades
+      __panelId__: '36'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) ((computeblade_fan_unit{job="blade_exporter",type!="smart"} > 0) or ((computeblade_fan_speed{job="blade_exporter"} > 20000) * 0 + 1))'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-critical-temperature
+    title: Blade — critical temperature
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-critical-temperature
+      summary: '{{ $labels.instance }} has been in critical mode for 10m'
+      description: 'The SoC on {{ $labels.instance }} has stayed at or above the agent''s critical threshold (60 °C) for 10m, with the fan already at 100%. Normal is 45-55 °C. Check the airflow and the fan; the Compute Blade dashboard''s thermals row shows SoC above airflow.'
+      __dashboardUid__: compute-blades
+      __panelId__: '31'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (computeblade_state_state{job="blade_exporter",state="critical"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-undervoltage
+    title: Blade — under-voltage
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-undervoltage
+      summary: '{{ $labels.instance }} is short on power'
+      description: 'The Pi firmware on {{ $labels.instance }} has flagged under-voltage for 5m; the agent holds the CPU at its lowest clock until the supply recovers. Usually the PoE budget or the cable. `bladectl -A get power_status`.'
+      __dashboardUid__: compute-blades
+      __panelId__: '39'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (computeblade_state_state{job="blade_exporter",state="undervoltage"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-not-on-poe-plus
+    title: Blade — not on PoE+
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-not-on-poe-plus
+      summary: '{{ $labels.instance }} isn''t powered by 802.3at PoE+'
+      description: '{{ $labels.instance }} has run on 802.3af PoE or USB-C for 15m instead of PoE+, so the agent caps its CPU at 1200 MHz. Check the switch port''s PoE mode and the cable. (type="1" is the label agents before 0.11.5 used for poe+.)'
+      __dashboardUid__: compute-blades
+      __panelId__: '39'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (computeblade_power_status{job="blade_exporter",type=~"poe\\+|1"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: blade-throttled
+    title: Blade — CPU throttled
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: compute-blades
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/compute-blades/how-to/respond-to-a-blade-alert/#blade-throttled
+      summary: '{{ $labels.instance }} has been throttled for 15m'
+      description: 'The Pi firmware on {{ $labels.instance }} has reported its CPU capped, throttled or at the soft temperature limit for 15m (edge LED slow yellow blink). These blades hadn''t throttled once in the week before this rule; look at temperature and power first.'
+      __dashboardUid__: compute-blades
+      __panelId__: '42'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max by (instance) (computeblade_state_state{job="blade_exporter",state="throttled"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B

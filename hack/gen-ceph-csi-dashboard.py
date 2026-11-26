@@ -10,6 +10,10 @@ kube-state-metrics from k8s-monitoring, and the Ceph side (pool, per-image RBD
 stats for the k3s pool) from the storage Pis' Alloy (cluster=homelab-ceph).
 PVCs and RBD images can't be joined (kube_persistentvolume_info, which holds
 the CSI volume handle, isn't collected), so they are shown side by side.
+
+The ceph-csi alerts (apps/grafana-operator/cluster/specht-labs/
+grafanaalertrules-ceph.yaml) link here, to panels by id: ids are numbered in
+the order below, so moving a panel means updating the rules' __panelId__.
 """
 import json
 

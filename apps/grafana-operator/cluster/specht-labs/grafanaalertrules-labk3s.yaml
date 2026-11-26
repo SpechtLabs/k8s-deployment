@@ -1,0 +1,454 @@
+# labk3s PLATFORM HEALTH TARGETS: the homelab k3s cluster (clusterpi-leader,
+# clusterpi-worker1..4; SpechtLabs/homelab docs/labk3s) gets the same kind of
+# stateful checks specht-labs has in grafanaalertrules-platform.yaml: nodes,
+# pods, volumes, Argo CD apps, and its telemetry arriving at all. labk3s ships
+# to the homelab Mimir tenant with cluster="labk3s"
+# (apps/grafana-k8s-monitoring/cluster/labk3s), so every rule reads
+# mimir-homelab. The API's availability is the SLO hlk3sapiavail (slos/) and
+# ceph-csi's health is in grafanaalertrules-ceph.yaml; neither is repeated
+# here. Every kube-state-metrics and kubelet query was checked against
+# mimir-homelab on 2026-11-27 (all five nodes Ready, nothing firing).
+# argocd_app_info arrives once apps/argocd/cluster/labk3s's
+# controller-metrics.patch.yaml is synced; until then the Argo CD rules see
+# NoData, which is OK.
+#
+# Runbooks: the labk3s TechDocs, how-to/respond-to-a-labk3s-alert, one
+# section per rule.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: labk3s-platform
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: kubernetes-platform
+  name: labk3s-platform
+  interval: 1m
+  rules:
+  - uid: lab-telemetry-absent
+    title: labk3s — telemetry missing
+    condition: B
+    for: 10m
+    noDataState: Alerting
+    execErrState: Alerting
+    labels:
+      severity: critical
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#labk3s-telemetry-missing
+      summary: No telemetry from the labk3s cluster is reaching Grafana
+      description: 'No kubelet scrape from labk3s has arrived in mimir-homelab for 10m, or Grafana Cloud can''t query it. Every rule in this group and the Ceph CSI rules are blind meanwhile. Likely: Alloy (monitoring ns on labk3s) down, the lab-lgtm-egress proxy or svc:lgtm unreachable, Mimir''s write path down, or the cluster itself. Fires on NoData and on query errors on purpose.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: sum(up{job="integrations/kubernetes/kubelet", cluster="labk3s"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-node-not-ready
+    title: labk3s — node NotReady
+    condition: B
+    for: 10m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#node-notready
+      summary: labk3s node {{ $labels.node }} has been NotReady for 10m
+      description: 'The kubelet on {{ $labels.node }} isn''t reporting Ready. A drained reboot takes 2-5 minutes, so 10m means it didn''t come back: check k3s/k3s-agent and tailscaled on the node (k3s waits for tailscale0''s address before it starts).'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: kube_node_status_condition{cluster="labk3s", condition="Ready", status="true"}
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-pod-restarting
+    title: labk3s — pod restarting repeatedly
+    condition: B
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#pod-restarting-repeatedly
+      summary: '{{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) on labk3s restarted more than 3 times in 6h, last: {{ or $labels.reason "unknown" }}'
+      description: 'Container {{ $labels.container }} in {{ $labels.namespace }}/{{ $labels.pod }} restarted {{ printf "%.0f" $values.A.Value }} times in the last 6h; it last stopped with {{ or $labels.reason "an unknown reason" }}. OOMKilled: raise its memory limit in k8s-deployment. Otherwise `kubectl --context labk3s -n {{ $labels.namespace }} logs {{ $labels.pod }} -c {{ $labels.container }} --previous`.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: |-
+          # Per pod incarnation (uid) and only pods that still exist, as in the
+          # specht-labs rule: a DaemonSet or StatefulSet pod can keep its name.
+          (
+            (
+              sum by (namespace, pod, uid, container) (increase(kube_pod_container_status_restarts_total{cluster="labk3s"}[6h]))
+              * on (uid, container) group_left (reason)
+              max by (uid, container, reason) (kube_pod_container_status_last_terminated_reason{cluster="labk3s"} == 1)
+            )
+            or
+            (
+              sum by (namespace, pod, uid, container) (increase(kube_pod_container_status_restarts_total{cluster="labk3s"}[6h]))
+              unless on (uid, container)
+              kube_pod_container_status_last_terminated_reason{cluster="labk3s"} == 1
+            )
+          )
+          and on (uid, container) kube_pod_container_info{cluster="labk3s"}
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 3
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-pod-not-ready
+    title: labk3s — pod not ready
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#pod-not-ready
+      summary: '{{ $labels.namespace }}/{{ $labels.pod }} on labk3s has not been Ready for 15m'
+      description: 'The pod is Pending (unschedulable, a volume that won''t attach, an image that won''t pull) or Running with a failing readiness probe. A node drain moves pods within minutes, so 15m is a pod that''s stuck. `kubectl --context labk3s -n {{ $labels.namespace }} describe pod {{ $labels.pod }}` shows which.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: |-
+          # Pods that should be serving: Pending or Running but not Ready. Finished
+          # pods (Jobs) are never Ready and don't count.
+          max by (namespace, pod) (kube_pod_status_ready{cluster="labk3s", condition="true"} == 0)
+          unless on (namespace, pod)
+          max by (namespace, pod) (kube_pod_status_phase{cluster="labk3s", phase=~"Succeeded|Failed"} == 1)
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-pvc-filling
+    title: labk3s — volume almost full
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#volume-almost-full
+      summary: PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} on labk3s has under 10% free
+      description: 'A local-path volume shares the node''s root filesystem, so this is the node''s disk filling, not the volume''s quota (TKA''s tsnet-state on clusterpi-worker1 sat at 22% free on 2026-11-27). Free space on the node, or move the data to ceph-rbd.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: |-
+          # ceph-rbd volumes have their own rule (Ceph CSI — PVC over 85% full).
+          # The rest are local-path, whose usage is the node's root filesystem.
+          min by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes{cluster="labk3s"}
+            / kubelet_volume_stats_capacity_bytes{cluster="labk3s"})
+          unless on (namespace, persistentvolumeclaim)
+          kube_persistentvolumeclaim_info{cluster="labk3s", storageclass="ceph-rbd"}
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.1
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-argocd-app-unhealthy
+    title: labk3s — Argo CD app unhealthy
+    condition: B
+    for: 30m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#argo-cd-app-unhealthy
+      summary: labk3s Argo CD app {{ $labels.name }} is {{ $labels.health_status }}
+      description: The app's resources have been Degraded/Missing/Unknown for 30m. Open it at https://lab-argocd.sphinx-map.ts.net for the failing resource.
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max by (name, health_status) (argocd_app_info{cluster="labk3s", health_status=~"Degraded|Missing|Unknown"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: lab-argocd-app-out-of-sync
+    title: labk3s — Argo CD app out of sync
+    condition: B
+    for: 1h
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: labk3s
+      category: health
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/labk3s/how-to/respond-to-a-labk3s-alert/#argo-cd-app-out-of-sync
+      summary: labk3s Argo CD app {{ $labels.name }} has been OutOfSync for 1h
+      description: 'Every labk3s app auto-syncs with self-heal, so an hour OutOfSync means a sync keeps failing or Argo CD gave up on this revision ("already attempted sync"). The app''s sync status in https://lab-argocd.sphinx-map.ts.net says which resource differs. 1-meta-labk3s flips to OutOfSync for a few seconds every couple of minutes (grafana-k8s-monitoring, self-healed at once); the 1h keeps that quiet.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: max by (name) (argocd_app_info{cluster="labk3s", sync_status="OutOfSync"})
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B

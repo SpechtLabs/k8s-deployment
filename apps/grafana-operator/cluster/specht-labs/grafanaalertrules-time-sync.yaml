@@ -5,6 +5,10 @@
 # (chrony_*, ptp4l_*) on the clients. Every query was checked against
 # mimir-homelab. GPS reception is alerted on here instead of gating Buckle
 # rollouts (timepi's gps-pps-selected check is informational since 2026-11-24).
+# Since 2026-11-27 time-client-metrics writes ptp4l_port_slave on every PTP
+# client even when ptp4l is stopped (0, with ptp4l_service_active 0), so a dead
+# ptp4l fires time-ptp-no-master instead of turning into no data. The
+# dashboard links point at the Time Server dashboard (stratum1.json).
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
@@ -31,6 +35,8 @@ spec:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-gps-pps-lost
       summary: "timepi has run without GPS PPS for 30m"
       description: "ntpsec on timepi hasn't selected the GPS PPS for 30m: the receiver has no fix (antenna sky view). timepi serves network time (PTB, pool) meanwhile, ~1 ms instead of ~1 µs, and announces PTP clockClass 52. `ntpq -pn` and `gpspipe -w -n 10` on timepi; the Stratum 1 dashboard shows satellites and SNR."
+      __dashboardUid__: stratum1
+      __panelId__: '2'
     data:
     - refId: A
       relativeTimeRange:
@@ -88,6 +94,8 @@ spec:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-not-synchronised
       summary: "timepi's ntpsec is unsynchronised"
       description: "ntpsec on timepi has had no usable source (stratum 16) for 5m: neither GPS PPS nor PTB/pool servers. The LAN's NTP and PTP clients follow a free-running clock. `ntpq -pn` on timepi."
+      __dashboardUid__: stratum1
+      __panelId__: '3'
     data:
     - refId: A
       relativeTimeRange:
@@ -145,6 +153,8 @@ spec:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-time-metrics-missing
       summary: "No ntpsec metrics from timepi for 15m"
       description: "timepi's time-metrics timer or its Alloy hasn't delivered ntpsec metrics for 15m, so the other timepi alerts can't fire. `systemctl status time-metrics.timer alloy` on timepi."
+      __dashboardUid__: stratum1
+      __panelId__: '17'
     data:
     - refId: A
       relativeTimeRange:
@@ -202,6 +212,8 @@ spec:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#host-clock-off-by-more-than-1-ms
       summary: "{{ $labels.instance }} is more than 1 ms off"
       description: "chrony on {{ $labels.instance }} has been more than 1 ms off its source for 15m (normally ns to µs). `chronyc tracking` and `chronyc sources` there."
+      __dashboardUid__: stratum1
+      __panelId__: '48'
     data:
     - refId: A
       relativeTimeRange:
@@ -259,6 +271,8 @@ spec:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#host-clock-unsynchronised
       summary: "chrony on {{ $labels.instance }} is unsynchronised"
       description: "chrony on {{ $labels.instance }} has reported a leap status other than normal (not synchronised) for 10m. `chronyc tracking` there."
+      __dashboardUid__: stratum1
+      __panelId__: '52'
     data:
     - refId: A
       relativeTimeRange:
@@ -315,7 +329,9 @@ spec:
     annotations:
       runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#ptp-client-lost-the-grandmaster
       summary: "ptp4l on {{ $labels.instance }} isn't following timepi"
-      description: "ptp4l on {{ $labels.instance }} hasn't been in SLAVE state for 10m; chrony falls back to NTP from timepi (~µs instead of ~ns). `pmc -u -b 0 'GET PORT_DATA_SET'` there, and ptp4l on timepi."
+      description: "ptp4l on {{ $labels.instance }} hasn't been in SLAVE state for 10m, or isn't running (ptp4l_service_active 0); chrony falls back to NTP from timepi (~µs instead of ~ns). `systemctl status ptp4l@<interface>` and `sudo pmc -u -b 0 'GET PORT_DATA_SET'` there, and ptp4l on timepi."
+      __dashboardUid__: stratum1
+      __panelId__: '50'
     data:
     - refId: A
       relativeTimeRange:
