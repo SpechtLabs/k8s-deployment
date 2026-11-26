@@ -38,11 +38,19 @@ patches:
         path: "/spec/tls/0/hosts/0"
         value: lab-argocd
 
-      # Tailnet only, no Funnel. tag:k3s is the labk3s operator's tag for the
-      # proxies it creates (cedi/homelab tailscale/policy.hujson); it has no
-      # funnel attribute. The operator applies tags only when it creates the
-      # proxy: after changing them, delete the Ingress and let Argo CD
-      # re-create it.
+      # Served by the tailnet-ingress ProxyGroup (../../../tailscale/cluster/
+      # labk3s/tailnet-ingress.proxygroup.yaml) as the Tailscale Service
+      # svc:lab-argocd, https://lab-argocd.<tailnet>: the name in Argo CD's url
+      # and the Dex redirect URI. The proxies share one Let's Encrypt cert for
+      # it. Don't change the TLS host or the proxy-group: the operator deletes
+      # the Tailscale Service with them.
+      - op: add
+        path: "/metadata/annotations/tailscale.com~1proxy-group"
+        value: "tailnet-ingress"
+
+      # Tailnet only, no Funnel. On a ProxyGroup Ingress tailscale.com/tags
+      # tags the Tailscale Service, not the proxies: tag:k3s, the labk3s
+      # operator's default, in no grant (access goes by svc:lab-argocd).
       - op: add
         path: "/metadata/annotations/tailscale.com~1tags"
         value: "tag:k3s"
