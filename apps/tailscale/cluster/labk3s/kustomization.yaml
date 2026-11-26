@@ -9,6 +9,7 @@ resources:
   - ../../base
   - ./dns-config.yaml
   - ./ts-egress-idp.yaml
+  - ./tailnet-ingress.proxygroup.yaml
 
 patches:
   - path: deployment.yaml

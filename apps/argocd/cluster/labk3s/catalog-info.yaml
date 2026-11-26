@@ -45,8 +45,10 @@ metadata:
   annotations:
     # Where tailnet consumers reach it; Backstage's tailnet-policy plugin
     # renders Tailscale grants from these (shadow mode for now).
-    # tag:lab-argocd is argocd-server-tailnet, the operator's LoadBalancer.
-    specht-labs.de/tailnet-dst: tag:lab-argocd
+    # tag:lab-argocd is argocd-server-tailnet, the operator's LoadBalancer
+    # device; svc:labk3s-argocd-api is argocd-server-tailnet-svc, its
+    # replacement on the tailnet-ingress ProxyGroup. Both until the device goes.
+    specht-labs.de/tailnet-dst: tag:lab-argocd,svc:labk3s-argocd-api
     specht-labs.de/tailnet-ports: tcp:443
   tags: [gitops, rest]
   links:

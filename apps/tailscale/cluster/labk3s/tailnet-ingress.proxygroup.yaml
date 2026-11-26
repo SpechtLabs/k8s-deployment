@@ -1,0 +1,61 @@
+# The HA proxies behind labk3s's Tailscale Services (svc:labk3s-argocd-api).
+# A Service with the tailscale.com/proxy-group: tailnet-ingress annotation
+# becomes a Tailscale Service that both replicas advertise; the operator creates
+# it through the API (its OAuth client needs General/Services write) and DNATs
+# the Service's VIP to the Kubernetes Service's ClusterIP. The VIP belongs to
+# the Tailscale Service, so replicas can come and go without changing it.
+#
+# Device tags are set only when a replica first joins, so tag:labk3s-ingress
+# must be in the policy before this syncs: owned by group:admins and
+# tag:k3s-operator (this cluster's operator), and the Services' only
+# autoApprover (cedi/homelab tailscale/policy.hujson). Grants name the
+# Services; the devices' own tag is in none.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: tailnet-ingress
+spec:
+  type: ingress
+  replicas: 2
+  hostnamePrefix: labk3s-ingress
+  tags:
+    - tag:labk3s-ingress
+  proxyClass: tailnet-ingress
+---
+# The homelab ProxyClass's bounds plus a node spread, so one Pi going away
+# doesn't take both replicas with it.
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: tailnet-ingress
+spec:
+  statefulSet:
+    pod:
+      labels:
+        app.kubernetes.io/name: tailnet-ingress
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: tailnet-ingress
+      tailscaleContainer:
+        resources:
+          requests:
+            cpu: 150m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+---
+# Node drains take the replicas one at a time.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: tailnet-ingress
+  namespace: tailscale
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tailnet-ingress

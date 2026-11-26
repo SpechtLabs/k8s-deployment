@@ -25,3 +25,34 @@ spec:
       port: 443
       targetPort: 8080
       protocol: TCP
+---
+# The same API as a Tailscale Service, svc:labk3s-argocd-api
+# (labk3s-argocd-api.<tailnet>), served by the tailnet-ingress ProxyGroup
+# (../../../tailscale/cluster/labk3s/tailnet-ingress.proxygroup.yaml). Its VIP
+# outlives the proxies. A new name, because lab-argocd-api is still the
+# device above; that one goes once Backstage's egress points here.
+#
+# Don't delete or rename this Service, or change tailscale.com/hostname or
+# tailscale.com/proxy-group: the operator deletes the Tailscale Service with
+# it and a re-created one gets a new VIP. tailscale.com/tags tags the Tailscale
+# Service (tag:k3s, the operator's default, in no grant); grants go by name.
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server-tailnet-svc
+  annotations:
+    tailscale.com/proxy-group: tailnet-ingress
+    tailscale.com/hostname: labk3s-argocd-api
+    tailscale.com/tags: tag:k3s
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/instance: argocd
+    app.kubernetes.io/name: argocd-server
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8080
+      protocol: TCP
