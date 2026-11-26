@@ -1,3 +1,10 @@
+# The ts.net nameserver: resolves the egress proxies' and Tailscale Ingresses'
+# tailnet names inside the cluster. CoreDNS forwards ts.net to it by IP
+# (apps/coredns/cluster/labk3s/coredns-custom.cm.yaml: its forward plugin
+# can't take a name), so the Service's ClusterIP is pinned here rather than
+# left to allocation: a re-created cluster gets the same address and the
+# forward keeps working. 10.43.37.229 is what the cluster allocated in 2025;
+# change both files together.
 apiVersion: tailscale.com/v1alpha1
 kind: DNSConfig
 metadata:
@@ -7,3 +14,5 @@ spec:
     image:
       repo: tailscale/k8s-nameserver
       tag: unstable
+    service:
+      clusterIP: 10.43.37.229

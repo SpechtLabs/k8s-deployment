@@ -26,7 +26,11 @@
       retryAfterSeconds: 1
 
     clusterInfo:
-        apiEndpoint: "https://clusterpi-leader:6443"
+        # svc:labk3s, the only way into the API that the tailnet policy names
+        # (the server's own 6443 is admins-only, by their "*" grant). The name
+        # is a tls-san of the serving certificate (SpechtLabs/homelab
+        # modules/k3s-server), so the kubeconfig TKA hands out verifies.
+        apiEndpoint: "https://labk3s.sphinx-map.ts.net:6443"
         caData: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJkekNDQVIyZ0F3SUJBZ0lCQURBS0JnZ3Foa2pPUFFRREFqQWpNU0V3SHdZRFZRUUREQmhyTTNNdGMyVnkKZG1WeUxXTmhRREUzTXpBMU1EWXlNRGt3SGhjTk1qUXhNVEF5TURBeE1EQTVXaGNOTXpReE1ETXhNREF4TURBNQpXakFqTVNFd0h3WURWUVFEREJock0zTXRjMlZ5ZG1WeUxXTmhRREUzTXpBMU1EWXlNRGt3V1RBVEJnY3Foa2pPClBRSUJCZ2dxaGtqT1BRTUJCd05DQUFTYzJVMUp0alRKam0yd0Z0bEhsRVhlaWV2SjdPUkdvZ0Npd3JrSWRaSUUKbjNFUlAwK1dsNHFjUHF4UDZIVnhaYkpJdHFrOVVQclo3VEtjNjZESHNkdDVvMEl3UURBT0JnTlZIUThCQWY4RQpCQU1DQXFRd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVWRtWkJIVFlTL053dkg5ZTNmdnNOCjN4NVR1cXN3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUlnWlo1QyttNXBmNjdtTGlvMlk0RGl4bWhWdzdSbG15Y2kKY2pWbmdiRk9lREVDSVFDcEtrYjNiTmM2TlgrV3pmLzg4WWFGZHpKSFRQM0MraTdiVjYxaktXQys4QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
         labels:
             environment: "dev"

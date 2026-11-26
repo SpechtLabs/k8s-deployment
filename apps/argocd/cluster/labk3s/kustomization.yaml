@@ -16,6 +16,7 @@ patches:
   - path: delete-sm-dex.yaml
   - path: delete-sm-app-controller.yaml
   - path: delete-sm-appset-controller.yaml
+  - path: controller-metrics.patch.yaml
   - target:
       kind: Role
       namespace: argocd

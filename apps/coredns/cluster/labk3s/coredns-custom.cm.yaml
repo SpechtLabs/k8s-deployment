@@ -10,8 +10,10 @@ data:
   # the egress proxy pods instead of the raw, unroutable tailnet (100.x) IPs.
   #
   # CoreDNS' forward plugin needs an IP (it does not resolve hostnames at config
-  # time), so the nameserver Service ClusterIP is pinned here. It is allocated
-  # once and stable for the life of the `nameserver` Service in ns `tailscale`.
+  # time), so the nameserver Service's ClusterIP is pinned here, and the same
+  # address is pinned on the Service itself through the DNSConfig
+  # (apps/tailscale/cluster/labk3s/dns-config.yaml, nameserver.service.clusterIP).
+  # Change both together.
   tailscale.server: |
     ts.net:53 {
         errors

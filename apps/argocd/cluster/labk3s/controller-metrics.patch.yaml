@@ -1,0 +1,20 @@
+# The application controller's metrics (argocd_app_info: each app's sync and
+# health status) for the labk3s alert rules in grafanaalertrules-labk3s.yaml.
+# labk3s has no prometheus-operator CRDs, so the chart's ServiceMonitors are
+# deleted here (delete-sm-*.yaml) and nothing scraped Argo CD; k8s-monitoring's
+# annotation autodiscovery (apps/grafana-k8s-monitoring/cluster/labk3s) picks
+# these annotations up and ships to the homelab Mimir tenant, cluster=labk3s.
+# Only the controller, and only its metrics port: the other components' metrics
+# aren't alerted on.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-application-controller
+  namespace: argocd
+spec:
+  template:
+    metadata:
+      annotations:
+        k8s.grafana.com/scrape: "true"
+        k8s.grafana.com/job: argocd/application-controller
+        k8s.grafana.com/metrics.portNumber: "8082"
