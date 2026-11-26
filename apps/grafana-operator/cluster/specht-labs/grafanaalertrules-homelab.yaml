@@ -1,7 +1,16 @@
-# Homelab platform health targets that no SLO covers: the Buckle server's
-# nightly database backup (SpechtLabs/homelab modules/buckle-server, metric from the
-# server host's node_exporter textfile). Grafana-managed rules on the homelab
-# Mimir tenant, in Infrastructure.
+# Homelab platform health targets that no SLO covers: the nightly backups to
+# the NAS (SpechtLabs/homelab modules/nas-backup; which backups exist is its
+# vars/backups.yaml). The metrics come from the backup hosts' node_exporter
+# textfiles: nas_backup_configured{backup}, written by Buckle, so a backup
+# that never ran still exists, and
+# nas_backup_last_success_timestamp_seconds{backup, target="local"|"nas"},
+# written by each run. One pair of rules covers every backup, each firing once
+# per backup and host. Grafana-managed rules on the homelab Mimir tenant, in
+# Infrastructure.
+#
+# They replace buckle-backup-stale and buckle-backup-missing (2026-11-27),
+# which read the Buckle-only buckle_backup_last_success_timestamp_seconds:
+# the Buckle database is now the backup "buckle".
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaAlertRuleGroup
 metadata:
@@ -14,20 +23,20 @@ spec:
   name: homelab-platform
   interval: 5m
   rules:
-  - uid: buckle-backup-stale
-    title: Buckle — database backup on the NAS is stale
+  - uid: nas-backup-stale
+    title: NAS backup is stale
     condition: B
     for: 10m
     noDataState: OK
     execErrState: Error
     labels:
       severity: warning
-      service: buckle
+      service: nas-backup
       category: backup
     annotations:
-      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/
-      summary: "The Buckle database's last NAS backup is more than 26 h old"
-      description: "buckle-backup on the server host (isa) hasn't copied the database to the NAS for over 26 h. `systemctl status buckle-backup` and `journalctl -u buckle-backup` there; a missing NFS mount still leaves the local copy in /var/backups/buckle."
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/#nas-backup-stale
+      summary: 'Backup {{ $labels.backup }}: the NAS copy is more than 26 h old'
+      description: 'nas-backup on {{ $labels.instance }} has not copied {{ $labels.backup }} to the NAS for over 26 h. `journalctl -u nas-backup` there names the step that failed; a failed mount still leaves the local copy in /var/backups/{{ $labels.backup }}.'
     data:
     - refId: A
       relativeTimeRange:
@@ -39,7 +48,7 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: 'time() - max(buckle_backup_last_success_timestamp_seconds{target="nas"})'
+        expr: 'time() - max by (backup, instance) (nas_backup_last_success_timestamp_seconds{target="nas"})'
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
@@ -71,20 +80,20 @@ spec:
             type: last
             params: []
         refId: B
-  - uid: buckle-backup-missing
-    title: Buckle — no database backup on the NAS recorded
+  - uid: nas-backup-missing
+    title: NAS backup never recorded
     condition: B
     for: 26h
     noDataState: OK
     execErrState: Error
     labels:
       severity: warning
-      service: buckle
+      service: nas-backup
       category: backup
     annotations:
-      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/
-      summary: "No NAS backup of the Buckle database has been recorded for 26 h"
-      description: "The server host exports no buckle_backup_last_success_timestamp_seconds for the NAS: the backup has never reached it, or its timer or metrics stopped. `systemctl list-timers buckle-backup.timer` on isa."
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/#nas-backup-missing
+      summary: 'Backup {{ $labels.backup }}: no NAS copy recorded for 26 h'
+      description: '{{ $labels.instance }} is meant to back up {{ $labels.backup }} (nas_backup_configured) but has recorded no NAS copy for 26 h: the backup never reached the NAS, or its metrics are gone. `systemctl list-timers nas-backup.timer` and `journalctl -u nas-backup` there.'
     data:
     - refId: A
       relativeTimeRange:
@@ -96,7 +105,8 @@ spec:
           type: prometheus
           uid: mimir-homelab
         editorMode: code
-        expr: 'absent(buckle_backup_last_success_timestamp_seconds{target="nas"})'
+        # 1 for each configured backup that has no NAS timestamp at all.
+        expr: 'max by (backup, instance) (nas_backup_configured) unless on (backup, instance) max by (backup, instance) (nas_backup_last_success_timestamp_seconds{target="nas"})'
         instant: true
         intervalMs: 1000
         maxDataPoints: 43200
