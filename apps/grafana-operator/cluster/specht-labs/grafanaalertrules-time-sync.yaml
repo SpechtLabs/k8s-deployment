@@ -28,6 +28,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-gps-pps-lost
       summary: "timepi has run without GPS PPS for 30m"
       description: "ntpsec on timepi hasn't selected the GPS PPS for 30m: the receiver has no fix (antenna sky view). timepi serves network time (PTB, pool) meanwhile, ~1 ms instead of ~1 µs, and announces PTP clockClass 52. `ntpq -pn` and `gpspipe -w -n 10` on timepi; the Stratum 1 dashboard shows satellites and SNR."
     data:
@@ -84,6 +85,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-not-synchronised
       summary: "timepi's ntpsec is unsynchronised"
       description: "ntpsec on timepi has had no usable source (stratum 16) for 5m: neither GPS PPS nor PTB/pool servers. The LAN's NTP and PTP clients follow a free-running clock. `ntpq -pn` on timepi."
     data:
@@ -140,6 +142,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#timepi-time-metrics-missing
       summary: "No ntpsec metrics from timepi for 15m"
       description: "timepi's time-metrics timer or its Alloy hasn't delivered ntpsec metrics for 15m, so the other timepi alerts can't fire. `systemctl status time-metrics.timer alloy` on timepi."
     data:
@@ -196,6 +199,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#host-clock-off-by-more-than-1-ms
       summary: "{{ $labels.instance }} is more than 1 ms off"
       description: "chrony on {{ $labels.instance }} has been more than 1 ms off its source for 15m (normally ns to µs). `chronyc tracking` and `chronyc sources` there."
     data:
@@ -252,6 +256,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#host-clock-unsynchronised
       summary: "chrony on {{ $labels.instance }} is unsynchronised"
       description: "chrony on {{ $labels.instance }} has reported a leap status other than normal (not synchronised) for 10m. `chronyc tracking` there."
     data:
@@ -308,6 +313,7 @@ spec:
       service: time-sync
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/timekeeping/how-to/respond-to-a-time-sync-alert/#ptp-client-lost-the-grandmaster
       summary: "ptp4l on {{ $labels.instance }} isn't following timepi"
       description: "ptp4l on {{ $labels.instance }} hasn't been in SLAVE state for 10m; chrony falls back to NTP from timepi (~µs instead of ~ns). `pmc -u -b 0 'GET PORT_DATA_SET'` there, and ptp4l on timepi."
     data:

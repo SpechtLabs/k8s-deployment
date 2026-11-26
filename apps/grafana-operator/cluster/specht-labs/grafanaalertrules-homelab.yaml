@@ -25,6 +25,7 @@ spec:
       service: buckle
       category: backup
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/
       summary: "The Buckle database's last NAS backup is more than 26 h old"
       description: "buckle-backup on the server host (isa) hasn't copied the database to the NAS for over 26 h. `systemctl status buckle-backup` and `journalctl -u buckle-backup` there; a missing NFS mount still leaves the local copy in /var/backups/buckle."
     data:
@@ -81,6 +82,7 @@ spec:
       service: buckle
       category: backup
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/fleet/how-to/respond-to-a-backup-alert/
       summary: "No NAS backup of the Buckle database has been recorded for 26 h"
       description: "The server host exports no buckle_backup_last_success_timestamp_seconds for the NAS: the backup has never reached it, or its timer or metrics stopped. `systemctl list-timers buckle-backup.timer` on isa."
     data:

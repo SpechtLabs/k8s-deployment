@@ -35,11 +35,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-health_err
       summary: 'Ceph HEALTH_ERR: {{ $labels.name }}'
       description: 'Health check {{ $labels.name }} has been at HEALTH_ERR for 5m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host.'
       __dashboardUid__: ceph-status
       __panelId__: '9'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -94,11 +94,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-health_warn
       summary: 'Ceph HEALTH_WARN for 30m: {{ $labels.name }}'
       description: 'Health check {{ $labels.name }} has warned for 30m. `sudo cephadm shell -- ceph health detail` on a storage Pi lists the daemons or PGs it is about; the Ceph - Status dashboard shows which host. Deliberate warnings are muted in SpechtLabs/homelab (ceph_health_mutes) and left out here by name.'
       __dashboardUid__: ceph-status
       __panelId__: '9'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -155,11 +155,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-no-cluster-metrics
       summary: No metrics from the Ceph cluster
       description: 'No active mgr has reported ceph_health_status for 10m: every mgr is down, the prometheus module is off, or Alloy on the storage Pis can''t write.'
       __dashboardUid__: ceph-status
       __panelId__: '18'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -214,11 +214,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-osd-down
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is down'
       description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been down for 5m. With 3 replicas and min_size 2 the cluster still serves I/O with one OSD down; two down block writes. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
       __dashboardUid__: ceph-status
       __panelId__: '11'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -273,11 +273,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-placement-groups-inactive
       summary: Ceph placement groups are inactive
       description: 'Some PGs have not been active for 10m: the data in them can''t be read or written (fewer than min_size OSDs, or stuck peering). The Ceph - Status dashboard shows which OSDs and hosts are down.'
       __dashboardUid__: ceph-status
       __panelId__: '8'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -332,11 +332,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-monitor-out-of-quorum
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is out of quorum'
       description: '{{ $labels.ceph_daemon }} on {{ $labels.hostname }} has been out of quorum for 5m. The cluster keeps working with 2 of 3 mons; losing a second stops it. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.ceph_daemon }}`.'
       __dashboardUid__: ceph-status
       __panelId__: '12'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -391,11 +391,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-osd-over-75-full
       summary: 'Ceph {{ $labels.ceph_daemon }} on {{ $labels.hostname }} is over 75% full'
       description: Ceph's nearfull is 85% and it stops writes at 95%; every PG lives on all three OSDs, so they fill together. Free space or add capacity.
       __dashboardUid__: ceph-status
       __panelId__: '11'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -450,11 +450,11 @@ spec:
       service: ceph
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-daemon-not-running
       summary: 'Ceph {{ $labels.daemon_name }} on {{ $labels.hostname }} is not running'
       description: 'cephadm has reported {{ $labels.daemon_name }} ({{ $labels.service_type }}) on {{ $labels.hostname }} as not running for 10m (status {{ $values.A.Value }}: 0 stopped, -1 error, 2 starting, -2 unknown). Several daemons on one host at once: the host or its Docker. On {{ $labels.hostname }}: `sudo systemctl status ceph-<fsid>@{{ $labels.daemon_name }}`; restart with `sudo cephadm shell -- ceph orch daemon restart {{ $labels.daemon_name }}`.'
       __dashboardUid__: ceph-status
       __panelId__: '10'
-      runbook_url: https://github.com/SpechtLabs/homelab/blob/main/docs/ceph.md#when-an-alert-fires
     data:
     - refId: A
       relativeTimeRange:
@@ -498,6 +498,7 @@ spec:
       service: ceph-csi
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-no-provisioner
       summary: No live ceph-csi provisioner on labk3s
       description: 'No provisioner pod reports csi_liveness: new PVCs on ceph-rbd stay Pending, attach/expand stop.'
     data:
@@ -554,6 +555,7 @@ spec:
       service: ceph-csi
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-node-plugin-missing
       summary: A labk3s node has no live ceph-csi node plugin
       description: Pods with ceph-rbd volumes can't start on that node (no mount/unmount).
     data:
@@ -610,6 +612,7 @@ spec:
       service: ceph-csi
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-volume-operations-failing
       summary: ceph-csi volume operations are failing
       description: Create/delete/attach/expand calls have returned gRPC errors for 15m. The Ceph CSI (RBD) dashboard shows which method; the provisioner logs say why.
     data:
@@ -666,6 +669,7 @@ spec:
       service: ceph-csi
       category: health
     annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/ceph/how-to/respond-to-a-ceph-alert/#ceph-csi-pvc-over-85-full
       summary: A ceph-rbd PVC is over 85% full
       description: '{{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is over 85% full. ceph-rbd volumes can be expanded: raise the PVC''s request.'
     data:
