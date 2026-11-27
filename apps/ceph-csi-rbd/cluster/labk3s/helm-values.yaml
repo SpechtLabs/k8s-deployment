@@ -52,6 +52,11 @@ provisioner:
 storageClass:
   create: true
   name: ceph-rbd
+  # The cluster's default StorageClass. k3s's local-path is no longer default:
+  # SpechtLabs/homelab modules/k3s-server skips k3s's local-storage manifest
+  # and unmarks it.
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
   clusterID: 85412c6c-e39c-11f1-ba59-2ccf678b0944
   # Pool and client (client.k3s, AES-128 key for the nodes' kernel rbd) are
   # created by Buckle; the key is in csi-rbd.secret.yaml.
