@@ -1,0 +1,417 @@
+# The UPS for the homelab: the Ubiquiti UPS Tower behind isa's NUT proxy
+# (SpechtLabs/homelab modules/nut-server; metrics from isa's node_exporter
+# textfile, ups-metrics, every 30 s). Grafana-managed rules on the homelab
+# Mimir tenant, in Infrastructure. The power-loss shutdown itself needs no
+# human; these say it's happening, that it can't (metrics stale), or that the
+# battery needs replacing. Every query is about the one UPS: no labels to split.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaAlertRuleGroup
+metadata:
+  name: ups
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-cloud
+  folderRef: infrastructure
+  name: ups
+  interval: 1m
+  rules:
+  - uid: ups-on-battery
+    title: UPS — on battery
+    condition: B
+    for: 1m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-on-battery
+      summary: 'The UPS Tower is on battery'
+      description: 'The house has lost mains power for 1m: the early NUT hosts (labk3s, Ceph, the blades, the NUC) are powering off now. jumphost, timepi and isa stay up until the UPS reports low battery. `upsc ups@localhost` on isa.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ups_status{flag="OB"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-runtime-low
+    title: UPS — less than 10 minutes of battery left
+    condition: B
+    for: 1m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-runtime-low
+      summary: 'UPS on battery with {{ $values.A.Value | humanizeDuration }} of runtime left'
+      description: 'The UPS estimates less than 10 minutes of battery. Low battery (LB) will make isa set FSD and take the rest of the fleet down; to do it now, `sudo upsmon -c fsd` on isa.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'min(ups_battery_runtime_seconds) and on() (max(ups_status{flag="OB"}) > 0.5)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 600
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-battery-low
+    title: UPS — battery low
+    condition: B
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-battery-low
+      summary: 'The UPS reports low battery (LB)'
+      description: 'The UPS Tower set LB. isa, the NUT primary, sets FSD now: every NUT host powers off and isa goes last. The NAS follows its own DSM UPS settings.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ups_status{flag="LB"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-forced-shutdown
+    title: UPS — forced shutdown (FSD) set
+    condition: B
+    for: 0s
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-forced-shutdown
+      summary: 'FSD is set on isa''s upsd: the NUT hosts are shutting down'
+      description: 'isa''s upsmon (the primary) set FSD, on low battery or by hand (`upsmon -c fsd`). Every NUT host powers off; isa waits for them, then shuts down itself. FSD clears when upsd restarts.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ups_status{flag="FSD"})'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-metrics-stale
+    title: UPS — metrics stale
+    condition: B
+    for: 5m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-metrics-stale
+      summary: 'isa hasn''t read the UPS for over 5 minutes'
+      description: 'ups-metrics on isa has had no successful read of the UPS through its upsd for 5m: the proxy, upsd or the UPS Tower''s NUT server is down, so the power-loss shutdown may not work either. Also fires once isa itself has shut down in a power cut. `upsc ups@localhost` and `systemctl status nut-server nut-driver@ups ups-metrics.timer` on isa.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'time() - max(ups_metrics_last_success_timestamp_seconds)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 300
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-metrics-missing
+    title: UPS — no metrics recorded
+    condition: B
+    for: 15m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-metrics-missing
+      summary: 'No UPS metrics from isa for 15 minutes'
+      description: 'isa exports no ups_metrics_last_success_timestamp_seconds: ups-metrics has never run there, its timer stopped, or Alloy on isa isn''t shipping. `systemctl list-timers ups-metrics.timer` on isa.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'absent(ups_metrics_last_success_timestamp_seconds)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
+  - uid: ups-replace-battery
+    title: UPS — replace the battery
+    condition: B
+    for: 1h
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: warning
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-replace-battery
+      summary: 'The UPS wants a new battery'
+      description: 'The UPS Tower reports RB (replace battery), or its last self-test (weekly) failed or warned. Runtime on battery is shorter than the numbers assume until the battery is replaced.'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'max(ups_status{flag="RB"} or ups_test_failed)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: gt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B

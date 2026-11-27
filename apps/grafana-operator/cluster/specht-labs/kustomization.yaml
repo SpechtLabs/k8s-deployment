@@ -41,8 +41,11 @@ resources:
   # labk3s platform health (homelab Mimir tenant): telemetry, nodes, pods,
   # volumes, Argo CD apps; what the labk3s API SLO can't see.
   - grafanaalertrules-labk3s.yaml
-  # Homelab platform: the Buckle server's database backup.
+  # Homelab platform: the nightly NAS backups (modules/nas-backup).
   - grafanaalertrules-homelab.yaml
+  # The UPS, from isa's ups-metrics (homelab Mimir tenant): on battery, low
+  # runtime or battery, FSD, battery to replace, metrics missing.
+  - grafanaalertrules-ups.yaml
   # specht-labs platform health: what the SLOs can't see (telemetry missing, SLO
   # recordings stopped, ingest stalled, restarts, nodes, certs, volumes, ArgoCD).
   - grafanaalertrules-platform.yaml
