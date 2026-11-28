@@ -254,6 +254,65 @@ spec:
             type: last
             params: []
         refId: B
+  - uid: ups-upstream-unreachable
+    title: UPS — UPS Tower unreachable from isa
+    condition: B
+    for: 3m
+    noDataState: OK
+    execErrState: Error
+    labels:
+      severity: critical
+      service: ups
+      category: power
+    annotations:
+      runbook_url: https://backstage.k8s.specht-labs.de/docs/default/system/elbschloss/how-to/respond-to-a-ups-alert/#ups-upstream-unreachable
+      summary: 'isa can''t reach the UPS Tower at {{ $labels.upstream }}: no host would shut down in a power cut'
+      description: 'ups-metrics on isa has failed to read ups.status from the UPS Tower directly for 3m. isa''s proxy (dummy-ups) keeps serving its last values, so every host and Grafana see a frozen UPS and nothing shuts down on a power loss. On 2026-11-28 the UPS Tower''s DHCP lease had moved it. `upsc ups@{{ $labels.upstream }} ups.status` on isa; `ping UPSTower.local` from the Mac for its current address.'
+      __dashboardUid__: ups-nut
+      __panelId__: '2'
+    data:
+    - refId: A
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: mimir-homelab
+      model:
+        datasource:
+          type: prometheus
+          uid: mimir-homelab
+        editorMode: code
+        expr: 'min by (upstream) (ups_upstream_up)'
+        instant: true
+        intervalMs: 1000
+        maxDataPoints: 43200
+        range: false
+        refId: A
+    - refId: B
+      relativeTimeRange:
+        from: 600
+        to: 0
+      datasourceUid: __expr__
+      model:
+        type: threshold
+        datasource:
+          type: __expr__
+          uid: __expr__
+        expression: A
+        conditions:
+        - type: query
+          evaluator:
+            type: lt
+            params:
+            - 0.5
+          operator:
+            type: and
+          query:
+            params:
+            - A
+          reducer:
+            type: last
+            params: []
+        refId: B
   - uid: ups-metrics-stale
     title: UPS — metrics stale
     condition: B

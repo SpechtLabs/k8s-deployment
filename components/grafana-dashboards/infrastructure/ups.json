@@ -124,7 +124,7 @@
       "id": 2,
       "type": "stat",
       "title": "Power",
-      "description": "On battery: the early hosts (labk3s, Ceph, the blades, the NUC) power off after 60 s. Battery low: isa sets FSD, jumphost and timepi go, isa goes last. No data: ups-metrics on isa isn't reporting (see Metrics age).",
+      "description": "UPS Tower unreachable: isa can't read it directly, its proxy serves frozen values and no host would shut down in a power cut (alert ups-upstream-unreachable). On battery: the early hosts (labk3s, Ceph, the blades, the NUC) power off after 60 s. Battery low: isa sets FSD, jumphost and timepi go, isa goes last. No data: ups-metrics on isa isn't reporting (see Metrics age).",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
@@ -184,11 +184,21 @@
               "type": "range",
               "options": {
                 "from": 3,
-                "to": 10,
+                "to": 5,
                 "result": {
                   "text": "Forced shutdown",
                   "color": "dark-red",
                   "index": 10
+                }
+              }
+            },
+            {
+              "type": "value",
+              "options": {
+                "9": {
+                  "text": "UPS Tower unreachable",
+                  "color": "dark-red",
+                  "index": 0
                 }
               }
             }
@@ -221,7 +231,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(ups_status{ups=\"ups\", flag=\"OB\"}) + max(ups_status{ups=\"ups\", flag=\"LB\"}) + 2 * max(ups_status{ups=\"ups\", flag=\"FSD\"})",
+          "expr": "((max(ups_status{ups=\"ups\", flag=\"OB\"}) + max(ups_status{ups=\"ups\", flag=\"LB\"}) + 2 * max(ups_status{ups=\"ups\", flag=\"FSD\"})) unless on() (min(ups_upstream_up{ups=\"ups\"}) == 0)) or on() ((min(ups_upstream_up{ups=\"ups\"}) == 0) * 0 + 9)",
           "refId": "A",
           "legendFormat": "__auto",
           "format": "time_series",

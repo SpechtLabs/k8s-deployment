@@ -35,9 +35,13 @@ def host(expr):
     return 'label_replace(' + expr + ', "host", "$1", "instance", "([^:]+):.*")'
 
 
-# The UPS's state as one number: 0 mains, 1 battery, 2 battery low, 3+ FSD.
-STATE = ('max(ups_status{' + U + ', flag="OB"}) + max(ups_status{' + U + ', flag="LB"})'
-         ' + 2 * max(ups_status{' + U + ', flag="FSD"})')
+# The UPS's state as one number: 0 mains, 1 battery, 2 battery low, 3-5 FSD,
+# 9 when isa can't read the UPS Tower directly: then the proxy's flags are
+# its last values, frozen, and showing them would say "On mains" in a power cut.
+UPSTREAM = 'min(ups_upstream_up{' + U + '})'
+STATE = ('((max(ups_status{' + U + ', flag="OB"}) + max(ups_status{' + U + ', flag="LB"})'
+         ' + 2 * max(ups_status{' + U + ', flag="FSD"})) unless on() (' + UPSTREAM + ' == 0))'
+         ' or on() ((' + UPSTREAM + ' == 0) * 0 + 9)')
 # Every NUT client that reported in the last week: a host that went dark
 # still has a row, with its last report's age.
 KNOWN = 'max by (host, affinity) (' + host('last_over_time(nut_client_info{' + U + '}[7d])') + ')'
@@ -91,7 +95,7 @@ def rmap(lo, hi, text, color, index=10):
 RUNNING = vmap((0, "stopped", "red"), (1, "running", "green"))
 YES_NO = vmap((0, "no", "red"), (1, "yes", "green"))
 POWER = vmap((0, "On mains", "green"), (1, "On battery", "orange"), (2, "Battery low", "red")) + \
-    [rmap(3, 10, "Forced shutdown", "dark-red")]
+    [rmap(3, 5, "Forced shutdown", "dark-red")] + vmap((9, "UPS Tower unreachable", "dark-red"))
 
 
 def stat(title, x, y, w, h, expr, desc="", th=None, mappings=None, unit="none", no_value="no data",
@@ -217,7 +221,9 @@ panels.append(row("Now", y)); y += 1
 panels += [
     stat("Power", 0, y, 4, 4, STATE, mappings=POWER, no_value="no data",
          th=thresholds(("green", None), ("orange", 1), ("red", 2), ("dark-red", 3)),
-         desc="On battery: the early hosts (labk3s, Ceph, the blades, the NUC) power off after 60 s. "
+         desc="UPS Tower unreachable: isa can't read it directly, its proxy serves frozen values and "
+              "no host would shut down in a power cut (alert ups-upstream-unreachable). "
+              "On battery: the early hosts (labk3s, Ceph, the blades, the NUC) power off after 60 s. "
               "Battery low: isa sets FSD, jumphost and timepi go, isa goes last. "
               "No data: ups-metrics on isa isn't reporting (see Metrics age)."),
     stat("Battery", 4, y, 3, 4, 'max(ups_battery_charge_percent{' + U + '})', unit="percent",
