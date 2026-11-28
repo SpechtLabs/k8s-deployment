@@ -763,8 +763,8 @@
       "gridPos": {
         "x": 0,
         "y": 5,
-        "w": 15,
-        "h": 10
+        "w": 16,
+        "h": 16
       },
       "fieldConfig": {
         "defaults": {
@@ -777,6 +777,66 @@
           "noValue": "-"
         },
         "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Affinity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 95
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FINALDELAY"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "upsmon"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UPS reachable"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 135
+              }
+            ]
+          },
           {
             "matcher": {
               "id": "byName",
@@ -949,7 +1009,7 @@
                     },
                     {
                       "color": "orange",
-                      "value": 90
+                      "value": 150
                     },
                     {
                       "color": "red",
@@ -1119,10 +1179,10 @@
         "uid": "${datasource}"
       },
       "gridPos": {
-        "x": 15,
+        "x": 16,
         "y": 5,
-        "w": 9,
-        "h": 10
+        "w": 8,
+        "h": 16
       },
       "fieldConfig": {
         "defaults": {
@@ -1233,7 +1293,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 21,
         "w": 24,
         "h": 1
       },
@@ -1250,7 +1310,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 16,
+        "y": 22,
         "w": 24,
         "h": 7
       },
@@ -1644,7 +1704,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 29,
         "w": 12,
         "h": 8
       },
@@ -1779,7 +1839,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 23,
+        "y": 29,
         "w": 12,
         "h": 8
       },
@@ -1902,7 +1962,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 37,
         "w": 12,
         "h": 8
       },
@@ -2050,7 +2110,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 31,
+        "y": 37,
         "w": 12,
         "h": 8
       },
@@ -2169,7 +2229,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 45,
         "w": 24,
         "h": 1
       },
@@ -2186,7 +2246,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 46,
         "w": 12,
         "h": 11
       },
@@ -2283,7 +2343,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 40,
+        "y": 46,
         "w": 12,
         "h": 11
       },
@@ -2348,7 +2408,7 @@
       "description": "Lines from nut-monitor (every client and isa) and nut-server (isa) that say something went wrong: data stale, communications lost, poll failed, server disconnected. 'Data stale' on many hosts at once: isa's repeater lost the UPS Tower.",
       "gridPos": {
         "x": 0,
-        "y": 51,
+        "y": 57,
         "w": 24,
         "h": 7
       },
@@ -2404,7 +2464,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 58,
+        "y": 64,
         "w": 24,
         "h": 1
       },
@@ -2421,7 +2481,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 59,
+        "y": 65,
         "w": 5,
         "h": 4
       },
@@ -2495,7 +2555,7 @@
       },
       "gridPos": {
         "x": 5,
-        "y": 59,
+        "y": 65,
         "w": 5,
         "h": 4
       },
@@ -2580,7 +2640,7 @@
       },
       "gridPos": {
         "x": 10,
-        "y": 59,
+        "y": 65,
         "w": 4,
         "h": 4
       },
@@ -2665,7 +2725,7 @@
       },
       "gridPos": {
         "x": 14,
-        "y": 59,
+        "y": 65,
         "w": 5,
         "h": 4
       },
@@ -2735,7 +2795,7 @@
       },
       "gridPos": {
         "x": 19,
-        "y": 59,
+        "y": 65,
         "w": 5,
         "h": 4
       },
@@ -2803,7 +2863,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 63,
+        "y": 69,
         "w": 24,
         "h": 1
       },
@@ -2820,7 +2880,7 @@
       "description": "upsmon on every client and isa, upsd and the driver on isa, ups-metrics and nut-client-metrics errors. upssched's shutdown lines come through nut-monitor.",
       "gridPos": {
         "x": 0,
-        "y": 64,
+        "y": 70,
         "w": 24,
         "h": 12
       },

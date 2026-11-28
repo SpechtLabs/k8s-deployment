@@ -135,6 +135,10 @@ def plain(name, unit=None, mappings=None, decimals=None):
     return {"matcher": {"id": "byName", "options": name}, "properties": props}
 
 
+def width(name, px):
+    return {"matcher": {"id": "byName", "options": name}, "properties": [{"id": "custom.width", "value": px}]}
+
+
 def table(title, x, y, w, h, exprs, columns, overrides, sort, desc="", no_value="-"):
     """exprs: {refId: expr}, instant tables keyed by the same labels, merged
     into one row per key. columns: [(field, display name)]."""
@@ -251,7 +255,7 @@ client_cols = [("host", "Host"), ("affinity", "Affinity"), ("Value #B", "Powers 
                ("Value #C", "FINALDELAY"), ("Value #D", "upsmon"), ("Value #E", "UPS reachable"),
                ("Value #F", "Round trip"), ("Value #G", "Last report")]
 panels.append(table(
-    "Clients", 0, y, 15, 10,
+    "Clients", 0, y, 16, 16,
     {
         "A": KNOWN,
         # Early hosts: seconds on battery. Late hosts: -1, shown as "on FSD".
@@ -263,13 +267,15 @@ panels.append(table(
         "G": 'time() - max by (host) (' + host('last_over_time(nut_client_metrics_timestamp_seconds{' + U + '}[7d])') + ')',
     },
     client_cols,
-    [plain("Powers off", unit="suffix: s on battery",
+    [width("Host", 150), width("Affinity", 95), width("FINALDELAY", 130), width("upsmon", 90),
+     width("UPS reachable", 135),
+     plain("Powers off", unit="suffix: s on battery",
            mappings=vmap((-1, "on FSD (low battery)", "text"))),
      plain("FINALDELAY", unit="s"),
      colored("upsmon", mappings=RUNNING),
      colored("UPS reachable", mappings=YES_NO),
      colored("Round trip", unit="s", th=thresholds(("transparent", None), ("orange", 1), ("red", 5))),
-     colored("Last report", unit="s", decimals=0, th=thresholds(("transparent", None), ("orange", 90), ("red", 300)))],
+     colored("Last report", unit="s", decimals=0, th=thresholds(("transparent", None), ("orange", 150), ("red", 300)))],
     [{"displayName": "Host", "desc": False}],
     desc="Every NUT client that reported in the last 7 days (nut-client-metrics, every 30 s). "
          "upsmon stopped or UPS not reachable: that host won't shut down on a power loss. "
@@ -278,7 +284,7 @@ panels.append(table(
          "late hosts on FSD, which isa sets on low battery. isa is the primary, not listed here.",
 ))
 panels.append(series(
-    "upsmon logins at upsd", 15, y, 9, 10,
+    "upsmon logins at upsd", 16, y, 8, 16,
     [target('max(ups_clients{' + U + '})', legend="logged in"),
      target('count(nut_client_info{' + U + '}) + 1', legend="clients reporting + isa", ref="B")],
     "none", decimals=0,
@@ -290,7 +296,7 @@ panels.append(series(
     desc="`upsc -c ups@localhost` on isa: one login per running upsmon, isa's primary included. "
          "Below the dashed line: a host that is up isn't logged in. Both drop together: a host is down.",
 ))
-y += 10
+y += 16
 
 # ── Power over time ──────────────────────────────────────────────────────────
 FLAG_COLORS = {"OL": "green", "OB": "orange", "LB": "red", "FSD": "dark-red", "CHRG": "blue",
