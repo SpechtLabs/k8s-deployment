@@ -32,6 +32,12 @@ configMapGenerator:
       disableNameSuffixHash: true
     files:
       - stratum1.json
+  # Generated: python3 hack/gen-ups-dashboard.py > components/grafana-dashboards/infrastructure/ups.json
+  - name: ups-dashboard-json
+    options:
+      disableNameSuffixHash: true
+    files:
+      - ups.json
   - name: synology-dashboard-json
     options:
       disableNameSuffixHash: true
